@@ -41,6 +41,45 @@ class VoiceAgent(
     private val onFiller: (String) -> Unit = {},
 ) {
 
+    /**
+     * 빠른 경로: 의도 분류기로 도구를 먼저 실행하고, 그 결과를 넣어 **한 번만** LLM을 부른다.
+     * 2턴 왕복(p50 7.3초)을 1턴(p50 3.6초)으로 줄인다. 도구 선택을 모델에 맡기지 못하는 대신
+     * 분류기가 확신하는 6개 의도에만 쓴다. 실패하면 일반 경로([ask])로 되돌린다.
+     */
+    suspend fun askFast(question: String, drivingMode: Boolean): Answer {
+        if (!consentCloud) return offline(question, drivingMode)
+        val intent = OfflineIntents.detect(question) ?: return ask(question, drivingMode)
+        val toolName = OfflineIntents.toolName(intent)
+        val toolJson = tools.execute(toolName, null)
+
+        val messages = JSONArray().apply {
+            put(JSONObject().put("role", "system").put("content", systemPrompt(drivingMode)))
+            put(
+                JSONObject().put(
+                    "role",
+                    "system",
+                    ).put(
+                        "content",
+                        "도구 결과(확인된 값): " + toolJson +
+                            "\n이 값만 근거로 답한다. 도구를 다시 부르지 않는다.",
+                    ),
+            )
+            put(JSONObject().put("role", "user").put("content", question))
+        }
+
+        val result = client.chat(JSONObject().apply { put("messages", messages) })
+        if (result !is ChatResult.Ok) return offline(question, drivingMode)
+        val message = result.message
+        if (message.optJSONArray("tool_calls")?.length() ?: 0 > 0) {
+            // 모델이 도구를 또 부르려 하면 일반 경로로 되돌린다.
+            return ask(question, drivingMode)
+        }
+        val text = message.optString("content").ifBlank {
+            message.optString("reasoning_content").ifBlank { "확인했어요." }
+        }
+        return Answer(text, listOf(toolName), usedOffline = false, fillerSpoken = false)
+    }
+
     suspend fun ask(question: String, drivingMode: Boolean): Answer {
         if (!consentCloud) return offline(question, drivingMode)
 

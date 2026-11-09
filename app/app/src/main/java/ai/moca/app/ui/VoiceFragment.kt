@@ -174,7 +174,8 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         chipText.text = ""
         viewLifecycleOwner.lifecycleScope.launch {
             val answer: Answer = runCatching {
-                runner.ask(question, activity.isDrivingLimited())
+                // 1턴 빠른 경로(의도 분류 → 도구 선실행). 실패하면 일반 경로로 되돌아간다.
+                runner.askFast(question, activity.isDrivingLimited())
             }.getOrElse {
                 Answer("지금은 답할 수 없어요. 잠시 뒤 다시 물어봐 주세요.", emptyList(), true, false)
             }

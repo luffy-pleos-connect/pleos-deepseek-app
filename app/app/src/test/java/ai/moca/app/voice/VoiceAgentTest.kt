@@ -314,7 +314,41 @@ class VoiceAgentTest {
         assertFalse(answer.usedOffline)
     }
 
-    // ── 22. 도구 정의 8개, 이름 중복 없음
+    // ── 22. 빠른 경로: 도구를 먼저 실행하고 1회만 부른다
+    @Test
+    fun `빠른 경로는 도구를 선실행하고 LLM 을 한 번만 부른다`() = runBlocking {
+        val client = ScriptedClient(listOf(ChatResult.Ok(textMessage("경고 2개예요."))))
+        val answer = agent(client).askFast("경고등 뭐야?", drivingMode = false)
+        assertEquals(1, client.bodies.size)
+        assertEquals("경고 2개예요.", answer.text)
+        assertFalse(answer.usedOffline)
+        val msgs = client.bodies[0].getJSONArray("messages")
+        val combined = (0 until msgs.length()).joinToString("|") { msgs.getJSONObject(it).optString("content") }
+        assertTrue("도구 결과가 프롬프트에 들어가야 한다", combined.contains("\"total\":2"))
+        assertTrue("도구 재호출 금지 지시가 있어야 한다", combined.contains("도구를 다시 부르지 않는다"))
+    }
+
+    @Test
+    fun `빠른 경로에서 모델이 도구를 또 부르면 일반 경로로 되돌린다`() = runBlocking {
+        val client = ScriptedClient(
+            listOf(
+                ChatResult.Ok(toolCallMessage("get_latest_inspection" to "{}")),
+                ChatResult.Ok(textMessage("일반 경로 답")),
+            ),
+        )
+        val answer = agent(client).askFast("경고등 뭐야?", drivingMode = false)
+        assertTrue("2회 이상 호출돼야 한다", client.bodies.size >= 2)
+        assertEquals("일반 경로 답", answer.text)
+    }
+
+    @Test
+    fun `빠른 경로에서 의도를 못 찾으면 일반 경로로 간다`() = runBlocking {
+        val client = ScriptedClient(listOf(ChatResult.Ok(textMessage("일반 답"))))
+        val answer = agent(client).askFast("오늘 날씨 어때?", drivingMode = false)
+        assertEquals("일반 답", answer.text)
+    }
+
+    // ── 23. 도구 정의 8개, 이름 중복 없음
     @Test
     fun `도구 정의는 8개이고 이름이 유일하다`() {
         val defs = buildTools().definitions()
