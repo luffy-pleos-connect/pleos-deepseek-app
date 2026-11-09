@@ -17,6 +17,7 @@
     <string name="c10_offline_voice">서버에 연결할 수 없어 오프라인 음성으로 답해요</string>
     <string name="c11_practice_opponent">연습 상대와 대전해요</string>
     <string name="c12_inspect_first">먼저 점검해 주세요</string>
+    <string name="c20_not_enough_data">이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요</string>
     <string name="c13_badge_demo">데모 데이터</string>
     <string name="c14_stop_safely">안전한 곳에 정차한 뒤 점검을 받으세요</string>
     <string name="c15_red_to_grade">빨간 경고등을 해결하면 %1$s까지 %2$d점</string>

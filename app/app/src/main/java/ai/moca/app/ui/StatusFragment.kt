@@ -26,6 +26,7 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         val app = requireActivity().application as MocaApp
         val container = view.findViewById<LinearLayout>(R.id.categoryContainer)
         val todo = view.findViewById<LinearLayout>(R.id.todoContainer)
+        val trend = view.findViewById<LinearLayout>(R.id.trendContainer)
         val worst = view.findViewById<TextView>(R.id.worstCategory)
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -69,6 +70,13 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
                 }
             }
 
+            // 추이(절단 규칙 4번: 선 그래프 대신 막대 5개로 단순화).
+            // 이번 단계는 기록 저장(Room)이 없어 현재 카테고리 점수를 막대로 보여 준다.
+            trend.removeAllViews()
+            for (category in Category.entries) {
+                trend.addView(trendBar(category, eval.categories[category]))
+            }
+
             if (snapshot.isDemo) {
                 worst.text = getString(R.string.c13_badge_demo) + " · " + worst.text
             }
@@ -77,6 +85,13 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
 
     private fun card(category: Category, score: Int?, eval: Evaluation): View {
         val ctx = requireContext()
+        val detail = TextView(ctx).apply {
+            text = detailText(category, score, eval)
+            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Label_S)
+            setTextColor(ContextCompat.getColor(ctx, ai.pleos.ds.R.color.pleos_text_dark_tertiary))
+            visibility = View.GONE
+            setPadding(0, 16, 0, 0)
+        }
         val box = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(48, 32, 48, 32)
@@ -85,6 +100,13 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).also { it.bottomMargin = 24 }
+            // 카드 탭 → 상세 패널(원본값·감점·지원 여부)을 카드 아래에 펼친다.
+            isClickable = true
+            isFocusable = true
+            descendantFocusability = LinearLayout.FOCUS_BLOCK_DESCENDANTS
+            setOnClickListener {
+                detail.visibility = if (detail.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            }
         }
         val title = TextView(ctx).apply {
             text = category.label
@@ -111,10 +133,79 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
                 ),
             )
         }
+        title.isClickable = false
+        state.isClickable = false
+        detail.isClickable = false
         box.addView(title)
         box.addView(state)
+        box.addView(detail)
         return box
     }
+
+    /** 상세: 원본값·지원 여부·감점·이유·조치. */
+    private fun detailText(category: Category, score: Int?, eval: Evaluation): String {
+        val supported = score != null
+        val deducted = if (score == null) 0 else 100 - score
+        val reason = when {
+            !supported -> "이 차가 값을 주지 않아 측정할 수 없어요."
+            deducted == 0 -> "감점 없음."
+            else -> "감점 $deducted 점."
+        }
+        val action = when {
+            !supported -> ""
+            deducted == 0 -> ""
+            else -> "해결하면 관리 +5. " + getString(R.string.c19_disclaimer)
+        }
+        return buildString {
+            append("지원: ").append(if (supported) "예" else "아니요").append(" · ")
+            append(reason)
+            if (action.isNotEmpty()) append(" ").append(action)
+        }
+    }
+
+    /** 막대 하나: 카테고리 이름 + 점수. 높이는 점수에 비례(최소 8dp). */
+    private fun trendBar(category: Category, score: Int?): View {
+        val ctx = requireContext()
+        val column = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+        }
+        val value = TextView(ctx).apply {
+            text = score?.toString() ?: "—"
+            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Label_S)
+            setTextColor(ContextCompat.getColor(ctx, ai.pleos.ds.R.color.pleos_text_dark_secondary))
+            gravity = android.view.Gravity.CENTER
+        }
+        val bar = View(ctx).apply {
+            val h = ((score ?: 0).coerceIn(0, 100) * 1.6).toInt().coerceAtLeast(8)
+            layoutParams = LinearLayout.LayoutParams(24.dp(ctx), h.dp(ctx)).also { it.bottomMargin = 8.dp(ctx) }
+            setBackgroundColor(
+                ContextCompat.getColor(
+                    ctx,
+                    when {
+                        score == null -> ai.pleos.ds.R.color.pleos_text_dark_quaternary
+                        score >= 100 -> ai.pleos.ds.R.color.pleos_informative_positive
+                        score >= 70 -> ai.pleos.ds.R.color.pleos_regulation_yellow
+                        else -> ai.pleos.ds.R.color.pleos_regulation_red
+                    },
+                ),
+            )
+        }
+        val label = TextView(ctx).apply {
+            text = category.label
+            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Label_S)
+            setTextColor(ContextCompat.getColor(ctx, ai.pleos.ds.R.color.pleos_text_dark_tertiary))
+            gravity = android.view.Gravity.CENTER
+        }
+        column.addView(value)
+        column.addView(bar)
+        column.addView(label)
+        return column
+    }
+
+    private fun Int.dp(ctx: android.content.Context): Int =
+        (this * ctx.resources.displayMetrics.density).toInt()
 
     private fun todoRow(text: String, positive: Boolean = false): View {
         val ctx = requireContext()

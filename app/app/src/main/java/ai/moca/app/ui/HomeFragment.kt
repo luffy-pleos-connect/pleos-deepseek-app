@@ -81,7 +81,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val evaluation = runCatching { ScoreBridge.evaluate(items, warnings, isDemo) }.getOrNull()
         if (evaluation?.grade == null) {
             gradeValue.text = getString(R.string.home_grade_placeholder)
-            gradeHint.text = getString(R.string.c03_first_grade)
+            gradeHint.text = if (evaluation != null && evaluation.categories.values.any { it != null }) {
+                getString(R.string.c20_not_enough_data)
+            } else {
+                getString(R.string.c03_first_grade)
+            }
             totalValue.text = getString(R.string.home_grade_placeholder)
             healthValue.text = getString(R.string.home_grade_placeholder)
             careValue.text = getString(R.string.home_grade_placeholder)

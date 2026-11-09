@@ -54,8 +54,8 @@ class InspectFragment : Fragment(R.layout.fragment_inspect) {
                     else -> ""
                 }
             } else {
-                grade.text = summarize(snapshot.items)
-                delta.text = ""
+                grade.text = getString(R.string.c20_not_enough_data)
+                delta.text = summarize(snapshot.items)
                 reason.text = reasons(snapshot.items)
             }
             if (snapshot.isDemo) {

@@ -253,4 +253,53 @@ class GradeTest {
         Assert.eq(85, e.displayedOverall)
         Assert.eq(5, e.pointsToNext)
     }
+
+    // ── 측정 항목이 적으면 등급을 주지 않는다 (정직성 규칙)
+    // 실제 에뮬레이터에서 오일·브레이크액·전기·안전이 모두 측정 불가일 때
+    // 타이어 1개만으로 "A · 종합 8"을 만들어 낸 결함을 막는다.
+
+    @Test
+    fun `측정된 카테고리가 2개면 등급이 없다`() {
+        val categories = mapOf(
+            Category.POWER to 100,
+            Category.BRAKE_STEERING to 100,
+            Category.TIRE to null,
+            Category.ELECTRIC to null,
+            Category.SAFETY to null,
+        )
+        val e = Scoring.evaluate(categories, care = 50)
+        Assert.eq(null, e.grade)
+        Assert.eq(null, e.overall)
+        Assert.eq(null, e.displayedOverall)
+        Assert.eq(2, e.categories.values.filterNotNull().size)
+    }
+
+    @Test
+    fun `측정된 카테고리가 3개면 등급이 나온다`() {
+        val categories = mapOf(
+            Category.POWER to 100,
+            Category.BRAKE_STEERING to 100,
+            Category.TIRE to 100,
+            Category.ELECTRIC to null,
+            Category.SAFETY to null,
+        )
+        val e = Scoring.evaluate(categories, care = 50)
+        Assert.eq(Grade.A, e.grade)
+        Assert.eq(85, e.displayedOverall)
+    }
+
+    @Test
+    fun `전부 측정 불가면 등급이 없고 건강도 없다`() {
+        val categories = Category.entries.associateWith { null }
+        val e = Scoring.evaluate(categories, care = 50)
+        Assert.eq(null, e.grade)
+        Assert.eq(null, e.health)
+        // care 는 호출자가 넘긴 값이다(기록 없음 → 시즌 시작값 50). 등급·종합만 없으면 된다.
+        Assert.eq(50, e.care)
+    }
+
+    @Test
+    fun `MIN_MEASURED_CATEGORIES 는 3이다`() {
+        Assert.eq(3, Scoring.MIN_MEASURED_CATEGORIES)
+    }
 }

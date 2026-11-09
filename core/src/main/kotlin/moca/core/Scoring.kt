@@ -5,6 +5,9 @@ object Scoring {
     const val HEALTH_WEIGHT = 0.7
     const val CARE_WEIGHT = 0.3
     const val HEALTH_NOTICE = "S 이상은 차 상태 90점 이상일 때 받을 수 있어요"
+
+    /** 등급을 내려면 최소 이만큼의 카테고리가 측정돼야 한다(5개 중 3개). */
+    const val MIN_MEASURED_CATEGORIES = 3
     private const val EPS = 1e-9
 
     fun categories(snapshot: VehicleSnapshot): Map<Category, Int?> {
@@ -68,7 +71,10 @@ object Scoring {
         val health = if (count == 0) null else sum.toDouble() / count
         val hasRed = redCap
 
-        if (count == 0 || care == null) {
+        // 카테고리 5개 중 3개 미만만 측정되면 "차 상태"를 대표하지 못한다.
+        // 그런데도 등급을 주면 "등급 = 차 상태 보증"이라는 약속(계획 7장)이 깨진다.
+        // 측정 불가 항목이 절반을 넘으면 등급을 내지 않고 점검을 권한다.
+        if (count < MIN_MEASURED_CATEGORIES || care == null) {
             return Evaluation(
                 categories = categories,
                 health = health,

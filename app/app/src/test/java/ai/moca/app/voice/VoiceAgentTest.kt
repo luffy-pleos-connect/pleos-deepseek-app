@@ -272,7 +272,36 @@ class VoiceAgentTest {
         assertEquals(2, obj.getInt("total"))
     }
 
-    // ── 20. 도구 정의 8개, 이름 중복 없음
+    // ── 20. 도구 결과가 없을 때(측정 불가) 정직하게 답한다
+    @Test
+    fun `측정 불가 차량이면 등급 대신 점검을 권한다`() = runBlocking {
+        val tools = Tools(
+            vehicle = object : VehicleSource {
+                override suspend fun read(): VehicleSnapshot =
+                    VehicleSnapshot(emptyMap(), 1_700_000_000_000L, isDemo = false)
+                override fun cachedWarnings(): WarningSummary = WarningSummary.empty()
+                override fun startWatchingWarnings(onChange: (WarningSummary) -> Unit) = Unit
+                override fun stopWatchingWarnings() = Unit
+            },
+            isDemo = false,
+            drivingLimited = { false },
+            openScreen = { true },
+            evaluate = { readings, warnings, isDemo ->
+                ai.moca.app.score.ScoreBridge.evaluate(readings, warnings, isDemo)
+            },
+        )
+        val answer = VoiceAgent(
+            client = ScriptedClient(listOf(ChatResult.UpstreamError)),
+            tools = tools,
+            toolsJson = tools.definitions(),
+            consentCloud = false,
+        ).ask("내 차 등급 몇이야?", drivingMode = false)
+        assertTrue(answer.usedOffline)
+        assertTrue("점검을 권해야 한다: ${answer.text}", answer.text.contains("점검"))
+        assertFalse("없는 등급을 지어내면 안 된다", answer.text.contains("등급은"))
+    }
+
+    // ── 21. 도구 정의 8개, 이름 중복 없음
     @Test
     fun `도구 정의는 8개이고 이름이 유일하다`() {
         val defs = buildTools().definitions()

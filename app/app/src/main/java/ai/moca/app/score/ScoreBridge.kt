@@ -31,12 +31,20 @@ object ScoreBridge {
         warnings: WarningSummary,
         isDemo: Boolean,
     ): VehicleSnapshot {
+        // 항목이 아예 없으면(읽지 못함) "정상"이 아니라 "측정 불가"다.
+        // 이렇게 하지 않으면 엔진이 기본값(정상 차)으로 평가해 없는 등급을 만들어 낸다.
+        fun missingOrUnsupported(key: String): Boolean = readings[key]?.supported != true
         val unsupported = buildSet {
-            if (readings[PleosVehicleSource.KEY_OIL_ENGINE]?.supported == false) add(Item.ENGINE_OIL)
-            if (readings[PleosVehicleSource.KEY_BRAKE_FLUID]?.supported == false) add(Item.BRAKE_FLUID)
-            if (readings[PleosVehicleSource.KEY_WASHER]?.supported == false) add(Item.WASHER_FLUID)
-            if (readings[PleosVehicleSource.KEY_TIRE_LOW]?.supported == false) add(Item.TIRE)
-            if (readings[PleosVehicleSource.KEY_TELLTALES]?.supported == false) add(Item.TELLTALES)
+            if (missingOrUnsupported(PleosVehicleSource.KEY_OIL_ENGINE)) add(Item.ENGINE_OIL)
+            // 변속기 오일은 이번 단계에서 읽지 않는다 → 측정 불가.
+            add(Item.TRANSMISSION_OIL)
+            if (missingOrUnsupported(PleosVehicleSource.KEY_BRAKE_FLUID)) add(Item.BRAKE_FLUID)
+            if (missingOrUnsupported(PleosVehicleSource.KEY_WASHER)) add(Item.WASHER_FLUID)
+            if (missingOrUnsupported(PleosVehicleSource.KEY_TIRE_LOW)) add(Item.TIRE)
+            if (missingOrUnsupported(PleosVehicleSource.KEY_TELLTALES)) add(Item.TELLTALES)
+            if (readings[PleosVehicleSource.KEY_SOC]?.value == null) add(Item.ENERGY)
+            // 에어백 전개 여부는 이번 단계에서 읽지 않는다 → 측정 불가로 넘긴다.
+            add(Item.AIRBAG)
         }
 
         return VehicleSnapshot(

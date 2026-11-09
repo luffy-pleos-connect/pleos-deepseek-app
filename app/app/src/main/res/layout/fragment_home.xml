@@ -79,8 +79,9 @@
                         <TextView
                             android:id="@+id/totalValue"
                             style="@style/Pleos.Text.Title.M"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:maxLines="1"
                             android:text="@string/home_grade_placeholder" />
                     </LinearLayout>
 
@@ -100,8 +101,9 @@
                         <TextView
                             android:id="@+id/healthValue"
                             style="@style/Pleos.Text.Title.M"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:maxLines="1"
                             android:text="@string/home_grade_placeholder" />
                     </LinearLayout>
 
@@ -121,8 +123,9 @@
                         <TextView
                             android:id="@+id/careValue"
                             style="@style/Pleos.Text.Title.M"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:maxLines="1"
                             android:text="@string/home_grade_placeholder" />
                     </LinearLayout>
                 </LinearLayout>
