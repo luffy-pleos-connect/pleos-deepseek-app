@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/moca_screen_margin"
+    android:paddingTop="@dimen/moca_gap"
+    android:paddingEnd="@dimen/moca_screen_margin"
+    android:paddingBottom="@dimen/moca_gap">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            style="@style/Widget.Pleos.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/moca_card_padding">
+
+            <TextView
+                style="@style/Pleos.Text.Title.M"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/inspect_done" />
+
+            <TextView
+                android:id="@+id/resultGrade"
+                style="@style/Pleos.Text.Headline.L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:text="@string/home_grade_placeholder" />
+
+            <TextView
+                android:id="@+id/resultDelta"
+                style="@style/Pleos.Text.Body.M"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:textColor="@color/pleos_text_dark_secondary" />
+
+            <TextView
+                android:id="@+id/resultReason"
+                style="@style/Pleos.Text.Label.S"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:textColor="@color/pleos_text_dark_tertiary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/categoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:orientation="vertical" />
+
+        <Button
+            android:id="@+id/buttonToStatus"
+            style="@style/Widget.Pleos.Button.Secondary.M"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/inspect_go_status" />
+
+        <Button
+            android:id="@+id/buttonInspectAgain"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/inspect_again" />
+    </LinearLayout>
+</ScrollView>

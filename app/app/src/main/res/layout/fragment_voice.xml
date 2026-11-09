@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/moca_screen_margin"
+    android:paddingTop="@dimen/moca_gap"
+    android:paddingEnd="@dimen/moca_screen_margin"
+    android:paddingBottom="@dimen/moca_gap">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="@dimen/moca_gap"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/voiceState"
+            style="@style/Pleos.Text.Title.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/voice_hint_idle" />
+
+        <TextView
+            android:id="@+id/voiceOfflineBadge"
+            style="@style/Pleos.Text.Label.S"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/voice_offline_badge"
+            android:textColor="@color/pleos_text_dark_tertiary"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/micButton"
+            style="@style/Widget.Pleos.Button.Secondary.L"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_l"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/c09_ask_by_voice" />
+
+        <TextView
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/c18_health_threshold"
+            android:textColor="@color/pleos_text_dark_tertiary" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/Pleos.Text.Body.M"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="@string/voice_hint_idle"
+            android:textColor="@color/pleos_text_dark_secondary" />
+
+        <Button
+            android:id="@+id/suggestion1"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/voice_suggestion_1" />
+
+        <Button
+            android:id="@+id/suggestion2"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/voice_suggestion_2" />
+
+        <Button
+            android:id="@+id/suggestion3"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/voice_suggestion_3" />
+    </LinearLayout>
+</LinearLayout>

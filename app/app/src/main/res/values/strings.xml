@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MOCA</string>
+
+    <!-- C-01 ~ C-19 (계획 6.7) -->
+    <string name="c01_tagline">MOCA · 내 차를 키우는 차량 관리 파트너</string>
+    <string name="c02_value">관리한 만큼 쌓이는 내 차의 가치를 키워보세요</string>
+    <string name="c03_first_grade">점검하고 첫 등급 받기</string>
+    <string name="c04_next_grade">%1$s까지 %2$d점</string>
+    <string name="c05_unsupported">이 차는 지원하지 않아요</string>
+    <string name="c06_unmeasurable">측정 불가</string>
+    <string name="c07_bonus_today">오늘 첫 점검 +2</string>
+    <string name="c07_bonus_streak">7일 연속 점검 +5</string>
+    <string name="c07_bonus_fixed">%1$s 해결 +5</string>
+    <string name="c08_driving_limited">주행 중에는 화면 조작이 제한돼요</string>
+    <string name="c09_ask_by_voice">음성으로 물어보기</string>
+    <string name="c10_offline_voice">서버에 연결할 수 없어 오프라인 음성으로 답해요</string>
+    <string name="c11_practice_opponent">연습 상대와 대전해요</string>
+    <string name="c12_inspect_first">먼저 점검해 주세요</string>
+    <string name="c13_badge_demo">데모 데이터</string>
+    <string name="c14_stop_safely">안전한 곳에 정차한 뒤 점검을 받으세요</string>
+    <string name="c15_red_to_grade">빨간 경고등을 해결하면 %1$s까지 %2$d점</string>
+    <string name="c16_checking">확인해 볼게요</string>
+    <string name="c17_grade_up">%1$s → %2$s 등급 상승!</string>
+    <string name="c18_health_threshold">S 이상은 차 상태 90점 이상일 때 받을 수 있어요</string>
+    <string name="c19_disclaimer">MOCA는 정비 진단을 대신하지 않아요. 경고등이 켜지면 차량 설명서와 정비소에서 확인하세요</string>
+
+    <!-- 화면 -->
+    <string name="nav_home">홈</string>
+    <string name="nav_inspect">점검하기</string>
+    <string name="nav_status">상태관리</string>
+    <string name="nav_voice">AI 보이스</string>
+    <string name="nav_battle">대전하기</string>
+    <string name="nav_settings">설정</string>
+
+    <string name="home_title">내 차 등급</string>
+    <string name="home_grade_placeholder">—</string>
+    <string name="home_warning_none">주의 없음</string>
+    <string name="home_warning_count">주의 %1$d</string>
+    <string name="home_total">종합</string>
+    <string name="home_health">건강</string>
+    <string name="home_care">관리</string>
+    <string name="home_last_inspect">마지막 점검</string>
+    <string name="home_never_inspected">아직 점검한 적이 없어요</string>
+    <string name="home_tile_inspect_desc">부품 5개를 한 번에 확인해요</string>
+    <string name="home_tile_status_desc">카드와 할 일로 관리해요</string>
+    <string name="home_tile_voice_desc">차 상태를 음성으로 물어보세요</string>
+    <string name="home_tile_battle_desc">부품 라운드로 겨뤄요</string>
+
+    <string name="inspect_running">점검 중…</string>
+    <string name="inspect_done">점검 완료</string>
+    <string name="inspect_failed">점검에 실패했어요</string>
+    <string name="inspect_go_status">상태관리에서 보기</string>
+    <string name="inspect_again">다시 점검</string>
+
+    <string name="status_title">상태관리</string>
+    <string name="status_todo">할 일</string>
+    <string name="status_trend">최근 추이</string>
+
+    <string name="voice_title">AI 보이스</string>
+    <string name="voice_hint_idle">마이크를 누르고 말해 보세요</string>
+    <string name="voice_hint_listening">듣는 중…</string>
+    <string name="voice_hint_thinking">생각 중…</string>
+    <string name="voice_hint_speaking">말하는 중…</string>
+    <string name="voice_offline_badge">오프라인 음성</string>
+    <string name="voice_suggestion_1">내 차 등급 몇이야?</string>
+    <string name="voice_suggestion_2">이 경고등 뭐야?</string>
+    <string name="voice_suggestion_3">엔진오일 괜찮아?</string>
+    <string name="voice_suggestion_4">다음 등급까지 몇 점 남았어?</string>
+
+    <string name="battle_title">부품 대전</string>
+    <string name="battle_start">대전 시작</string>
+    <string name="battle_win">승리!</string>
+    <string name="battle_draw">무승부</string>
+    <string name="battle_lose">패배</string>
+    <string name="battle_again">다시</string>
+
+    <string name="settings_title">설정</string>
+    <string name="settings_nickname">닉네임</string>
+    <string name="settings_consent">데이터 동의</string>
+    <string name="settings_demo">데모 모드</string>
+    <string name="settings_delete_data">내 데이터 삭제</string>
+    <string name="settings_licenses">오픈소스 라이선스</string>
+    <string name="settings_about">앱 정보</string>
+
+    <string name="onboarding_title">MOCA를 시작해 볼까요?</string>
+    <string name="onboarding_consent_1">차량 상태로 점수를 계산해요</string>
+    <string name="onboarding_consent_2">음성 질문과 점수 요약을 서버를 거쳐 AI에 보내요</string>
+    <string name="onboarding_consent_3">대전 상대에게 닉네임·등급·점수가 보여요</string>
+    <string name="onboarding_agree">동의하고 시작</string>
+    <string name="onboarding_nickname">닉네임</string>
+    <string name="onboarding_skip">건너뛰기</string>
+
+    <string name="common_cancel">취소</string>
+    <string name="common_confirm">확인</string>
+    <string name="common_close">닫기</string>
+    <string name="common_loading">불러오는 중…</string>
+    <string name="placeholder_preparing">준비 중이에요</string>
+</resources>

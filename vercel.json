@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/snapshots", "destination": "/api/index" },
+    { "source": "/opponent", "destination": "/api/index" },
+    { "source": "/chat", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/index.mjs": { "maxDuration": 30 }
+  }
+}

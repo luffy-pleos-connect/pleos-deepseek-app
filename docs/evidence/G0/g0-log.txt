@@ -1,0 +1,11 @@
+--------- beginning of main
+11-09 07:15:07.095  5843  5843 I MOCA_G0 : INIT Vehicle.initialize() called
+11-09 07:15:07.384  5843  5843 I MOCA_G0 : REGISTER registerTelltales OK
+11-09 07:15:07.549  5843  5873 I MOCA_G0 : LISTENER count=0
+11-09 07:15:07.549  5843  5866 I MOCA_G0 : LISTENER count=0
+11-09 07:15:07.550  5843  5873 I MOCA_G0 : SOC value=100
+11-09 07:15:07.550  5843  5873 I MOCA_G0 : OIL FAIL Exception: java.lang.IllegalArgumentException: property ID is not in carPropertyConfig list, and so it is not supported: ENGINE_OIL_LEVEL
+11-09 07:15:07.550  5843  6072 I MOCA_G0 : GET_INFO count=0
+11-09 07:15:07.551  5843  5873 I MOCA_G0 : BRAKE_FLUID FAIL Exception: java.lang.IllegalArgumentException: property ID is not in carPropertyConfig list, and so it is not supported: 0x21400730
+11-09 07:15:07.555  5843  5873 I MOCA_G0 : CAP_TELLTALES config=CapabilityConfig(accessType=READ)
+11-09 07:15:07.561  5843  5866 I MOCA_G0 : CAP_WHEEL areas=[ai.pleos.playground.vehicle.api.model.area.WheelArea@4137faea, ai.pleos.playground.vehicle.api.model.area.WheelArea@4253c4df, ai.pleos.playground.vehicle.api.model.area.WheelArea@3b2f6830, ai.pleos.playground.vehicle.api.model.area.WheelArea@3e1c9fad]

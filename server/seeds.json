@@ -1,0 +1,95 @@
+[
+  {
+    "nickname": "새벽드라이버",
+    "categories": { "power": 100, "brake": 100, "tire": 100, "electric": 100, "safety": 100 },
+    "management": 90,
+    "total": 97.0,
+    "grade": "S+"
+  },
+  {
+    "nickname": "주말캠퍼",
+    "categories": { "power": 100, "brake": 100, "tire": 100, "electric": 100, "safety": 100 },
+    "management": 75,
+    "total": 92.5,
+    "grade": "S"
+  },
+  {
+    "nickname": "출근길요정",
+    "categories": { "power": 100, "brake": 100, "tire": 80, "electric": 100, "safety": 100 },
+    "management": 80,
+    "total": 91.2,
+    "grade": "S"
+  },
+  {
+    "nickname": "달리는곰",
+    "categories": { "power": 100, "brake": 100, "tire": 75, "electric": 100, "safety": 100 },
+    "management": 60,
+    "total": 84.5,
+    "grade": "A"
+  },
+  {
+    "nickname": "세차는사랑",
+    "categories": { "power": 100, "brake": 100, "tire": 100, "electric": 90, "safety": 100 },
+    "management": 50,
+    "total": 83.6,
+    "grade": "A"
+  },
+  {
+    "nickname": "초보운전3년차",
+    "categories": { "power": 60, "brake": 100, "tire": 100, "electric": 100, "safety": 100 },
+    "management": 70,
+    "total": 85.4,
+    "grade": "A"
+  },
+  {
+    "nickname": "퇴근길질주",
+    "categories": { "power": 60, "brake": 100, "tire": 75, "electric": 100, "safety": 100 },
+    "management": 52,
+    "total": 76.5,
+    "grade": "B"
+  },
+  {
+    "nickname": "가족여행러",
+    "categories": { "power": 100, "brake": 50, "tire": 100, "electric": 100, "safety": 100 },
+    "management": 85,
+    "total": 88.5,
+    "grade": "B",
+    "redCap": true
+  },
+  {
+    "nickname": "오일교체미루기",
+    "categories": { "power": 60, "brake": 100, "tire": 100, "electric": 90, "safety": 90 },
+    "management": 40,
+    "total": 73.6,
+    "grade": "B"
+  },
+  {
+    "nickname": "방치된세단",
+    "categories": { "power": 60, "brake": 100, "tire": 60, "electric": 90, "safety": 100 },
+    "management": 30,
+    "total": 66.4,
+    "grade": "C"
+  },
+  {
+    "nickname": "경고등수집가",
+    "categories": { "power": 75, "brake": 75, "tire": 75, "electric": 100, "safety": 90 },
+    "management": 20,
+    "total": 64.1,
+    "grade": "C"
+  },
+  {
+    "nickname": "주차장지킴이",
+    "categories": { "power": 60, "brake": 60, "tire": 60, "electric": 75, "safety": 100 },
+    "management": 10,
+    "total": 52.7,
+    "grade": "D"
+  },
+  {
+    "nickname": "라이벌드라이버",
+    "categories": { "power": 100, "brake": 100, "tire": 100, "electric": 90, "safety": 90 },
+    "management": 70,
+    "total": 88.2,
+    "grade": "A",
+    "demoOnly": true
+  }
+]

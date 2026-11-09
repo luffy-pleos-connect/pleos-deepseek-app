@@ -1,0 +1,108 @@
+package ai.moca.app
+
+import android.os.Bundle
+import android.widget.Button
+import ai.pleos.ds.PleosUxRestrictions
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.Fragment
+import ai.moca.app.data.Prefs
+import ai.moca.app.ui.BattleFragment
+import ai.moca.app.ui.HomeFragment
+import ai.moca.app.ui.InspectFragment
+import ai.moca.app.ui.OnboardingFragment
+import ai.moca.app.ui.SettingsFragment
+import ai.moca.app.ui.StatusFragment
+import ai.moca.app.ui.VoiceFragment
+
+/**
+ * FragmentActivity 1개 + Fragment 7개. NavHost 대신 수동 트랜잭션을 쓴다(의존성 최소화).
+ * 창 크기가 바뀌어도 Fragment 상태는 시스템이 복원한다(configChanges 로 막지 않는다).
+ */
+class MainActivity : FragmentActivity() {
+
+    private lateinit var prefs: Prefs
+    private lateinit var ux: PleosUxRestrictions
+    private var drivingLimited = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        prefs = (application as MocaApp).prefs
+        ux = PleosUxRestrictions(this) { state -> applyUxRestrictions(state) }
+
+        findViewById<Button>(R.id.tabHome).setOnClickListener { show(HOME_TAG) { HomeFragment() } }
+        findViewById<Button>(R.id.tabStatus).setOnClickListener { show(STATUS_TAG) { StatusFragment() } }
+        findViewById<Button>(R.id.tabVoice).setOnClickListener { show(VOICE_TAG) { VoiceFragment() } }
+        findViewById<Button>(R.id.tabBattle).setOnClickListener { show(BATTLE_TAG) { BattleFragment() } }
+        findViewById<Button>(R.id.tabSettings).setOnClickListener { show(SETTINGS_TAG) { SettingsFragment() } }
+
+        if (savedInstanceState == null) {
+            if (prefs.onboarded) show(HOME_TAG) { HomeFragment() } else show(ONBOARD_TAG) { OnboardingFragment() }
+        }
+    }
+
+    private fun applyUxRestrictions(state: PleosUxRestrictions.State) {
+        drivingLimited = state.distractionOptimized
+        // 주행 중: 점검·상태관리·대전 진입은 막고 홈·보이스는 남긴다(DS-01, F-20).
+        findViewById<Button>(R.id.tabStatus).isEnabled = !drivingLimited
+        findViewById<Button>(R.id.tabBattle).isEnabled = !drivingLimited
+    }
+
+    fun isDrivingLimited(): Boolean = drivingLimited
+
+    override fun onStart() {
+        super.onStart()
+        ux.start()
+    }
+
+    override fun onStop() {
+        ux.stop()
+        super.onStop()
+    }
+
+    fun goHome() = show(HOME_TAG) { HomeFragment() }
+
+    fun goStatus() = show(STATUS_TAG) { StatusFragment() }
+
+    fun goInspect() = show(INSPECT_TAG) { InspectFragment() }
+
+    fun goVoice() = show(VOICE_TAG) { VoiceFragment() }
+
+    fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
+
+    fun goOnboarding() = show(ONBOARD_TAG) { OnboardingFragment() }
+
+    private fun show(tag: String, create: () -> Fragment) {
+        val existing = supportFragmentManager.findFragmentByTag(tag)
+        val tx = supportFragmentManager.beginTransaction()
+        // 보이는 Fragment 를 hide 하고 새 것을 show 한다. 재생성 비용을 줄인다.
+        for (f in supportFragmentManager.fragments) tx.hide(f)
+        if (existing != null) {
+            tx.show(existing)
+        } else {
+            tx.add(R.id.navHost, create(), tag)
+        }
+        tx.commit()
+        updateDemoBadge()
+    }
+
+    private fun updateDemoBadge() {
+        val badge = findViewById<android.widget.TextView>(R.id.demoBadge)
+        badge.visibility = if (prefs.demoEnabled) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::prefs.isInitialized) updateDemoBadge()
+    }
+
+    private companion object {
+        const val HOME_TAG = "home"
+        const val STATUS_TAG = "status"
+        const val VOICE_TAG = "voice"
+        const val BATTLE_TAG = "battle"
+        const val SETTINGS_TAG = "settings"
+        const val ONBOARD_TAG = "onboarding"
+        const val INSPECT_TAG = "inspect"
+    }
+}

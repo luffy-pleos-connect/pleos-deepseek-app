@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/moca_screen_margin"
+    android:paddingTop="@dimen/moca_gap"
+    android:paddingEnd="@dimen/moca_screen_margin"
+    android:paddingBottom="@dimen/moca_gap">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- 좌: 등급 카드 -->
+        <LinearLayout
+            style="@style/Widget.Pleos.Card"
+                        android:id="@+id/gradeCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/moca_gap"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="@dimen/moca_card_padding">
+
+            <TextView
+                style="@style/Pleos.Text.Label.M"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/home_title"
+                android:textColor="@color/pleos_text_dark_tertiary" />
+
+            <TextView
+                android:id="@+id/gradeValue"
+                style="@style/Pleos.Text.Headline.L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:text="@string/home_grade_placeholder" />
+
+            <TextView
+                android:id="@+id/gradeHint"
+                style="@style/Pleos.Text.Body.M"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:text="@string/c03_first_grade"
+                android:textColor="@color/pleos_text_dark_secondary" />
+
+            <TextView
+                android:id="@+id/warningSummary"
+                style="@style/Pleos.Text.Body.M.Strong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:text="@string/home_warning_none"
+                android:textColor="@color/pleos_text_dark_primary" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_total"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+
+                    <TextView
+                        android:id="@+id/totalValue"
+                        style="@style/Pleos.Text.Title.M"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_grade_placeholder" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_health"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+
+                    <TextView
+                        android:id="@+id/healthValue"
+                        style="@style/Pleos.Text.Title.M"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_grade_placeholder" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_care"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+
+                    <TextView
+                        android:id="@+id/careValue"
+                        style="@style/Pleos.Text.Title.M"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_grade_placeholder" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/lastInspection"
+                style="@style/Pleos.Text.Label.S"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:text="@string/home_never_inspected"
+                android:textColor="@color/pleos_text_dark_tertiary" />
+        </LinearLayout>
+
+        <!-- 우: 기능 타일 2x2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+            style="@style/Widget.Pleos.Card"
+                                android:id="@+id/tileInspect"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/moca_tile_min_height"
+                    android:layout_marginEnd="@dimen/moca_gap"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="@dimen/moca_gap">
+
+                    <TextView
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nav_inspect" />
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/home_tile_inspect_desc"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+                </LinearLayout>
+
+                <LinearLayout
+            style="@style/Widget.Pleos.Card"
+                                android:id="@+id/tileStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/moca_tile_min_height"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="@dimen/moca_gap">
+
+                    <TextView
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nav_status" />
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/home_tile_status_desc"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <LinearLayout
+            style="@style/Widget.Pleos.Card"
+                                android:id="@+id/tileVoice"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/moca_tile_min_height"
+                    android:layout_marginEnd="@dimen/moca_gap"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="@dimen/moca_gap">
+
+                    <TextView
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nav_voice" />
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/home_tile_voice_desc"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+                </LinearLayout>
+
+                <LinearLayout
+            style="@style/Widget.Pleos.Card"
+                                android:id="@+id/tileBattle"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/moca_tile_min_height"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="@dimen/moca_gap">
+
+                    <TextView
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nav_battle" />
+
+                    <TextView
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/home_tile_battle_desc"
+                        android:textColor="@color/pleos_text_dark_tertiary" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

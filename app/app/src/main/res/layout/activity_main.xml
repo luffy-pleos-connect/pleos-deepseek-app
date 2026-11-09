@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pleos_background_primary"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/moca_screen_margin"
+        android:paddingTop="@dimen/moca_gap"
+        android:paddingEnd="@dimen/moca_screen_margin">
+
+        <TextView
+            android:id="@+id/headerTitle"
+            style="@style/Pleos.Text.Title.L"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:text="@string/app_name" />
+
+        <TextView
+            android:id="@+id/demoBadge"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:text="@string/c13_badge_demo"
+            android:textColor="@color/pleos_text_dark_secondary"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/navHost"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/tabBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/moca_screen_margin"
+        android:paddingTop="@dimen/moca_gap_small"
+        android:paddingEnd="@dimen/moca_screen_margin"
+        android:paddingBottom="@dimen/moca_gap">
+
+        <Button
+            android:id="@+id/tabHome"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginEnd="@dimen/moca_gap_small"
+            android:layout_weight="1"
+            android:text="@string/nav_home" />
+
+        <Button
+            android:id="@+id/tabStatus"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginEnd="@dimen/moca_gap_small"
+            android:layout_weight="1"
+            android:text="@string/nav_status" />
+
+        <Button
+            android:id="@+id/tabVoice"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginEnd="@dimen/moca_gap_small"
+            android:layout_weight="1"
+            android:text="@string/nav_voice" />
+
+        <Button
+            android:id="@+id/tabBattle"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_marginEnd="@dimen/moca_gap_small"
+            android:layout_weight="1"
+            android:text="@string/nav_battle" />
+
+        <Button
+            android:id="@+id/tabSettings"
+            style="@style/Widget.Pleos.Button.Primary.S"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_s"
+            android:layout_weight="1"
+            android:text="@string/nav_settings" />
+    </LinearLayout>
+</LinearLayout>

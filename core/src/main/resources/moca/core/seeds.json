@@ -1,0 +1,17 @@
+{
+  "seeds": [
+    { "nickname": "새벽드라이버", "power": 100, "brake": 100, "tire": 100, "electric": 100, "safety": 100, "care": 90, "overall": 97.0, "grade": "S_PLUS" },
+    { "nickname": "주말캠퍼", "power": 100, "brake": 100, "tire": 100, "electric": 100, "safety": 100, "care": 75, "overall": 92.5, "grade": "S" },
+    { "nickname": "출근길요정", "power": 100, "brake": 100, "tire": 80, "electric": 100, "safety": 100, "care": 80, "overall": 91.2, "grade": "S" },
+    { "nickname": "달리는곰", "power": 100, "brake": 100, "tire": 75, "electric": 100, "safety": 100, "care": 60, "overall": 84.5, "grade": "A" },
+    { "nickname": "세차는사랑", "power": 100, "brake": 100, "tire": 100, "electric": 90, "safety": 100, "care": 50, "overall": 83.6, "grade": "A" },
+    { "nickname": "초보운전3년차", "power": 60, "brake": 100, "tire": 100, "electric": 100, "safety": 100, "care": 70, "overall": 85.4, "grade": "A" },
+    { "nickname": "퇴근길질주", "power": 60, "brake": 100, "tire": 75, "electric": 100, "safety": 100, "care": 52, "overall": 76.5, "grade": "B" },
+    { "nickname": "가족여행러", "power": 100, "brake": 50, "tire": 100, "electric": 100, "safety": 100, "care": 85, "overall": 88.5, "grade": "B", "redCap": true },
+    { "nickname": "오일교체미루기", "power": 60, "brake": 100, "tire": 100, "electric": 90, "safety": 90, "care": 40, "overall": 73.6, "grade": "B" },
+    { "nickname": "방치된세단", "power": 60, "brake": 100, "tire": 60, "electric": 90, "safety": 100, "care": 30, "overall": 66.4, "grade": "C" },
+    { "nickname": "경고등수집가", "power": 75, "brake": 75, "tire": 75, "electric": 100, "safety": 90, "care": 20, "overall": 64.1, "grade": "C" },
+    { "nickname": "주차장지킴이", "power": 60, "brake": 60, "tire": 60, "electric": 75, "safety": 100, "care": 10, "overall": 52.7, "grade": "D" },
+    { "nickname": "라이벌드라이버", "power": 100, "brake": 100, "tire": 100, "electric": 90, "safety": 90, "care": 70, "overall": 88.2, "grade": "A", "demoOnly": true }
+  ]
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DS 간격 규칙: 가장자리 48dp, 컴포넌트 간격 24dp -->
+    <dimen name="moca_screen_margin">48dp</dimen>
+    <dimen name="moca_gap">24dp</dimen>
+    <dimen name="moca_gap_small">12dp</dimen>
+    <dimen name="moca_card_padding">32dp</dimen>
+    <dimen name="moca_tile_min_height">120dp</dimen>
+    <dimen name="moca_grade_card_min_width">360dp</dimen>
+</resources>

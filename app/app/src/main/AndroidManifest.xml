@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="true" />
+
+    <!-- 읽기 전용 차량 데이터 권한만. CONTROL_ 권한은 0개.
+         getTelltalesInfo/registerTelltales 는 공식 문서상 PRIVATE_CAR_SAFETY(signature|privileged)이나,
+         Pleos 에뮬레이터 2.1.0에서는 protectionLevel=normal 로 선언되어 있다(G0 실측).
+         실차에서 막히면 이 기능은 "연동 코드 구현, 실값 미확인"으로 표기한다. -->
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.CAR_INFO" />
+
+    <application
+        android:name=".MocaApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PleosConnect">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <!-- 주행 중에도 표시. 제한 항목은 PleosUxRestrictions 로 처리한다. -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:paddingStart="@dimen/moca_screen_margin"
+    android:paddingTop="@dimen/moca_gap"
+    android:paddingEnd="@dimen/moca_screen_margin"
+    android:paddingBottom="@dimen/moca_gap">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/Pleos.Text.Title.L"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/battle_title" />
+
+        <TextView
+            android:id="@+id/battleResult"
+            style="@style/Pleos.Text.Headline.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/c11_practice_opponent"
+            android:textColor="@color/pleos_text_dark_primary" />
+
+        <LinearLayout
+            android:id="@+id/roundContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:orientation="vertical" />
+
+        <Button
+            android:id="@+id/buttonStartBattle"
+            style="@style/Widget.Pleos.Button.Secondary.L"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_l"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/battle_start" />
+    </LinearLayout>
+</ScrollView>
