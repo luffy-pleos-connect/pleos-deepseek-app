@@ -301,7 +301,20 @@ class VoiceAgentTest {
         assertFalse("없는 등급을 지어내면 안 된다", answer.text.contains("등급은"))
     }
 
-    // ── 21. 도구 정의 8개, 이름 중복 없음
+    // ── 21. 추론형 응답 폴백
+    @Test
+    fun `content 가 비면 reasoning_content 를 답으로 쓴다`() = runBlocking {
+        val msg = JSONObject().apply {
+            put("role", "assistant")
+            put("content", "")
+            put("reasoning_content", "지금은 괜찮아요")
+        }
+        val answer = agent(ScriptedClient(listOf(ChatResult.Ok(msg)))).ask("상태 알려줘", drivingMode = false)
+        assertEquals("지금은 괜찮아요", answer.text)
+        assertFalse(answer.usedOffline)
+    }
+
+    // ── 22. 도구 정의 8개, 이름 중복 없음
     @Test
     fun `도구 정의는 8개이고 이름이 유일하다`() {
         val defs = buildTools().definitions()

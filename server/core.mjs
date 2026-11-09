@@ -182,9 +182,28 @@ async function callHive(env, payload, fetchImpl) {
     } catch {
       return { status: 502 };
     }
-    const content = parsed?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string' || content.length === 0) return { status: 502 };
-    return { status: 200, message: content };
+    const message = parsed?.choices?.[0]?.message;
+    if (!message || typeof message !== 'object') return { status: 502 };
+
+    // Hive(DeepSeek)는 도구 호출을 하면 content 가 비고 tool_calls 로 온다.
+    // 추론형 모델은 답을 reasoning_content 에 넣고 content 를 비우기도 한다.
+    // 앱은 message.tool_calls / message.content / message.reasoning_content 를 모두 읽는다.
+    const toolCalls = Array.isArray(message.tool_calls) && message.tool_calls.length > 0
+      ? message.tool_calls
+      : null;
+    const content = typeof message.content === 'string' ? message.content : '';
+    const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : '';
+    if (!toolCalls && content.length === 0 && reasoning.length === 0) return { status: 502 };
+
+    return {
+      status: 200,
+      message: {
+        role: message.role ?? 'assistant',
+        content,
+        reasoning_content: reasoning,
+        tool_calls: toolCalls,
+      },
+    };
   } catch (error) {
     return { status: error === TIMEOUT ? 504 : 502 };
   } finally {

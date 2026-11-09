@@ -220,7 +220,9 @@ test('POST /chat 정상 → 200 {message}, Hive 요청 파라미터 고정', asy
   });
   assert.equal(res.status, 200);
   const text = await res.text();
-  assert.deepEqual(JSON.parse(text), { message: '지금은 괜찮아요' });
+  assert.deepEqual(JSON.parse(text), {
+    message: { role: 'assistant', content: '지금은 괜찮아요', reasoning_content: '', tool_calls: null },
+  });
   assert.equal(text.includes('hive-key-should-not-leak'), false);
   assert.equal(captured.length, 1);
   assert.equal(captured[0].url, HIVE_URL);
@@ -353,4 +355,51 @@ test('스냅샷은 마지막 갱신 후 90일이 지나면 상대 풀에서 사�
   assert.equal(await store.getSnapshot(OTHER), null);
   const after = await getOpponent(h, DEV);
   assert.equal((await after.json()).isSeed, true);
+});
+
+test('POST /chat 도구 호출이 오면 tool_calls 를 보존한다', async () => {
+  const toolMessage = {
+    role: 'assistant',
+    content: '',
+    tool_calls: [
+      { id: 'call_1', type: 'function', function: { name: 'get_active_warnings', arguments: '{}' } },
+    ],
+  };
+  const h = harness({
+    env: { HIVE_API_KEY: 'k', HIVE_API_URL: HIVE_URL, HIVE_TIMEOUT_MS: '2000' },
+    fetch: async () => new Response(JSON.stringify({ choices: [{ message: toolMessage }] }), { status: 200 }),
+  });
+  const res = await postChat(h, { messages: [{ role: 'user', content: '경고등 뭐야' }] });
+  assert.equal(res.status, 200);
+  const body = JSON.parse(await res.text());
+  assert.equal(body.message.tool_calls.length, 1);
+  assert.equal(body.message.tool_calls[0].function.name, 'get_active_warnings');
+  assert.equal(body.message.content, '');
+});
+
+test('POST /chat 추론형 응답은 reasoning_content 로 대체한다', async () => {
+  const h = harness({
+    env: { HIVE_API_KEY: 'k', HIVE_API_URL: HIVE_URL, HIVE_TIMEOUT_MS: '2000' },
+    fetch: async () => new Response(
+      JSON.stringify({ choices: [{ message: { role: 'assistant', content: '', reasoning_content: '지금은 괜찮아요' } }] }),
+      { status: 200 },
+    ),
+  });
+  const res = await postChat(h, { messages: [{ role: 'user', content: '상태 알려줘' }] });
+  assert.equal(res.status, 200);
+  const body = JSON.parse(await res.text());
+  assert.equal(body.message.reasoning_content, '지금은 괜찮아요');
+  assert.equal(body.message.tool_calls, null);
+});
+
+test('POST /chat content·reasoning·tool_calls 가 모두 비면 502', async () => {
+  const h = harness({
+    env: { HIVE_API_KEY: 'k', HIVE_API_URL: HIVE_URL, HIVE_TIMEOUT_MS: '2000' },
+    fetch: async () => new Response(
+      JSON.stringify({ choices: [{ message: { role: 'assistant', content: '' } }] }),
+      { status: 200 },
+    ),
+  });
+  const res = await postChat(h, { messages: [{ role: 'user', content: '안녕' }] });
+  assert.equal(res.status, 502);
 });

@@ -69,7 +69,10 @@ class VoiceAgent(
 
             val toolCalls = message.optJSONArray("tool_calls")
             if (toolCalls == null || toolCalls.length() == 0) {
-                val text = message.optString("content").ifBlank { "확인했어요." }
+                // Hive(추론형)는 content 가 비고 reasoning_content 에 답을 넣기도 한다.
+                val text = message.optString("content").ifBlank {
+                    message.optString("reasoning_content").ifBlank { "확인했어요." }
+                }
                 return Answer(text, calledTools, usedOffline = false, fillerSpoken = fillerSpoken)
             }
 
