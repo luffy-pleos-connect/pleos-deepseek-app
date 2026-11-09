@@ -14,16 +14,39 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            // 키는 저장소 밖(~/moca-keys)에 있고 값은 로컬 파일에서 읽는다. 저장소·APK에 넣지 않는다.
+            val keyDir = File(System.getProperty("user.home"), "moca-keys")
+            val store = File(keyDir, "moca-release.jks")
+            if (store.exists()) {
+                val passFile = File(keyDir, "moca-release.pass")
+                val pass = if (passFile.exists()) passFile.readText().trim() else ""
+                storeFile = store
+                storePassword = pass
+                keyAlias = "moca"
+                keyPassword = pass
+            }
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("String", "SERVER_BASE_URL", "\"http://10.0.2.2:8787\"")
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "SERVER_BASE_URL", "\"https://moca.vercel.app\"")
         }
+    }
+
+    // JVM 단위 테스트에서도 org.json 이 동작하도록 실제 구현을 쓴다.
+    testOptions {
+        unitTests.isReturnDefaultValues = false
+        unitTests.all { it.systemProperty("org.json.simple", "true") }
     }
 
     buildFeatures {
@@ -57,4 +80,6 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
 
     testImplementation("junit:junit:4.13.2")
+    // Android 의 org.json 스텁 대신 실제 JSON 구현을 JVM 테스트에 쓴다.
+    testImplementation("org.json:json:20240303")
 }

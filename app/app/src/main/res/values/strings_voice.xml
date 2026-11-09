@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voice_badge_demo">데모 데이터</string>
+    <string name="voice_badge_offline">오프라인 음성</string>
+    <string name="voice_state_idle">대기</string>
+    <string name="voice_state_listening">듣는 중…</string>
+    <string name="voice_state_thinking">생각 중…</string>
+    <string name="voice_state_speaking">말하는 중…</string>
+    <string name="voice_hint_type">정차 중에는 글로도 물어볼 수 있어요</string>
+    <string name="voice_send">보내기</string>
+    <string name="voice_tool_chip_running">확인 중</string>
+    <string name="voice_tool_chip_done">확인 완료</string>
+    <string name="voice_recent_1">내 차 등급 몇이야?</string>
+    <string name="voice_recent_2">이 경고등 뭐야?</string>
+    <string name="voice_recent_3">엔진오일 괜찮아?</string>
+    <string name="voice_recent_4">다음 등급까지 몇 점 남았어?</string>
+    <string name="voice_permission_needed">마이크 권한이 필요해요. 글로 물어볼 수 있어요.</string>
+
+    <string name="battle_lobby_title">부품 대전</string>
+    <string name="battle_my_grade">내 등급</string>
+    <string name="battle_opponent">상대</string>
+    <string name="battle_practice">연습 상대</string>
+    <string name="battle_record">전적 %1$d승 %2$d무 %3$d패</string>
+    <string name="battle_round_title">라운드 %1$d · %2$s</string>
+    <string name="battle_round_pending">대기</string>
+    <string name="battle_round_win">승</string>
+    <string name="battle_round_lose">패</string>
+    <string name="battle_round_draw">무</string>
+    <string name="battle_skip">건너뛰기</string>
+    <string name="battle_result_win">승리!</string>
+    <string name="battle_result_draw">무승부</string>
+    <string name="battle_result_lose">패배</string>
+    <string name="battle_score_line">%1$d : %2$d</string>
+    <string name="battle_no_record">먼저 점검해 주세요</string>
+    <string name="battle_searching">상대를 찾는 중…</string>
+</resources>

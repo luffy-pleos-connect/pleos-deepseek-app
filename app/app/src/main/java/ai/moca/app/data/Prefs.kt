@@ -60,6 +60,21 @@ class Prefs(context: Context) {
         consentBattle = value
     }
 
+    /** 프로필별 전적(승·무·패). key 는 "battle_real"·"battle_demo". */
+    fun battleRecord(key: String): Triple<Int, Int, Int> = Triple(
+        sp.getInt("${key}_w", 0),
+        sp.getInt("${key}_d", 0),
+        sp.getInt("${key}_l", 0),
+    )
+
+    fun setBattleRecord(key: String, win: Int, draw: Int, lose: Int) {
+        sp.edit()
+            .putInt("${key}_w", win)
+            .putInt("${key}_d", draw)
+            .putInt("${key}_l", lose)
+            .apply()
+    }
+
     var demoScenarioId: String
         get() = sp.getString(KEY_DEMO_SCENARIO, "D3") ?: "D3"
         set(value) = sp.edit().putString(KEY_DEMO_SCENARIO, value).apply()

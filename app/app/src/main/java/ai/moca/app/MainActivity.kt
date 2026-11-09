@@ -75,13 +75,10 @@ class MainActivity : FragmentActivity() {
     private fun show(tag: String, create: () -> Fragment) {
         val existing = supportFragmentManager.findFragmentByTag(tag)
         val tx = supportFragmentManager.beginTransaction()
-        // 보이는 Fragment 를 hide 하고 새 것을 show 한다. 재생성 비용을 줄인다.
-        for (f in supportFragmentManager.fragments) tx.hide(f)
-        if (existing != null) {
-            tx.show(existing)
-        } else {
-            tx.add(R.id.navHost, create(), tag)
-        }
+        // 화면 전환마다 컨테이너의 모든 Fragment 를 replace 해 겹침을 없앤다.
+        // 상태는 Fragment 의 ViewModel·SavedState 가 아니라 화면 데이터 재조회로 복원한다.
+        val target = existing ?: create()
+        tx.replace(R.id.navHost, target, tag)
         tx.commit()
         updateDemoBadge()
     }

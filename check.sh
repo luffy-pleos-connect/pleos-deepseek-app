@@ -75,6 +75,32 @@ else
   row "빌드" SKIP "app/ Gradle 프로젝트 없음"
 fi
 
+say "앱 단위 테스트 (AT-08, 대전)"
+if [ -x app/gradlew ]; then
+  out="$(cd app && JAVA_HOME="$JAVA17" ./gradlew -q :app:testDebugUnitTest 2>&1)"
+  xml_fail=0; xml_total=0
+  if ls app/app/build/test-results/testDebugUnitTest/*.xml >/dev/null 2>&1; then
+    for f in app/app/build/test-results/testDebugUnitTest/*.xml; do
+      t=$(sed -n 's/.*tests="\([0-9]*\)".*/\1/p' "$f" | head -1)
+      fa=$(sed -n 's/.*failures="\([0-9]*\)".*/\1/p' "$f" | head -1)
+      er=$(sed -n 's/.*errors="\([0-9]*\)".*/\1/p' "$f" | head -1)
+      [ -n "$t" ] && xml_total=$((xml_total + t))
+      xml_fail=$((xml_fail + ${fa:-0} + ${er:-0}))
+    done
+  fi
+  if printf '%s' "$out" | grep -q 'FAILED'; then
+    row "AT-08·대전" FAIL "console/XML 참조"
+  elif [ "$xml_fail" -eq 0 ] && [ "$xml_total" -gt 0 ]; then
+    row "AT-08·대전" PASS "테스트 ${xml_total}개 통과"
+  elif [ "$xml_total" -gt 0 ]; then
+    row "AT-08·대전" FAIL "${xml_fail}개 실패"
+  else
+    row "AT-08·대전" SKIP "테스트 결과 XML 없음"
+  fi
+else
+  row "AT-08·대전" SKIP "app/ Gradle 프로젝트 없음"
+fi
+
 say "pleos_lint (PG-08)"
 LINT="$ROOT/../pleos-connect-design-system/.claude/skills/pleos-connect-ui-review/scripts/pleos_lint.py"
 if [ -f "$LINT" ] && [ -d app ]; then
@@ -124,7 +150,8 @@ fi
 
 # ─────────────────────────────── 5. APK 크기·서명
 say "APK (PF-07, D-14)"
-APK="app/build/outputs/apk/release/app-release.apk"
+APK="apk/MOCA팀_MOCA_release.apk"
+[ -f "$APK" ] || APK="app/app/build/outputs/apk/release/app-release.apk"
 if [ -f "$APK" ]; then
   mb=$(( $(stat -f%z "$APK") / 1048576 ))
   if [ "$mb" -le 30 ]; then row "PF-07" PASS "${mb}MB"; else row "PF-07" FAIL "${mb}MB (>30)"; fi

@@ -6,6 +6,9 @@ import ai.moca.app.vehicle.DemoScenarios
 import ai.moca.app.vehicle.PleosVehicleSource
 import ai.moca.app.vehicle.VehicleSource
 
+/** 계획 6.7 C-16. 도구 호출 직전에 말하는 필러. */
+const val FILLER_TEXT = "확인해 볼게요"
+
 class MocaApp : Application() {
 
     lateinit var prefs: Prefs
