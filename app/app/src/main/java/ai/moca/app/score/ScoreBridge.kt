@@ -39,7 +39,8 @@ object ScoreBridge {
             // 변속기 오일은 이번 단계에서 읽지 않는다 → 측정 불가.
             add(Item.TRANSMISSION_OIL)
             if (missingOrUnsupported(PleosVehicleSource.KEY_BRAKE_FLUID)) add(Item.BRAKE_FLUID)
-            if (missingOrUnsupported(PleosVehicleSource.KEY_WASHER)) add(Item.WASHER_FLUID)
+            // 워셔액·에어백은 이번 단계에서 읽지 않는다 → 측정 불가.
+            add(Item.WASHER_FLUID)
             if (missingOrUnsupported(PleosVehicleSource.KEY_TIRE_LOW)) add(Item.TIRE)
             if (missingOrUnsupported(PleosVehicleSource.KEY_TELLTALES)) add(Item.TELLTALES)
             if (readings[PleosVehicleSource.KEY_SOC]?.value == null) add(Item.ENERGY)

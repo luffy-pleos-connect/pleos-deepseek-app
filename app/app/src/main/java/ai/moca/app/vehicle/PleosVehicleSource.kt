@@ -32,6 +32,8 @@ class PleosVehicleSource(context: Context) : VehicleSource {
 
     private var listener: TelltaleInfoListener? = null
 
+    // Pleos SDK 리스너 콜백은 백그라운드 스레드에서 온다.
+    // 캐시 갱신은 volatile 대입만 하고, 화면 갱신은 메인스레드로 넘긴다(CalledFromWrongThreadException 방지).
     private val telltaleListener = object : TelltaleInfoListener {
         override fun onTelltaleInfoUpdated(telltales: Telltales?) {
             warningCache = summarize(telltales?.telltales.orEmpty(), isDemo = false)
@@ -206,11 +208,12 @@ class PleosVehicleSource(context: Context) : VehicleSource {
     override fun startWatchingWarnings(onChange: (WarningSummary) -> Unit) {
         ensureInit()
         if (listener != null) return
+        val main = android.os.Handler(android.os.Looper.getMainLooper())
         val wrapper = object : TelltaleInfoListener {
             override fun onTelltaleInfoUpdated(telltales: Telltales?) {
                 val summary = summarize(telltales?.telltales.orEmpty(), isDemo = false)
                 warningCache = summary
-                onChange(summary)
+                main.post { onChange(summary) }
             }
 
             override fun onFailed(e: Exception) {
