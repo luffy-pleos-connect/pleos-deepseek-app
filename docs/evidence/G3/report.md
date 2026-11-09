@@ -63,3 +63,12 @@ python3 ../pleos-connect-design-system/.claude/skills/pleos-connect-ui-review/sc
 
 - 2026-11-10 02:00 기준 **동결 선언**. 이후 심각도 3~4 버그만 고친다.
 - 동결 시점 테스트: core 167 / server 65 / app 28 / lint 0 / check.sh 12 PASS.
+
+## 시연 영상 녹화 시도 (2026-11-10 02:00)
+
+- `adb shell screenrecord --size 1920x1080 --bit-rate 8M` 은 **동작한다**(179초, 16.6MB 파일 생성).
+- 그러나 **headless + swiftshader 조합에서 시각 콘텐츠가 검게 녹화된다.** 1/10초 프레임 18장을 추출한 결과 대부분이 검은 화면이었고, 흰 배경 일부 프레임만 나왔다.
+- 원인: GPU 렌더러가 `-no-window` 모드에서 화면 합성 결과를 `screenrecord` 로 넘기지 못하는 것으로 보인다(추정).
+- 조치: **스크린샷(adb exec-out screencap) 기반 영상**으로 대체한다. `docs/submission/숏폼_MOCA_15s.mp4` 는 이 방식으로 제작했다.
+- 실사용자 시연 영상(움직이는 화면)은 **창 있는 환경 또는 실기기**가 필요하다. 사람 확인 항목으로 남긴다.
+- 삭제: 실패한 원본 `/tmp/moca_demo_raw.mp4` 는 저장소에 넣지 않았다.
