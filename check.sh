@@ -130,7 +130,8 @@ if [ ${#existing[@]} -gt 0 ]; then
 
   # CQ-07: 실명·키
   # 실명·계정·키만 잡는다. 업스트림 도메인은 비밀값이 아니므로 제외한다.
-  secret_hits="$(grep -rniE 'heodongun|/Users/[a-z0-9._-]+/|sk-[A-Za-z0-9]{16,}|HIVE_API_KEY *= *["'\'']' "${existing[@]}" docs 2>/dev/null | grep -v '/build/' | grep -v 'docs/plan/' || true)"
+  # 개인 홈 경로·API 키 형태만 잡는다(실명 자체는 저장소에 남기지 않는다).
+  secret_hits="$(grep -rniE '/Users/[a-z0-9._-]+/|sk-[A-Za-z0-9]{16,}|HIVE_API_KEY *= *["'\'']' "${existing[@]}" docs 2>/dev/null | grep -v '/build/' | grep -v 'docs/plan/' || true)"
   if [ -z "$secret_hits" ]; then row "CQ-07(비밀값)" PASS "0건"; else row "CQ-07(비밀값)" FAIL "$(printf '%s' "$secret_hits" | head -3 | tr '\n' ' ')"; fi
 
   # LY-06: hex 색

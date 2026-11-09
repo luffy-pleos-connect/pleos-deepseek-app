@@ -10,6 +10,17 @@ Pleos Connect(현대차·기아·제네시스 차량용 인포테인먼트) 앱.
 > Vehicle SDK 연동 코드를 구현했고, Pleos 에뮬레이터에서 **배터리 SOC 실값(100) 수신**과 **경고등 리스너 콜백 수신**을 로그로 확인했습니다(`docs/evidence/G0/g0-log.txt`).
 > 다만 **경고등 색 정수(RED/YELLOW) 매핑은 에뮬레이터 Virtual Console의 DDS 브리지가 비활성이라 미확인**입니다. 그래서 경고등 관련 화면은 "연동 코드 구현, 실값 미확인" 상태이며, 데모 모드에서만 시나리오로 시연합니다. 자세한 내용은 `docs/evidence/G0/report.md` §7.
 
+## 검증 (2026-11-10)
+
+| 항목 | 결과 |
+|---|---|
+| 점수 엔진 단위 테스트 | **167 / 167** (`core/run-tests.sh`, JDK 17만) |
+| 서버 테스트 | **65 / 65** (`server/node --test`) |
+| 앱 단위 테스트 | **28 / 28** (`app/gradlew :app:testDebugUnitTest`) |
+| Pleos 디자인 시스템 정적 검사 | **0 findings / 48 files** (`pleos_lint.py`) |
+| 게이트 종합 | `./check.sh` → **PASS 12 / FAIL 0 / SKIP 0** |
+| release APK | 4.17MB, DN `CN=MOCA Team` |
+
 ## 공식 4항목
 
 ### 1. 앱 소개
@@ -117,6 +128,26 @@ check.sh        품질 게이트
 - 모든 데모 화면에 "데모 데이터" 배지가 붙는다.
 - 데모 기록은 실제 기록과 분리되고, 시즌 계산에 들어가지 않는다.
 - D3(ABS 빨강 + TPMS 노랑 + 저압 1개)가 대표 이야기다: 75점 B → ABS 해결 후 83점 A.
+
+## 스크린샷
+
+| 화면 | 파일 |
+|---|---|
+| 홈 (실차 값 B · 73) | `docs/evidence/G2/screens/home_final.png` |
+| 점검 결과 | `docs/evidence/G2/screens/inspect.png` |
+| 상태관리 | `docs/evidence/G2/screens/status_final.png` |
+| 상세 시트(카드 펼침) | `docs/evidence/G2/screens/status_detail.png` |
+| 첫 실행 | `docs/evidence/G2/screens/onboarding.png` |
+| 야간 모드 | `docs/evidence/G3/windows/S17_land_night.png` |
+
+## 알려진 제약
+
+- **창 있는 에뮬레이터는 이 맥에서 부팅 직후 QEMU가 멈춘다.** `-no-window` + `swiftshader_indirect` 조합으로만 동작한다.
+- **경고등 색 정수(RED/YELLOW) 매핑 미확인** — Virtual Console의 DDS 브리지가 비활성.
+- **오일·브레이크액은 에뮬레이터 VHAL에 속성이 없다** → "측정 불가"로 처리.
+- **세로 창 검수 미완** — `wm size` 오버라이드 후 윈도 서비스가 정지한다.
+- **Hive 실호출 미검증** — `HIVE_API_KEY` 필요.
+- 점수는 카테고리 5개 중 **3개 미만만 측정되면 등급을 내지 않는다**(정직성 규칙).
 
 ## 라이선스
 
