@@ -151,14 +151,14 @@ fi
 
 # ─────────────────────────────── 5. APK 크기·서명
 say "APK (PF-07, D-14)"
-APK="apk/MOCA팀_MOCA_release.apk"
+APK="apk/해적단_MOCA_release.apk"
 [ -f "$APK" ] || APK="app/app/build/outputs/apk/release/app-release.apk"
 if [ -f "$APK" ]; then
   mb=$(( $(stat -f%z "$APK") / 1048576 ))
   if [ "$mb" -le 30 ]; then row "PF-07" PASS "${mb}MB"; else row "PF-07" FAIL "${mb}MB (>30)"; fi
   if [ -x "$SDK/build-tools/36.0.0/apksigner" ]; then
     dn="$("$SDK/build-tools/36.0.0/apksigner" verify --print-certs "$APK" 2>/dev/null | grep -m1 'certificate DN' || true)"
-    echo "$dn" | grep -qi 'CN=MOCA' && row "D-14(DN)" PASS "$dn" || row "D-14(DN)" FAIL "${dn:-서명 없음}"
+    echo "$dn" | grep -q 'CN=해적단' && row "D-14(DN)" PASS "$dn" || row "D-14(DN)" FAIL "${dn:-서명 없음}"
   else
     row "D-14(DN)" SKIP "apksigner 없음"
   fi

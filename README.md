@@ -19,7 +19,7 @@ Pleos Connect(현대차·기아·제네시스 차량용 인포테인먼트) 앱.
 | 앱 단위 테스트 | **28 / 28** (`app/gradlew :app:testDebugUnitTest`) |
 | Pleos 디자인 시스템 정적 검사 | **0 findings / 48 files** (`pleos_lint.py`) |
 | 게이트 종합 | `./check.sh` → **PASS 12 / FAIL 0 / SKIP 0** |
-| release APK | 4.17MB, DN `CN=MOCA Team` |
+| release APK | 4.17MB, DN `CN=해적단` |
 
 ## 공식 4항목
 
