@@ -62,11 +62,21 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         kotlinx.coroutines.delay(120)
         val readings = LinkedHashMap<String, ItemReading>()
 
-        readings += readItem(KEY_OIL_ENGINE) { cb -> vehicle.getSafety().getEngineOilLevelState(cb, ::fail) }
-        readings += readItem(KEY_BRAKE_FLUID) { cb -> vehicle.getSafety().getBrakeFluidLevelState(cb, ::fail) }
-        readings += readItem(KEY_WASHER) { cb -> vehicle.getSafety().hasLowWasherFluidWarning(cb, ::fail) }
-        readings += readItem(KEY_POWER_DOWN) { cb -> vehicle.getSafety().hasPowerDownWarningIndicator(cb, ::fail) }
-        readings += readItem(KEY_SOC) { cb -> vehicle.getEvBattery().getEvBatteryStateOfCharge(cb, ::fail) }
+        readings += readItem(KEY_OIL_ENGINE) { cb, onFail ->
+            vehicle.getSafety().getEngineOilLevelState(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readItem(KEY_BRAKE_FLUID) { cb, onFail ->
+            vehicle.getSafety().getBrakeFluidLevelState(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readItem(KEY_WASHER) { cb, onFail ->
+            vehicle.getSafety().hasLowWasherFluidWarning(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readItem(KEY_POWER_DOWN) { cb, onFail ->
+            vehicle.getSafety().hasPowerDownWarningIndicator(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readItem(KEY_SOC) { cb, onFail ->
+            vehicle.getEvBattery().getEvBatteryStateOfCharge(cb) { e -> onFail(noteOf(e)) }
+        }
         readings += readTireLowPressure()
         readings += readTirePressure()
         readings += readTelltales()
@@ -74,14 +84,15 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         VehicleSnapshot(readings, System.currentTimeMillis(), isDemo = false)
     }
 
-    private fun fail(e: Exception) {
+    private fun noteOf(e: Exception): String {
         Log.d(TAG, "read failed: ${e.javaClass.simpleName}: ${e.message}")
+        return if (e is IllegalArgumentException) "unsupported" else e.javaClass.simpleName
     }
 
     /** 콜백이 두 번 와도 한 번만 resume 한다. 시간 초과면 value=null. */
     private suspend fun readItem(
         key: String,
-        request: (cb: (Any?) -> Unit) -> Unit,
+        request: (cb: (Any?) -> Unit, onFail: (String) -> Unit) -> Unit,
     ): Pair<String, ItemReading> {
         val result = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
             suspendCancellableCoroutine<ItemReading?> { cont ->
@@ -92,12 +103,19 @@ class PleosVehicleSource(context: Context) : VehicleSource {
                         if (cont.isActive) cont.resume(toReading(key, value))
                     }
                 }
-                runCatching { request(cb) }
-                    .onFailure {
-                        if (!resumed) {
-                            resumed = true
-                            if (cont.isActive) cont.resume(ItemReading(key, supported = false, value = null, note = "unsupported"))
+                // SDK 는 실패를 콜백(onFailed)으로 알린다. 이 경로를 "미지원"으로 반드시 표시해야
+                // 점수 엔진이 그 항목을 계산에서 빼고, 측정 항목이 3개 미만이면 등급을 내지 않는다.
+                val fail: (String) -> Unit = { note ->
+                    if (!resumed) {
+                        resumed = true
+                        if (cont.isActive) {
+                            cont.resume(ItemReading(key, supported = false, value = null, note = note))
                         }
+                    }
+                }
+                runCatching { request(cb, fail) }
+                    .onFailure { e ->
+                        fail(if (e is IllegalArgumentException) "unsupported" else e.javaClass.simpleName)
                     }
             }
         }

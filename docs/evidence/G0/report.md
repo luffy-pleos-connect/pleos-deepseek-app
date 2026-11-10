@@ -136,3 +136,23 @@ I MOCA_G0 : CAP_WHEEL areas=[WheelArea x4]
 1. G0 잔여: DDS 브리지 활성화 방법을 Pleos 문서에서 찾고, 안 되면 사무국에 사람이 문의(V9에 항목 추가).
 2. G1: 서버·:core·check.sh — SDK·에뮬레이터 불필요. 서브에이전트가 진행 중.
 3. G2: 경고등 색 정수를 모르므로 **색 정수 → RED/YELLOW 매핑을 설정값으로 두고**, 기본값은 AAR enum(`TelltaleColor.RED=4` 추정)과 실측 전 가정을 코드 주석·문서에 명시한다. 데모 시나리오는 색 정수에 의존하지 않게 `TelltaleColor` enum 기반으로 설계한다(가능한 경우).
+
+## 10. 후속 발견 (2026-11-10 10:20) — `onFailed` 경로 버그
+
+G0 이후 앱을 만들면서 **중대한 버그**를 발견했다.
+
+- 증상: 오일·브레이크액이 `IllegalArgumentException: property ID is not in carPropertyConfig list` 로 실패하는데도
+  앱이 그 항목을 `supported=true` 로 기록해, 점수 엔진이 "정상"으로 계산했다.
+- 결과: 측정 불가 항목만 있는데도 **"A · 종합 85"** 같은 없는 등급을 화면에 표시했다.
+- 원인: `PleosVehicleSource.readItem` 이 **SDK의 `onFailed` 콜백을 연결하지 않고** 콜백만 기다렸다.
+  시간 초과 시 `supported=true, note="timeout"` 으로 남겨, 실패와 시간 초과를 구분하지 못했다.
+- 수정: `readItem(key) { cb, onFail -> ... }` 로 `onFailed` 를 연결하고 `IllegalArgumentException` 은
+  `unsupported`, 그 외는 예외 클래스명으로 기록해 `supported=false` 로 넘긴다.
+- 검증(실측 로그):
+  ```
+  sup={oil_engine=false, brake_fluid=false, washer=false, power_down=true,
+       soc=true, tire_low=true, tire_kpa=true, telltales=true}
+  grade=null cats={POWER=null, BRAKE_STEERING=null, TIRE=20, ELECTRIC=100, SAFETY=null}
+  ```
+  화면: `—` + **"이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요"**
+- 이것이 "없는 등급을 만들지 않는다"는 원칙의 실제 구현이다. 데모 모드에서는 시나리오 값으로 정상 등급이 나온다.
