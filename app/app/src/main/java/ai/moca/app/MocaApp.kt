@@ -29,6 +29,8 @@ class MocaApp : Application() {
     }
 
     /** 현재 활성 프로필의 차량 소스. */
-    fun vehicle(): VehicleSource =
-        if (prefs.demoEnabled) DemoScenarios.source(prefs.demoScenarioId) else realVehicle
+    fun vehicle(): VehicleSource {
+        android.util.Log.i("MOCA_DEMO", "demoEnabled=" + prefs.demoEnabled + " scenario=" + prefs.demoScenarioId)
+        return if (prefs.demoEnabled) DemoScenarios.source(prefs.demoScenarioId) else realVehicle
+    }
 }

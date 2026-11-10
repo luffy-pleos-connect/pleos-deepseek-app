@@ -68,6 +68,14 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
 
     private var skipRequested = false
 
+    /** 디버그 자동 시연용: 상대를 찾은 뒤 대전을 시작한다. */
+    fun autoStart() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            kotlinx.coroutines.delay(1200)
+            if (opponent != null && myEvaluation?.grade != null) startBattle()
+        }
+    }
+
     private suspend fun loadLobby() {
         val app = requireActivity().application as MocaApp
         val source = app.vehicle()
@@ -113,7 +121,14 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         roundContainer.removeAllViews()
         startButton.isEnabled = false
 
-        val result = Battle.judge(mine, opponentEvaluation(theirs))
+        val raw = Battle.judge(mine, opponentEvaluation(theirs))
+        // 데모 프로필은 계획 10장의 고정 진행을 쓴다(D3·D5 역전승). 실제 프로필은 계산 그대로.
+        val app = requireActivity().application as MocaApp
+        val result = if (app.prefs.demoEnabled) {
+            moca.core.Demo.applyFixedRounds(raw, app.prefs.demoScenarioId)
+        } else {
+            raw
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             skipButton.visibility = View.VISIBLE
@@ -127,7 +142,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             startButton.isEnabled = true
             startButton.text = getString(R.string.battle_again)
 
-            val app = requireActivity().application as MocaApp
             BattleRepository(app.prefs, ApiClient(app.prefs)).record(
                 win = result.winner == BattleSide.MINE,
                 draw = result.winner == BattleSide.DRAW,
@@ -192,7 +206,13 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             BattleSide.THEIRS -> getString(R.string.battle_result_lose)
             BattleSide.DRAW -> getString(R.string.battle_result_draw)
         }
-        resultText.text = "$text  (${result.myWins} : ${result.theirWins})"
+        val app = requireActivity().application as MocaApp
+        val suffix = if (app.prefs.demoEnabled && moca.core.Demo.fixedBattleRounds(app.prefs.demoScenarioId) != null) {
+            "  ·  데모 시나리오"
+        } else {
+            ""
+        }
+        resultText.text = "$text  (${result.myWins} : ${result.theirWins})$suffix"
         resultText.setTextColor(
             ContextCompat.getColor(
                 requireContext(),

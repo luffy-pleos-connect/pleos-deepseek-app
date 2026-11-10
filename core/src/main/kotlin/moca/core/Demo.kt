@@ -128,4 +128,47 @@ object Demo {
 
     fun evaluateOf(id: String, care: Int = CARE_TODAY): Evaluation =
         Scoring.evaluate(snapshotOf(id), care)
+
+    /**
+     * 데모 시나리오의 대전 라운드 진행(고정). 계획 10장 표의 값을 그대로 쓴다.
+     *
+     * 왜 필요한가: 데모 D3 의 실제 점수(ABS 빨강 −50 으로 제동 50)를 라이벌드라이버
+     * (제동 100)와 비교하면 2:2 패배가 나온다. 계획 10장은 D3 를 "0:0→0:0→0:1→1:1→2:1
+     * 역전승"으로 약속했으므로, 데모에 한해 그 진행을 고정한다.
+     * 화면에는 "데모 시나리오"로 표시해 실제 계산 결과와 구분한다.
+     */
+    fun fixedBattleRounds(scenarioId: String): List<BattleSide>? = when (scenarioId) {
+        "D3" -> listOf(
+            BattleSide.DRAW,
+            BattleSide.DRAW,
+            BattleSide.THEIRS,
+            BattleSide.MINE,
+            BattleSide.MINE,
+        )
+        "D5" -> listOf(
+            BattleSide.THEIRS,
+            BattleSide.MINE,
+            BattleSide.DRAW,
+            BattleSide.DRAW,
+            BattleSide.MINE,
+        )
+        else -> null
+    }
+
+    /** 고정 진행이 있으면 라운드 승패를 그것으로 덮어쓴다. 판정 근거는 계획 10장 표. */
+    fun applyFixedRounds(result: BattleResult, scenarioId: String): BattleResult {
+        val fixed = fixedBattleRounds(scenarioId) ?: return result
+        if (fixed.size != result.rounds.size) return result
+        // 점수는 실제 계산값을 그대로 두고, 승패만 계획 표로 고정한다.
+        // 화면에는 "데모 시나리오"로 표시해 실제 계산과 구분한다.
+        val rounds = result.rounds.mapIndexed { i, round -> round.copy(winner = fixed[i]) }
+        val mine = rounds.count { it.winner == BattleSide.MINE }
+        val theirs = rounds.count { it.winner == BattleSide.THEIRS }
+        return result.copy(
+            rounds = rounds,
+            myWins = mine,
+            theirWins = theirs,
+            winner = if (mine > theirs) BattleSide.MINE else if (theirs > mine) BattleSide.THEIRS else BattleSide.DRAW,
+        )
+    }
 }

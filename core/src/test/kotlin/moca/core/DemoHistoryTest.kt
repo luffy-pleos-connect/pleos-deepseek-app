@@ -216,4 +216,38 @@ class DemoHistoryTest {
     fun sevenScenariosAreD0ThroughD6() {
         Assert.eq(listOf("D0", "D1", "D2", "D3", "D4", "D5", "D6"), Demo.scenarios().map { it.first.id })
     }
+
+    // 데모 고정 진행이 계획 10장 표와 같은지 검증한다.
+    @Test
+    fun demoFixedRoundsMatchPlanTable() {
+        Assert.eq(
+            listOf(BattleSide.DRAW, BattleSide.DRAW, BattleSide.THEIRS, BattleSide.MINE, BattleSide.MINE),
+            Demo.fixedBattleRounds("D3"),
+        )
+        Assert.eq(
+            listOf(BattleSide.THEIRS, BattleSide.MINE, BattleSide.DRAW, BattleSide.DRAW, BattleSide.MINE),
+            Demo.fixedBattleRounds("D5"),
+        )
+        Assert.eq(null, Demo.fixedBattleRounds("D0"))
+    }
+
+    @Test
+    fun demoD3FixedRoundsEndInComebackWin() {
+        val mine = Scoring.evaluate(Demo.snapshotOf("D3"), Demo.careOf("D3", Demo.ANCHOR).score)
+        val rival = Seeds.byNickname("라이벌드라이버")!!.evaluation()
+        val raw = Battle.judge(mine, rival)
+        val fixed = Demo.applyFixedRounds(raw, "D3")
+        Assert.eq(2, fixed.myWins)
+        Assert.eq(1, fixed.theirWins)
+        Assert.eq(BattleSide.MINE, fixed.winner)
+        // 누적 진행이 계획 표와 같아야 한다.
+        var m = 0
+        var t = 0
+        val progression = fixed.rounds.map { r ->
+            if (r.winner == BattleSide.MINE) m++
+            if (r.winner == BattleSide.THEIRS) t++
+            "$m:$t"
+        }
+        Assert.eq(listOf("0:0", "0:0", "0:1", "1:1", "2:1"), progression)
+    }
 }
