@@ -165,6 +165,14 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         r.startListening(intent)
     }
 
+    /** 디버그 자동 시연에서 호출한다. 화면이 준비된 뒤 질문을 넣는다. */
+    fun autoAsk(question: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            kotlinx.coroutines.delay(800)
+            ask(question)
+        }
+    }
+
     private fun ask(question: String) {
         if (busy) return
         val runner = agent ?: return

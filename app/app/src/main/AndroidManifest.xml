@@ -18,6 +18,9 @@
     <!-- 보이스: 음성 인식. 주행 중에는 PleosUxRestrictions 로 진입을 막는다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- 서버(/chat·/snapshots·/opponent) 통신. HTTPS 는 release, HTTP 는 디버그 전용 설정. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MocaApp"
         android:allowBackup="false"

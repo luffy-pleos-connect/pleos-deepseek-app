@@ -25,6 +25,7 @@ class ApiClient(
     override suspend fun chat(body: JSONObject): ChatResult = withContext(Dispatchers.IO) {
         var conn: HttpURLConnection? = null
         try {
+            android.util.Log.i("MOCA_NET", "POST " + baseUrl + "/chat")
             val url = URL("$baseUrl/chat")
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -50,6 +51,7 @@ class ApiClient(
                 else -> ChatResult.UpstreamError
             }
         } catch (e: Exception) {
+            android.util.Log.e("MOCA_NET", "chat failed", e)
             ChatResult.UpstreamError
         } finally {
             conn?.disconnect()
@@ -75,10 +77,14 @@ class ApiClient(
                 connectTimeout = OPPONENT_TIMEOUT_MS
                 readTimeout = OPPONENT_TIMEOUT_MS
             }
-            if (conn.responseCode != 200) return@withContext null
+            if (conn.responseCode != 200) {
+                android.util.Log.w("MOCA_NET", "opponent ${'$'}{conn.responseCode}")
+                return@withContext null
+            }
             val text = conn.inputStream.bufferedReader().use { it.readText() }
             runCatching { JSONObject(text) }.getOrNull()
         } catch (e: Exception) {
+            android.util.Log.e("MOCA_NET", "opponent failed", e)
             null
         } finally {
             conn?.disconnect()

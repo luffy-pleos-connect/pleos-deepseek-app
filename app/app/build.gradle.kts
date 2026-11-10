@@ -32,7 +32,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "SERVER_BASE_URL", "\"http://10.0.2.2:8787\"")
+            buildConfigField("String", "SERVER_BASE_URL", "\"http://127.0.0.1:8787\"")
         }
         release {
             signingConfig = signingConfigs.getByName("release")

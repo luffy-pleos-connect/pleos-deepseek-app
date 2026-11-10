@@ -28,3 +28,8 @@ research/
 
 # G0 스파이크용 복사본 (제출물 아님)
 sample/
+
+# 환경변수 (키는 절대 커밋하지 않는다)
+.env
+.env.local
+.env.*.local

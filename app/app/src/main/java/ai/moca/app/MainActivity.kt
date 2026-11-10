@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.widget.Button
 import ai.pleos.ds.PleosUxRestrictions
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.fragment.app.Fragment
 import ai.moca.app.data.Prefs
 import ai.moca.app.ui.BattleFragment
@@ -27,6 +30,10 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        findViewById<android.view.View>(android.R.id.content).setOnTouchListener { _, e ->
+            android.util.Log.i("MOCA_TOUCH", "touch ${e.action} ${e.x},${e.y}")
+            false
+        }
         prefs = (application as MocaApp).prefs
         ux = PleosUxRestrictions(this) { state -> applyUxRestrictions(state) }
 
@@ -38,6 +45,12 @@ class MainActivity : FragmentActivity() {
 
         if (savedInstanceState == null) {
             if (prefs.onboarded) show(HOME_TAG) { HomeFragment() } else show(ONBOARD_TAG) { OnboardingFragment() }
+        }
+
+        // 디버그 전용 자동 시연(adb 입력이 전달되지 않는 이 에뮬레이터에서 녹화하기 위한 것).
+        // release 빌드에는 포함되지 않는다.
+        if (intent.getBooleanExtra("moca_autodemo", false) && BuildConfig.DEBUG) {
+            viewLifecycleScopeAutoDemo()
         }
     }
 
@@ -58,6 +71,34 @@ class MainActivity : FragmentActivity() {
     override fun onStop() {
         ux.stop()
         super.onStop()
+    }
+
+    private fun viewLifecycleScopeAutoDemo() {
+        lifecycleScope.launch {
+            delay(1500)
+            prefs.consentData = true
+            prefs.consentCloud = true
+            prefs.applyBattleConsent(true)
+            android.util.Log.i("MOCA_AUTODEMO", "start")
+            prefs.onboarded = true
+            goHome()
+            delay(4000)
+            goInspect()
+            delay(5000)
+            goStatus()
+            delay(4000)
+            goBattle()
+            delay(5000)
+            goVoice()
+            delay(5000)
+            autoAskVoice("경고등 뭐야?")
+        }
+    }
+
+    /** 보이스 화면이 뜬 뒤 자동으로 질문을 넣는다(디버그 전용). */
+    private fun autoAskVoice(question: String) {
+        val f = supportFragmentManager.findFragmentByTag(VOICE_TAG) as? VoiceFragment ?: return
+        f.autoAsk(question)
     }
 
     fun goHome() = show(HOME_TAG) { HomeFragment() }

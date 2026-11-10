@@ -55,8 +55,15 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
             val worstCategory = eval.categories.entries
                 .filter { it.value != null }
                 .minByOrNull { it.value!! }
+            val unmeasured = eval.categories.count { it.value == null }
             worst.text = when {
+                // 측정된 항목이 하나도 없으면 정상이라고 말하지 않는다.
                 worstCategory == null -> getString(R.string.c06_unmeasurable)
+                // 일부만 측정됐으면 "모두 정상"이라고 단정하지 않는다 — 측정 불가 항목을 함께 알린다.
+                unmeasured > 0 && worstCategory.value!! >= 100 ->
+                    "측정된 항목은 정상이에요. ${unmeasured}개 항목은 이 차에서 읽을 수 없어요."
+                unmeasured > 0 ->
+                    "${worstCategory.key.label}부터 보면 좋아요 (${worstCategory.value}점) · ${unmeasured}개 항목은 측정 불가"
                 worstCategory.value!! >= 100 -> "지금은 모두 정상 범위예요"
                 else -> "${worstCategory.key.label}부터 보면 좋아요 (${worstCategory.value}점)"
             }
