@@ -6,6 +6,7 @@ import ai.moca.app.vehicle.VehicleSnapshot
 import ai.moca.app.vehicle.VehicleSource
 import ai.moca.app.vehicle.WarningSummary
 import moca.core.Evaluation
+import moca.core.FixAction
 import moca.core.Scoring
 import org.json.JSONArray
 import org.json.JSONObject
@@ -35,6 +36,7 @@ class VoiceAgentTest {
         scenario: DemoScenario = DemoScenario.D3,
         driving: Boolean = false,
         screens: MutableList<String> = mutableListOf(),
+        startFix: suspend (FixAction) -> String = { """{"ok":true,"result":"NAVI_OPENED"}""" },
     ): Tools {
         val vehicle = FakeVehicle(scenario)
         return Tools(
@@ -43,6 +45,7 @@ class VoiceAgentTest {
             drivingLimited = { driving },
             openScreen = { s -> screens += s; true },
             evaluate = { readings, warnings, isDemo -> evaluate(readings, warnings, isDemo) },
+            startFix = startFix,
         )
     }
 
@@ -289,6 +292,7 @@ class VoiceAgentTest {
             evaluate = { readings, warnings, isDemo ->
                 ai.moca.app.score.ScoreBridge.evaluate(readings, warnings, isDemo)
             },
+            startFix = { """{"ok":true,"result":"NAVI_OPENED"}""" },
         )
         val answer = VoiceAgent(
             client = ScriptedClient(listOf(ChatResult.UpstreamError)),
@@ -358,5 +362,28 @@ class VoiceAgentTest {
         }
         assertEquals(names.size, names.toSet().size)
         assertTrue(names.contains("start_navigation_to_service"))
+    }
+
+    @Test
+    fun `정비소 안내 도구는 startFix 의 JSON 을 그대로 돌려준다`() = runBlocking {
+        val seen = mutableListOf<FixAction>()
+        val json = """{"ok":true,"result":"NAVI_OPENED","message":"내비게이션 검색을 열었어요"}"""
+        val tools = buildTools(startFix = { action ->
+            seen += action
+            json
+        })
+        val out = tools.execute("start_navigation_to_service", null)
+        assertEquals(listOf(FixAction.REPAIR_SHOP), seen)
+        assertEquals(json, out)
+        assertFalse(out.contains("not_implemented"))
+    }
+
+    @Test
+    fun `정비소 안내 도구는 실패 JSON 도 그대로 전달한다`() = runBlocking {
+        val json = """{"ok":false,"result":"FAILED","message":"내비게이션에서 직접 찾아 주세요"}"""
+        val out = buildTools(startFix = { json }).execute("start_navigation_to_service", null)
+        val obj = JSONObject(out)
+        assertFalse(obj.getBoolean("ok"))
+        assertEquals("FAILED", obj.getString("result"))
     }
 }

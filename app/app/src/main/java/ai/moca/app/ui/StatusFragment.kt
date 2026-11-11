@@ -21,6 +21,10 @@ import moca.core.Evaluation
  */
 class StatusFragment : Fragment(R.layout.fragment_status) {
 
+    /** 홈 카테고리 줄이 넘긴 [Category.name]. 이번 과제에서는 받아 두기만 한다. */
+    val requestedCategory: String?
+        get() = arguments?.getString(ARG_CATEGORY)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val app = requireActivity().application as MocaApp
@@ -248,5 +252,9 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
             )
             setPadding(0, 16, 0, 16)
         }
+    }
+
+    companion object {
+        const val ARG_CATEGORY = "category"
     }
 }

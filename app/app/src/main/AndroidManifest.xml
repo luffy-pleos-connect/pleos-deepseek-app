@@ -15,6 +15,11 @@
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
     <uses-permission android:name="pleos.car.permission.CAR_INFO" />
 
+    <!-- NaviHelper: 경로·검색은 S1, 검색 화면은 requestNavigationScreen (NAVI_CUSTOM_MAP). -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
+
     <!-- 보이스: 음성 인식. 주행 중에는 PleosUxRestrictions 로 진입을 막는다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 

@@ -38,58 +38,49 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <LinearLayout
+    <RadioGroup
         android:id="@+id/tabBar"
+        style="@style/Widget.Pleos.Segmented"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/moca_screen_margin"
-        android:paddingTop="@dimen/moca_gap_small"
-        android:paddingEnd="@dimen/moca_screen_margin"
-        android:paddingBottom="@dimen/moca_gap">
+        android:layout_marginStart="@dimen/moca_screen_margin"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:layout_marginEnd="@dimen/moca_screen_margin"
+        android:layout_marginBottom="@dimen/moca_gap"
+        android:checkedButton="@+id/tabHome">
 
-        <Button
+        <RadioButton
             android:id="@+id/tabHome"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Segmented.Item"
             android:layout_width="0dp"
-            android:layout_height="@dimen/pleos_button_height_s"
-            android:layout_marginEnd="@dimen/moca_gap_small"
             android:layout_weight="1"
             android:text="@string/nav_home" />
 
-        <Button
+        <RadioButton
             android:id="@+id/tabStatus"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Segmented.Item"
             android:layout_width="0dp"
-            android:layout_height="@dimen/pleos_button_height_s"
-            android:layout_marginEnd="@dimen/moca_gap_small"
             android:layout_weight="1"
             android:text="@string/nav_status" />
 
-        <Button
+        <RadioButton
             android:id="@+id/tabVoice"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Segmented.Item"
             android:layout_width="0dp"
-            android:layout_height="@dimen/pleos_button_height_s"
-            android:layout_marginEnd="@dimen/moca_gap_small"
             android:layout_weight="1"
             android:text="@string/nav_voice" />
 
-        <Button
+        <RadioButton
             android:id="@+id/tabBattle"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Segmented.Item"
             android:layout_width="0dp"
-            android:layout_height="@dimen/pleos_button_height_s"
-            android:layout_marginEnd="@dimen/moca_gap_small"
             android:layout_weight="1"
             android:text="@string/nav_battle" />
 
-        <Button
+        <RadioButton
             android:id="@+id/tabSettings"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Segmented.Item"
             android:layout_width="0dp"
-            android:layout_height="@dimen/pleos_button_height_s"
             android:layout_weight="1"
             android:text="@string/nav_settings" />
-    </LinearLayout>
+    </RadioGroup>
 </LinearLayout>

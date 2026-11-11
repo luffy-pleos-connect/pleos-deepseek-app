@@ -1,0 +1,2 @@
+mCurrentFocus=Window{5238333 u10 ai.pleos.spike.s1/ai.pleos.spike.s1.MainActivity}
+mFocusedApp=ActivityRecord{782b0f2 u10 ai.pleos.spike.s1/.MainActivity t1005192}

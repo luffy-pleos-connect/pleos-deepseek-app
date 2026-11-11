@@ -6,6 +6,7 @@ import ai.moca.app.vehicle.VehicleSource
 import ai.moca.app.vehicle.WarningSummary
 import moca.core.Category
 import moca.core.Evaluation
+import moca.core.FixAction
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -19,6 +20,8 @@ class Tools(
     private val drivingLimited: () -> Boolean,
     private val openScreen: (String) -> Boolean,
     private val evaluate: (Map<String, ItemReading>, WarningSummary, Boolean) -> Evaluation?,
+    private val startFix: suspend (FixAction) -> String,
+    private val rerunInspection: suspend () -> Unit = {},
 ) {
 
     data class Snapshot(
@@ -57,7 +60,7 @@ class Tools(
                 "앱 화면을 연다. 주행 중이면 열 수 없다.",
                 obj().put("screen", JSONObject().apply {
                     put("type", "string")
-                    put("enum", JSONArray(listOf("home", "status", "battle")))
+                    put("enum", JSONArray(listOf("home", "status", "battle", "inspect")))
                 }),
             ),
         )
@@ -84,12 +87,15 @@ class Tools(
         when (name) {
             "get_latest_inspection" -> latestInspection()
             "get_active_warnings" -> activeWarnings()
-            "run_inspection" -> latestInspection()
+            "run_inspection" -> {
+                rerunInspection()
+                latestInspection()
+            }
             "get_part_status" -> partStatus(args?.optString("category").orEmpty())
             "get_energy_and_distance" -> energyAndDistance()
             "start_battle" -> JSONObject().put("ok", false).put("reason", "battle_not_ready").toString()
             "open_screen" -> openScreenTool(args?.optString("screen").orEmpty())
-            "start_navigation_to_service" -> JSONObject().put("ok", false).put("reason", "not_implemented").toString()
+            "start_navigation_to_service" -> startFix(FixAction.REPAIR_SHOP)
             else -> JSONObject().put("ok", false).put("error", "unknown_tool").put("name", name).toString()
         }
     }.getOrElse { e ->

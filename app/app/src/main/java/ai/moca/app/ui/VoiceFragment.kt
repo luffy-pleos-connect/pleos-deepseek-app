@@ -5,6 +5,7 @@ import ai.moca.app.R
 import ai.moca.app.battle.BattleRepository
 import ai.moca.app.net.ApiClient
 import ai.moca.app.score.ScoreBridge
+import ai.moca.app.link.FixLinks
 import ai.moca.app.voice.Answer
 import ai.moca.app.voice.ChatClient
 import ai.moca.app.voice.Tools
@@ -24,7 +25,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
+import kotlin.coroutines.resume
 
 /**
  * 보이스: Android SpeechRecognizer + TextToSpeech + /chat 도구 호출 루프.
@@ -87,13 +90,21 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
             drivingLimited = { activity.isDrivingLimited() },
             openScreen = { screen ->
                 when (screen) {
-                    "home" -> { activity.goHome(); true }
+                    "home", "inspect" -> { activity.goHome(); true }
                     "status" -> { activity.goStatus(); true }
                     "battle" -> { activity.goBattle(); true }
                     else -> false
                 }
             },
             evaluate = { readings, warnings, isDemo -> ScoreBridge.evaluate(readings, warnings, isDemo) },
+            rerunInspection = { ai.moca.app.inspect.Inspector(app).run(force = true) },
+            startFix = { action ->
+                suspendCancellableCoroutine { cont ->
+                    FixLinks.start(activity, action, activity.isDrivingLimited()) { result ->
+                        if (cont.isActive) cont.resume(result.toJson())
+                    }
+                }
+            },
         )
         val client: ChatClient = ApiClient(app.prefs)
         return VoiceAgent(

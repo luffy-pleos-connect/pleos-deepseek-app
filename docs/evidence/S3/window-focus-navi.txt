@@ -1,0 +1,2 @@
+mCurrentFocus=Window{498c038 u10 ai.umos.maps.android.navigation.app/ai.umos.maps.android.navigation.app.MainActivity}
+mFocusedApp=ActivityRecord{f10b7f6 u10 ai.umos.maps.android.navigation.app/.MainActivity t1004918}

@@ -28,10 +28,9 @@
 
     <!-- 화면 -->
     <string name="nav_home">홈</string>
-    <string name="nav_inspect">점검하기</string>
-    <string name="nav_status">상태관리</string>
-    <string name="nav_voice">AI 보이스</string>
-    <string name="nav_battle">대전하기</string>
+    <string name="nav_status">상세</string>
+    <string name="nav_voice">차에게 묻기</string>
+    <string name="nav_battle">순위·대전</string>
     <string name="nav_settings">설정</string>
 
     <string name="home_title">내 차 등급</string>
@@ -41,18 +40,20 @@
     <string name="home_total">종합</string>
     <string name="home_health">건강</string>
     <string name="home_care">관리</string>
+    <string name="home_health_value">건강 %1$s</string>
+    <string name="home_care_value">관리 %1$s</string>
     <string name="home_last_inspect">마지막 점검</string>
     <string name="home_never_inspected">아직 점검한 적이 없어요</string>
-    <string name="home_tile_inspect_desc">부품 5개를 한 번에 확인해요</string>
-    <string name="home_tile_status_desc">카드와 할 일로 관리해요</string>
-    <string name="home_tile_voice_desc">차 상태를 음성으로 물어보세요</string>
-    <string name="home_tile_battle_desc">부품 라운드로 겨뤄요</string>
-
-    <string name="inspect_running">점검 중…</string>
-    <string name="inspect_done">점검 완료</string>
-    <string name="inspect_failed">점검에 실패했어요</string>
-    <string name="inspect_go_status">상태관리에서 보기</string>
-    <string name="inspect_again">다시 점검</string>
+    <string name="home_inspecting">점검하는 중이에요</string>
+    <string name="home_top_title">가장 먼저 할 일</string>
+    <string name="home_all_good">오늘도 이상 없어요</string>
+    <string name="home_streak">%1$d일째 이어서 점검했어요</string>
+    <string name="home_problem_line">%1$s · %2$s −%3$d</string>
+    <string name="home_cat_power">동력</string>
+    <string name="home_cat_brake">제동·조향</string>
+    <string name="home_cat_tire">타이어</string>
+    <string name="home_cat_electric">전기</string>
+    <string name="home_cat_safety">안전</string>
 
     <string name="status_title">상태관리</string>
     <string name="status_todo">할 일</string>
@@ -104,4 +105,11 @@
     <string name="common_close">닫기</string>
     <string name="common_loading">불러오는 중…</string>
     <string name="placeholder_preparing">준비 중이에요</string>
+
+    <string name="link_blocked_driving">정차한 뒤에 볼 수 있어요</string>
+    <string name="link_find_in_navi">내비게이션에서 직접 찾아 주세요</string>
+    <string name="link_navi_opened">내비게이션 검색을 열었어요</string>
+    <string name="link_qr_shown">휴대폰으로 열 수 있는 QR 을 띄웠어요</string>
+    <string name="link_navi_failed_qr">내비게이션에 연결하지 못해 QR 을 띄웠어요</string>
+    <string name="link_qr_image">QR 코드</string>
 </resources>

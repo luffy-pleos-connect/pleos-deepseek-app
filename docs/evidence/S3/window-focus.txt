@@ -1,0 +1,3 @@
+  mCurrentFocus=Window{7c4626d u10 ai.pleos.spike.s1/ai.pleos.spike.s1.MainActivity}
+  mFocusedApp=ActivityRecord{d1657a7 u10 ai.pleos.spike.s1/.MainActivity t1005190}
+  mHoldScreenWindow=Window{d86753f u10 ai.umos.homescreen/ai.umos.homescreen.HomeActivity}

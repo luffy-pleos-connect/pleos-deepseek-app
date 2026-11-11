@@ -1,0 +1,7 @@
+--------- beginning of main
+11-11 04:10:01.210 17477 17477 I S3Navi  : create
+11-11 04:10:01.228 17477 17477 I S3Navi  : initialize called
+11-11 04:10:01.237 17477 17477 I S3Navi  : onConnected
+11-11 04:10:01.237 17477 17477 I S3Navi  : requestNavigationScreen SearchPlace(정비소)
+11-11 04:10:01.239 17477 17477 I S3Navi  : requestNavigationScreen returned
+11-11 04:10:01.240 17477 17477 I S3Navi  : moveTaskToBack true

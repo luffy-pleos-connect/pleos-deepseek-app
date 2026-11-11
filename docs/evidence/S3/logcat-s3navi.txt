@@ -1,0 +1,8 @@
+--------- beginning of main
+11-11 04:07:41.640 20586 20586 I S3Navi  : create
+11-11 04:07:41.658 20586 20586 I S3Navi  : initialize called
+11-11 04:07:41.673 20586 20586 I S3Navi  : onConnected
+11-11 04:07:41.673 20586 20586 I S3Navi  : requestNavigationScreen SearchPlace(정비소)
+11-11 04:07:41.675 20586 20586 I S3Navi  : requestNavigationScreen returned
+11-11 04:07:56.663 20586 20586 I S3Navi  : dump requested at 1794398876663
+11-11 04:08:11.671 20586 20586 I S3Navi  : dump requested at 1794398891671

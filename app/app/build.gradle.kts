@@ -71,6 +71,8 @@ android {
 dependencies {
     implementation(project(":pleos-ds"))
     implementation("ai.pleos.playground:Vehicle:2.3.2")
+    implementation("ai.pleos.playground:NaviHelper:3.0.5")
+    implementation("com.google.zxing:core:3.5.3")
 
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.fragment:fragment-ktx:1.8.5")
