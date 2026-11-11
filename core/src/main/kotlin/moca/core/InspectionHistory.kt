@@ -104,9 +104,12 @@ object InspectionHistory {
      * 추이 그래프에 쓸 점. 하루에 점 하나(그날의 마지막 점검), 오래된 날부터 마지막 [limit] 일만.
      * 오늘보다 뒤의 날짜는 [latestLabel] 과 같은 이유로 뺀다. 점수는 [trendRows] 와 같은 방법으로 구한다.
      */
-    fun trendPoints(text: String, profile: Profile, today: LocalDate, limit: Int = 14): List<TrendPoint> {
+    fun trendPoints(text: String, profile: Profile, today: LocalDate, limit: Int = 14): List<TrendPoint> =
+        trendPoints(read(text, profile), profile, today, limit)
+
+    /** 이미 읽은 점검 목록으로 추이 점을 만든다. 데모는 저장 기록 대신 이 목록을 넘긴다. */
+    fun trendPoints(records: List<Inspection>, profile: Profile, today: LocalDate, limit: Int = 14): List<TrendPoint> {
         if (limit <= 0) return emptyList()
-        val records = read(text, profile)
         val lastIndexByDay = LinkedHashMap<LocalDate, Int>()
         records.forEachIndexed { index, inspection -> lastIndexByDay[inspection.inspectedAt] = index }
         return lastIndexByDay.entries

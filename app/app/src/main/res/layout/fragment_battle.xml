@@ -1,17 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
     android:paddingStart="@dimen/moca_screen_margin"
     android:paddingTop="@dimen/moca_gap"
     android:paddingEnd="@dimen/moca_screen_margin"
     android:paddingBottom="@dimen/moca_gap">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        style="@style/Widget.Pleos.Card"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="@dimen/moca_card_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/Pleos.Text.Title.L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/rank_title" />
+
+            <TextView
+                android:id="@+id/rankPracticeBadge"
+                style="@style/Pleos.Text.Label.M"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/moca_gap"
+                android:text="@string/rank_practice_badge"
+                android:textColor="@color/pleos_text_dark_tertiary" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/Pleos.Text.Body.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/rank_explain"
+            android:textColor="@color/pleos_text_dark_secondary" />
+
+        <TextView
+            android:id="@+id/rankSummary"
+            style="@style/Pleos.Text.Title.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:textColor="@color/pleos_text_dark_primary"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/rankList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:layout_weight="1"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/rankEmpty"
+            style="@style/Pleos.Text.Body.L"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/rank_empty"
+            android:textColor="@color/pleos_text_dark_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/Widget.Pleos.Card"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/moca_gap"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="@dimen/moca_card_padding">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,71 +109,49 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <LinearLayout
-            style="@style/Widget.Pleos.Card"
+        <TextView
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/battle_my_grade"
+            android:textColor="@color/pleos_text_dark_tertiary" />
+
+        <TextView
+            android:id="@+id/myGrade"
+            style="@style/Pleos.Text.Title.L"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap_small"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
-            android:padding="@dimen/moca_card_padding">
+            android:text="@string/home_grade_placeholder" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+        <TextView
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/battle_opponent"
+            android:textColor="@color/pleos_text_dark_tertiary" />
 
-                <TextView
-                    style="@style/Pleos.Text.Label.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/battle_my_grade"
-                    android:textColor="@color/pleos_text_dark_tertiary" />
+        <TextView
+            android:id="@+id/opponentName"
+            style="@style/Pleos.Text.Title.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/battle_searching" />
 
-                <TextView
-                    android:id="@+id/myGrade"
-                    style="@style/Pleos.Text.Headline.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/moca_gap_small"
-                    android:text="@string/home_grade_placeholder" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="end"
-                android:orientation="vertical">
-
-                <TextView
-                    style="@style/Pleos.Text.Label.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/battle_opponent"
-                    android:textColor="@color/pleos_text_dark_tertiary" />
-
-                <TextView
-                    android:id="@+id/opponentName"
-                    style="@style/Pleos.Text.Title.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/moca_gap_small"
-                    android:text="@string/battle_searching" />
-
-                <TextView
-                    android:id="@+id/opponentScore"
-                    style="@style/Pleos.Text.Body.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/pleos_text_dark_secondary" />
-            </LinearLayout>
-        </LinearLayout>
+        <TextView
+            android:id="@+id/opponentScore"
+            style="@style/Pleos.Text.Body.L"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:textColor="@color/pleos_text_dark_secondary" />
 
         <TextView
             android:id="@+id/battleRecord"
-            style="@style/Pleos.Text.Body.M"
+            style="@style/Pleos.Text.Body.L"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap"
@@ -110,22 +159,24 @@
 
         <TextView
             android:id="@+id/battleResult"
-            style="@style/Pleos.Text.Headline.M"
+            style="@style/Pleos.Text.Title.M"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
+            android:layout_marginTop="@dimen/moca_gap_small"
             android:textColor="@color/pleos_text_dark_primary" />
 
         <LinearLayout
             android:id="@+id/roundContainer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="@dimen/moca_gap"
-            android:orientation="vertical" />
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
 
         <Button
             android:id="@+id/buttonStartBattle"
-            style="@style/Widget.Pleos.Button.Secondary.L"
+            style="@style/Widget.Pleos.Button.Primary.L"
             android:layout_width="match_parent"
             android:layout_height="@dimen/pleos_button_height_l"
             android:layout_marginTop="@dimen/moca_gap"
@@ -133,11 +184,11 @@
 
         <Button
             android:id="@+id/buttonSkip"
-            style="@style/Widget.Pleos.Button.Primary.S"
+            style="@style/Widget.Pleos.Button.Secondary.L"
             android:layout_width="match_parent"
             android:layout_height="@dimen/pleos_button_height_s"
             android:layout_marginTop="@dimen/moca_gap_small"
             android:text="@string/battle_skip"
             android:visibility="gone" />
     </LinearLayout>
-</ScrollView>
+</LinearLayout>

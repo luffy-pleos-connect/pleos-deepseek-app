@@ -142,6 +142,22 @@ class MainActivity : FragmentActivity() {
 
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
+    /** 순위·대전 화면을 열고, 로비가 준비되면 대전을 시작한다. */
+    fun openBattleAndStart() {
+        val launch = {
+            show(BATTLE_TAG, forceNew = true) {
+                BattleFragment().apply {
+                    arguments = Bundle().apply { putBoolean(BattleFragment.ARG_START, true) }
+                }
+            }
+        }
+        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            launch()
+        } else {
+            mainHandler.post { launch() }
+        }
+    }
+
     fun goOnboarding() = show(ONBOARD_TAG) { OnboardingFragment() }
 
     private fun show(tag: String, forceNew: Boolean = false, create: () -> Fragment) {

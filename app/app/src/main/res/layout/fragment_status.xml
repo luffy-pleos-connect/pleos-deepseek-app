@@ -306,24 +306,52 @@
             android:text="@string/home_inspecting" />
 
         <TextView
-            android:id="@+id/detailValues"
-            style="@style/Pleos.Text.Body.S"
+            android:id="@+id/detailValuesLabel"
+            style="@style/Pleos.Text.Label.M"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap"
-            android:textColor="@color/pleos_text_dark_secondary" />
+            android:text="@string/status_label_values"
+            android:textColor="@color/pleos_text_dark_tertiary" />
 
         <TextView
-            android:id="@+id/detailDeductions"
-            style="@style/Pleos.Text.Body.S"
+            android:id="@+id/detailValues"
+            style="@style/Pleos.Text.Body.L"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap_small"
             android:textColor="@color/pleos_text_dark_secondary" />
 
         <TextView
+            android:id="@+id/detailDeductionsLabel"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/status_label_deductions"
+            android:textColor="@color/pleos_text_dark_tertiary" />
+
+        <TextView
+            android:id="@+id/detailDeductions"
+            style="@style/Pleos.Text.Body.L"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:textColor="@color/pleos_text_dark_secondary" />
+
+        <TextView
+            android:id="@+id/detailAdviceLabel"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/status_label_advice"
+            android:textColor="@color/pleos_text_dark_tertiary"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/detailAdvice"
-            style="@style/Pleos.Text.Body.M"
+            style="@style/Pleos.Text.Body.L"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap_small"

@@ -23,6 +23,7 @@ import moca.core.Category
 import moca.core.CategoryStatus
 import moca.core.Color
 import moca.core.Deduction
+import moca.core.Demo
 import moca.core.FluidLevel
 import moca.core.InspectionHistory
 import moca.core.Item
@@ -47,6 +48,7 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
     private lateinit var detailValues: TextView
     private lateinit var detailDeductions: TextView
     private lateinit var detailAdvice: TextView
+    private lateinit var detailAdviceLabel: TextView
     private lateinit var detailAction: TextView
     private lateinit var trendGraph: TrendGraphView
     private lateinit var trendEmpty: TextView
@@ -67,6 +69,7 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         detailValues = view.findViewById(R.id.detailValues)
         detailDeductions = view.findViewById(R.id.detailDeductions)
         detailAdvice = view.findViewById(R.id.detailAdvice)
+        detailAdviceLabel = view.findViewById(R.id.detailAdviceLabel)
         detailAction = view.findViewById(R.id.detailAction)
         trendGraph = view.findViewById(R.id.trendGraph)
         trendEmpty = view.findViewById(R.id.trendEmpty)
@@ -154,9 +157,11 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         if (problem == null) {
             detailAdvice.text = ""
             detailAdvice.visibility = View.GONE
+            detailAdviceLabel.visibility = View.GONE
             detailAction.visibility = View.GONE
             return
         }
+        detailAdviceLabel.visibility = View.VISIBLE
         detailAdvice.visibility = View.VISIBLE
         detailAdvice.text = Priority.advice(problem, result.engine)
         val action = Priority.actionFor(problem, result.engine)
@@ -172,12 +177,17 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
 
     private fun renderTrend(result: InspectionResult) {
         val app = requireActivity().application as MocaApp
-        val profile = if (result.demo) Profile.DEMO else Profile.REAL
-        val points = InspectionHistory.trendPoints(
-            app.prefs.inspectionLog(result.demo),
-            profile,
-            ScoreBridge.today(),
-        )
+        val today = ScoreBridge.today()
+        val points = if (result.demo) {
+            val records = runCatching { Demo.recordsOf(app.prefs.demoScenarioId, today) }.getOrNull()
+            if (records == null) {
+                emptyList()
+            } else {
+                InspectionHistory.trendPoints(records, Profile.DEMO, today)
+            }
+        } else {
+            InspectionHistory.trendPoints(app.prefs.inspectionLog(false), Profile.REAL, today)
+        }
         if (points.size < 2) {
             trendGraph.visibility = View.GONE
             trendEmpty.visibility = View.VISIBLE
@@ -193,6 +203,7 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         detailValues.text = getString(R.string.c06_unmeasurable)
         detailDeductions.text = getString(R.string.status_no_deduction)
         detailAdvice.visibility = View.GONE
+        detailAdviceLabel.visibility = View.GONE
         detailAction.visibility = View.GONE
         trendGraph.visibility = View.GONE
         trendEmpty.visibility = View.VISIBLE

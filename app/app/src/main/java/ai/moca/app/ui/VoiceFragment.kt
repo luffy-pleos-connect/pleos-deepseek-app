@@ -105,6 +105,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
                     }
                 }
             },
+            startBattle = { activity.openBattleAndStart() },
         )
         val client: ChatClient = ApiClient(app.prefs)
         return VoiceAgent(

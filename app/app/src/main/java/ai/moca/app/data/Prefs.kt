@@ -35,7 +35,8 @@ class Prefs(context: Context) {
     }
 
     var nickname: String
-        get() = sp.getString(KEY_NICKNAME, null) ?: "드라이버${(1000..9999).random()}"
+        // 처음 만든 닉네임은 저장한다. 저장하지 않으면 읽을 때마다 숫자가 바뀐다.
+        get() = sp.getString(KEY_NICKNAME, null) ?: "드라이버${(1000..9999).random()}".also { nickname = it }
         set(value) = sp.edit().putString(KEY_NICKNAME, value).apply()
 
     var onboarded: Boolean

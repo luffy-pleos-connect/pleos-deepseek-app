@@ -37,6 +37,7 @@ class VoiceAgentTest {
         driving: Boolean = false,
         screens: MutableList<String> = mutableListOf(),
         startFix: suspend (FixAction) -> String = { """{"ok":true,"result":"NAVI_OPENED"}""" },
+        starts: MutableList<String> = mutableListOf(),
     ): Tools {
         val vehicle = FakeVehicle(scenario)
         return Tools(
@@ -46,6 +47,7 @@ class VoiceAgentTest {
             openScreen = { s -> screens += s; true },
             evaluate = { readings, warnings, isDemo -> evaluate(readings, warnings, isDemo) },
             startFix = startFix,
+            startBattle = { starts += "start" },
         )
     }
 
@@ -248,11 +250,22 @@ class VoiceAgentTest {
         }
     }
 
-    // ── 17. 대전 도구는 아직 준비 안 됨을 정직하게 돌려준다
+    // ── 17. 정차면 대전을 한 번 시작하고, 주행 중이면 화면을 열지 않는다
     @Test
-    fun `start_battle 은 준비 안 됨을 돌려준다`() = runBlocking {
-        val out = buildTools().execute("start_battle", null)
-        assertTrue(out.contains("battle_not_ready"))
+    fun `정차하면 start_battle 이 대전을 한 번 시작한다`() = runBlocking {
+        val starts = mutableListOf<String>()
+        val out = JSONObject(buildTools(starts = starts).execute("start_battle", null))
+        assertTrue(out.getBoolean("ok"))
+        assertEquals(listOf("start"), starts)
+    }
+
+    @Test
+    fun `주행 중이면 start_battle 이 대전을 시작하지 않는다`() = runBlocking {
+        val starts = mutableListOf<String>()
+        val out = JSONObject(buildTools(driving = true, starts = starts).execute("start_battle", null))
+        assertFalse(out.getBoolean("ok"))
+        assertEquals("driving_limited", out.getString("reason"))
+        assertTrue(starts.isEmpty())
     }
 
     // ── 18. 주행 중 화면 열기는 거부된다

@@ -21,6 +21,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import moca.core.Category
 import moca.core.CategoryStatus
+import moca.core.DailyRank
 import moca.core.Evaluation
 import moca.core.InspectionHistory
 import moca.core.Priority
@@ -33,6 +34,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var gradeValue: TextView
     private lateinit var gradeHint: TextView
+    private lateinit var rankText: TextView
     private lateinit var warningSummary: TextView
     private lateinit var totalValue: TextView
     private lateinit var healthValue: TextView
@@ -49,6 +51,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         gradeValue = view.findViewById(R.id.gradeValue)
         gradeHint = view.findViewById(R.id.gradeHint)
+        rankText = view.findViewById(R.id.rankText)
+        rankText.isClickable = false
+        rankText.isFocusable = false
         warningSummary = view.findViewById(R.id.warningSummary)
         totalValue = view.findViewById(R.id.totalValue)
         healthValue = view.findViewById(R.id.healthValue)
@@ -113,6 +118,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun showInspectFailed() {
         gradeHint.text = ""
+        renderRank(null)
         topProblemText.text = getString(R.string.c20_not_enough_data)
         topProblemAction.visibility = View.GONE
         homeStreak.visibility = View.GONE
@@ -121,6 +127,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun render(result: InspectionResult) {
         val evaluation = result.evaluation
         renderGrade(evaluation)
+        renderRank(evaluation)
         renderWarnings(result.warnings)
         renderTop(result)
         renderCategories(evaluation)
@@ -167,6 +174,23 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
         scoreRing.progress = evaluation.displayedOverall ?: 0
         scoreRing.hasRed = evaluation.hasRed
+    }
+
+    /** 등급이 없으면 순위를 숨긴다. 줄은 누르지 않는다. 이동은 아래 탭뿐이다. */
+    private fun renderRank(evaluation: Evaluation?) {
+        val board = if (evaluation?.grade == null) {
+            null
+        } else {
+            val app = requireActivity().application as MocaApp
+            DailyRank.board(app.prefs.nickname, evaluation)
+        }
+        if (board == null) {
+            rankText.visibility = View.GONE
+            return
+        }
+        rankText.visibility = View.VISIBLE
+        rankText.text = getString(R.string.home_rank_line, board.rank, board.total)
+        rankText.isClickable = false
     }
 
     private fun renderWarnings(summary: WarningSummary) {

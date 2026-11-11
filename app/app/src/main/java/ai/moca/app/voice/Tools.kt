@@ -22,6 +22,7 @@ class Tools(
     private val evaluate: (Map<String, ItemReading>, WarningSummary, Boolean) -> Evaluation?,
     private val startFix: suspend (FixAction) -> String,
     private val rerunInspection: suspend () -> Unit = {},
+    private val startBattle: () -> Unit = {},
 ) {
 
     data class Snapshot(
@@ -93,7 +94,7 @@ class Tools(
             }
             "get_part_status" -> partStatus(args?.optString("category").orEmpty())
             "get_energy_and_distance" -> energyAndDistance()
-            "start_battle" -> JSONObject().put("ok", false).put("reason", "battle_not_ready").toString()
+            "start_battle" -> startBattleTool()
             "open_screen" -> openScreenTool(args?.optString("screen").orEmpty())
             "start_navigation_to_service" -> startFix(FixAction.REPAIR_SHOP)
             else -> JSONObject().put("ok", false).put("error", "unknown_tool").put("name", name).toString()
@@ -185,6 +186,18 @@ class Tools(
             put("isDemo", isDemo)
             put("batteryPercent", s.readings[PleosVehicleSource.KEY_SOC]?.value ?: JSONObject.NULL)
         }.toString()
+    }
+
+    private fun startBattleTool(): String {
+        if (drivingLimited()) {
+            return JSONObject().put("ok", false).put("reason", "driving_limited").toString()
+        }
+        startBattle()
+        return JSONObject()
+            .put("ok", true)
+            .put("action", "start_battle")
+            .put("screen", "battle")
+            .toString()
     }
 
     private fun openScreenTool(screen: String): String {

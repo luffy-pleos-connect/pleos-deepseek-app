@@ -65,6 +65,16 @@
                 android:text="@string/c03_first_grade"
                 android:textColor="@color/pleos_text_dark_secondary" />
 
+            <TextView
+                android:id="@+id/rankText"
+                style="@style/Pleos.Text.Title.S"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:gravity="center"
+                android:textColor="@color/pleos_text_dark_secondary"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
