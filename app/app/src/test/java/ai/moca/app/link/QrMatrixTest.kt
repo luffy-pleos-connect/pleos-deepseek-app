@@ -36,7 +36,7 @@ class QrMatrixTest {
         val scale = 4
         val modulesSide = modules.size + quiet * 2
         val side = modulesSide * scale
-        val pixels = IntArray(side * side) { 0xFFFFFFFF.toInt() }
+        val pixels = IntArray(side * side) { -1 } // ARGB 흰색
         for (y in modules.indices) {
             for (x in modules[y].indices) {
                 if (!modules[y][x]) continue
@@ -46,7 +46,7 @@ class QrMatrixTest {
                     for (dx in 0 until scale) {
                         val px = originX + dx
                         val py = originY + dy
-                        pixels[py * side + px] = 0xFF000000.toInt()
+                        pixels[py * side + px] = 255 shl 24 // ARGB 검정
                     }
                 }
             }
