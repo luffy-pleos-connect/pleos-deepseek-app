@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/pleos_toggle_button_radius" />
+            <solid android:color="@color/pleos_button_filled_pressed" />
+        </shape>
+    </item>
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/pleos_toggle_button_radius" />
+            <solid android:color="@color/pleos_button_filled_enabled" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/pleos_toggle_button_radius" />
+            <solid android:color="@color/pleos_button_basic_pressed" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/pleos_toggle_button_radius" />
+            <solid android:color="@color/pleos_button_basic_enabled" />
+        </shape>
+    </item>
+</selector>

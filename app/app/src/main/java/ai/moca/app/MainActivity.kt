@@ -31,6 +31,7 @@ class MainActivity : FragmentActivity() {
     private var lastUxState: PleosUxRestrictions.State = PleosUxRestrictions.State.UNRESTRICTED
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var suppressTabCallback = false
+    private var currentTag: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +54,7 @@ class MainActivity : FragmentActivity() {
             }
         }
 
+        currentTag = savedInstanceState?.getString(KEY_TAG)
         if (savedInstanceState == null) {
             if (prefs.onboarded) show(HOME_TAG) { HomeFragment() } else show(ONBOARD_TAG) { OnboardingFragment() }
         }
@@ -166,6 +168,7 @@ class MainActivity : FragmentActivity() {
         // 화면 전환마다 컨테이너의 모든 Fragment 를 replace 해 겹침을 없앤다.
         // 상태는 Fragment 의 ViewModel·SavedState 가 아니라 화면 데이터 재조회로 복원한다.
         val target = existing ?: create()
+        currentTag = tag
         tx.replace(R.id.navHost, target, tag)
         tx.commit()
         updateDemoBadge()
@@ -200,6 +203,22 @@ class MainActivity : FragmentActivity() {
         badge.visibility = if (prefs.demoEnabled) android.view.View.VISIBLE else android.view.View.GONE
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_TAG, currentTag)
+    }
+
+    /**
+     * 화면이 다시 만들어질 때(데모 스위치·시나리오 변경) 보던 화면은 FragmentManager 가 되살린다.
+     * 탭의 선택 표시만 그 화면에 맞춘다. 되살리는 동안 탭이 바뀌어도 화면을 갈아 끼우지 않는다.
+     */
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        suppressTabCallback = true
+        super.onRestoreInstanceState(savedInstanceState)
+        suppressTabCallback = false
+        currentTag?.let { selectTab(it) }
+    }
+
     override fun onResume() {
         super.onResume()
         if (::prefs.isInitialized) updateDemoBadge()
@@ -208,6 +227,7 @@ class MainActivity : FragmentActivity() {
     }
 
     private companion object {
+        const val KEY_TAG = "current_tag"
         const val HOME_TAG = "home"
         const val STATUS_TAG = "status"
         const val VOICE_TAG = "voice"

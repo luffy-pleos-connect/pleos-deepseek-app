@@ -31,6 +31,7 @@ import moca.core.Priority
 import moca.core.Profile
 import moca.core.Rules
 import moca.core.Telltale
+import moca.core.WheelArea
 import moca.core.VehicleSnapshot
 
 /**
@@ -278,11 +279,17 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         val name = getString(R.string.status_item_tire)
         if (reading != null && !reading.supported) return line(name, getString(R.string.c05_unsupported))
         if (reading == null || reading.value == null || Item.TIRE in engine.unsupported) return unread(name)
-        val count = engine.lowTireWheels.size
-        val word = if (count == 0) {
-            getString(R.string.status_level_normal)
+        val wheels = engine.lowTireWheels
+        val word = if (wheels.isEmpty()) {
+            val count = reading.value?.toInt() ?: 0
+            if (count == 0) {
+                getString(R.string.status_level_normal)
+            } else {
+                getString(R.string.status_tire_low_count, count)
+            }
         } else {
-            getString(R.string.status_tire_low_count, count)
+            val where = WheelArea.entries.filter { it in wheels }.joinToString(", ") { it.label }
+            getString(R.string.status_tire_low_where, where)
         }
         return line(name, word)
     }

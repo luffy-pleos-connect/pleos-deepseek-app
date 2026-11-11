@@ -24,7 +24,12 @@ class MocaApp : Application() {
         private set
 
     /** 이번 프로세스에서 가장 최근 점검. 화면은 이 값을 읽는다. */
+    /**
+     * 가장 최근 점검. 데모 여부·시나리오·날짜가 그때와 달라졌으면 낡은 결과이므로 돌려주지 않는다.
+     * 그러면 읽는 화면(홈·상세·순위)이 점검을 다시 돌린다.
+     */
     var latestInspection: InspectionResult? = null
+        get() = field?.takeIf { lastInspectKey == ai.moca.app.inspect.Inspector.currentKey(this) }
 
     /** 마지막으로 기록을 남긴 점검의 키. 같으면 줄을 또 넣지 않는다. */
     var lastInspectKey: InspectKey? = null

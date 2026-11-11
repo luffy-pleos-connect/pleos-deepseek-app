@@ -6,6 +6,7 @@ import ai.moca.app.vehicle.ItemReading
 import ai.moca.app.vehicle.PleosVehicleSource
 import ai.moca.app.vehicle.WarningSummary
 import moca.core.Category
+import moca.core.WheelArea
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -99,5 +100,33 @@ class ScoreBridgeTest {
         val snapshot = ScoreBridge.toEngineSnapshot(d3Readings(), d3Warnings(), isDemo = false)
         assertNull("연료는 읽지 않으므로 기본값이 들어가면 안 된다", snapshot.fuelPercent)
         assertEquals(62.0, snapshot.batteryPercent!!, 0.0)
+    }
+
+    @Test
+    fun `뒤오른쪽만 저압이면 그 바퀴만 기록된다`() {
+        val readings = d3Readings().toMutableMap()
+        readings[PleosVehicleSource.KEY_TIRE_LOW] =
+            ItemReading(PleosVehicleSource.KEY_TIRE_LOW, true, 1.0, "RR")
+        val snapshot = ScoreBridge.toEngineSnapshot(readings, WarningSummary.empty(), isDemo = false)
+        assertEquals(setOf(WheelArea.RR), snapshot.lowTireWheels)
+    }
+
+    @Test
+    fun `위치 없이 개수만 있으면 앞에서부터 고르지 않는다`() {
+        val snapshot = ScoreBridge.toEngineSnapshot(d3Readings(), d3Warnings(), isDemo = true)
+        assertEquals(emptySet<WheelArea>(), snapshot.lowTireWheels)
+    }
+
+    @Test
+    fun `데모는 시나리오에 적힌 바퀴만 저압이다`() {
+        fun wheels(scenario: DemoScenario) = ScoreBridge.toEngineSnapshot(
+            scenario.readings(),
+            scenario.warnings(),
+            isDemo = true,
+        ).lowTireWheels
+        assertEquals(setOf(WheelArea.FL, WheelArea.FR), wheels(DemoScenario.D2))
+        assertEquals(setOf(WheelArea.FL), wheels(DemoScenario.D3))
+        assertEquals(setOf(WheelArea.FL), wheels(DemoScenario.D5))
+        assertEquals(emptySet<WheelArea>(), wheels(DemoScenario.D0))
     }
 }

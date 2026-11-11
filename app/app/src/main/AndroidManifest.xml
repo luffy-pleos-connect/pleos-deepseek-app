@@ -5,7 +5,7 @@
         android:name="android.hardware.type.automotive"
         android:required="true" />
 
-    <!-- 읽기 전용 차량 데이터 권한만. CONTROL_ 권한은 0개.
+    <!-- 읽기 전용 차량 데이터 권한만. 제어 권한은 넣지 않는다.
          getTelltalesInfo/registerTelltales 는 공식 문서상 PRIVATE_CAR_SAFETY(signature|privileged)이나,
          Pleos 에뮬레이터 2.1.0에서는 protectionLevel=normal 로 선언되어 있다(G0 실측).
          실차에서 막히면 이 기능은 "연동 코드 구현, 실값 미확인"으로 표기한다. -->
@@ -25,6 +25,11 @@
 
     <!-- 서버(/chat·/snapshots·/opponent) 통신. HTTPS 는 release, HTTP 는 디버그 전용 설정. -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 시동 때 화면 없이 한 번 점검하고 바로 끝낸다. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".MocaApp"
@@ -47,5 +52,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".inspect.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".inspect.InspectionService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>

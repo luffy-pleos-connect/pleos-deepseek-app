@@ -46,4 +46,80 @@ class TirePressureTest {
     fun emptyListIsUnmeasured() {
         Assert.isNull(TirePressure.lowCount(emptyList()))
     }
+
+    @Test
+    fun lowAreasNamesTheLowWheels() {
+        Assert.eq(
+            setOf(WheelArea.FL, WheelArea.RL),
+            TirePressure.lowAreas(
+                mapOf(
+                    WheelArea.FL to (160f to 180f),
+                    WheelArea.FR to (200f to 180f),
+                    WheelArea.RL to (179.9f to 180f),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun lowAreasEqualPressureIsNotLow() {
+        Assert.eq(
+            emptySet<WheelArea>(),
+            TirePressure.lowAreas(mapOf(WheelArea.FL to (180f to 180f))),
+        )
+    }
+
+    @Test
+    fun lowAreasUnreadWithoutLowIsNull() {
+        Assert.isNull(
+            TirePressure.lowAreas(
+                mapOf(
+                    WheelArea.FL to (200f to 180f),
+                    WheelArea.FR to (null to 180f),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun lowAreasUnreadWithLowKeepsThoseWheels() {
+        Assert.eq(
+            setOf(WheelArea.FL),
+            TirePressure.lowAreas(
+                mapOf(
+                    WheelArea.FL to (100f to 180f),
+                    WheelArea.FR to (null to 180f),
+                    WheelArea.RL to (null to null),
+                    WheelArea.RR to (200f to 180f),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun lowAreasNanIsUnread() {
+        Assert.isNull(TirePressure.lowAreas(mapOf(WheelArea.FL to (Float.NaN to 180f))))
+        Assert.isNull(
+            TirePressure.lowAreas(
+                mapOf(
+                    WheelArea.FL to (200f to Float.NaN),
+                    WheelArea.FR to (200f to 180f),
+                ),
+            ),
+        )
+        Assert.eq(
+            setOf(WheelArea.FL),
+            TirePressure.lowAreas(
+                mapOf(
+                    WheelArea.FL to (100f to 180f),
+                    WheelArea.FR to (Float.NaN to 180f),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun lowAreasEmptyIsNull() {
+        Assert.isNull(TirePressure.lowAreas(emptyMap()))
+    }
 }

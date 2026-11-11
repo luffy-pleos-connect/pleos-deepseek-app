@@ -1,0 +1,2 @@
+--------- beginning of main
+11-11 06:42:05.112  4945  4973 I MOCA_BOOT: inspected demo=true grade=A

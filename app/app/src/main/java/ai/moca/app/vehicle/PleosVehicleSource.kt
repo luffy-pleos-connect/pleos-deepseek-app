@@ -3,6 +3,7 @@ package ai.moca.app.vehicle
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.model.area.WheelArea
 import ai.pleos.playground.vehicle.api.model.telltale.TelltaleData
+import ai.pleos.playground.vehicle.constant.area.WheelValue
 import ai.pleos.playground.vehicle.api.model.telltale.Telltales
 import ai.pleos.playground.vehicle.constant.control.OilLevelState
 import ai.pleos.playground.vehicle.constant.telltale.TelltaleState
@@ -157,6 +158,7 @@ class PleosVehicleSource(context: Context) : VehicleSource {
             return KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = false, value = null, note = "no_wheel_area")
         }
         val pairs = mutableListOf<Pair<Float?, Float?>>()
+        val mapped = linkedMapOf<moca.core.WheelArea, Pair<Float?, Float?>>()
         for (area in areas) {
             val pressure = readFloat { onOk, onFail ->
                 vehicle.getTire().getTirePressure(area, onOk, onFail)
@@ -164,14 +166,46 @@ class PleosVehicleSource(context: Context) : VehicleSource {
             val threshold = readFloat { onOk, onFail ->
                 vehicle.getTire().getLowTirePressure(area, onOk, onFail)
             }
-            pairs += pressure to threshold
+            val pair = pressure to threshold
+            pairs += pair
+            val core = toCoreWheel(area)
+            if (core != null) mapped[core] = pair
         }
         val lowCount = moca.core.TirePressure.lowCount(pairs)
-        return if (lowCount == null) {
-            KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = true, value = null, note = "timeout")
-        } else {
-            KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = true, value = lowCount.toDouble())
+        val named = moca.core.TirePressure.lowAreas(mapped)
+        if (lowCount == null || named == null || lowCount != named.size) {
+            val note = if (lowCount != null && named != null) "unmapped_wheel" else "timeout"
+            return KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = true, value = null, note = note)
         }
+        return KEY_TIRE_LOW to ItemReading(
+            KEY_TIRE_LOW,
+            supported = true,
+            value = lowCount.toDouble(),
+            note = wheelNote(named),
+        )
+    }
+
+    /**
+     * SDK `WheelValue` 이름과 core 바퀴를 맞춘다.
+     * LEFT_FRONT→FL, RIGHT_FRONT→FR, LEFT_REAR→RL, RIGHT_REAR→RR.
+     * UNKNOWN 이나 바퀴가 하나가 아닌 영역은 위치를 만들지 않는다.
+     */
+    private fun toCoreWheel(area: WheelArea): moca.core.WheelArea? {
+        val values = area.values
+        if (values.size != 1) return null
+        return when (values[0]) {
+            WheelValue.LEFT_FRONT -> moca.core.WheelArea.FL
+            WheelValue.RIGHT_FRONT -> moca.core.WheelArea.FR
+            WheelValue.LEFT_REAR -> moca.core.WheelArea.RL
+            WheelValue.RIGHT_REAR -> moca.core.WheelArea.RR
+            WheelValue.UNKNOWN -> null
+            else -> null
+        }
+    }
+
+    private fun wheelNote(areas: Set<moca.core.WheelArea>): String? {
+        if (areas.isEmpty()) return null
+        return moca.core.WheelArea.entries.filter { it in areas }.joinToString("+") { it.name }
     }
 
     private suspend fun readFloat(

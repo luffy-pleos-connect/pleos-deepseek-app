@@ -84,9 +84,19 @@ object ScoreBridge {
         else -> FluidLevel.NORMAL
     }
 
+    /**
+     * 저압 바퀴는 읽기 결과의 위치(`note`, 예: `FL+RR`)를 쓴다.
+     * 개수만 있고 위치가 없으면 앞에서부터 바퀴를 만들지 않는다.
+     */
     private fun tireWheels(reading: ItemReading?): Set<WheelArea> {
-        val count = reading?.value?.toInt() ?: return emptySet()
-        return WheelArea.entries.take(count.coerceIn(0, 4)).toSet()
+        if (reading == null || !reading.supported || reading.value == null) return emptySet()
+        val note = reading.note ?: return emptySet()
+        return note.split('+')
+            .mapNotNull { token ->
+                val name = token.trim()
+                WheelArea.entries.firstOrNull { it.name == name }
+            }
+            .toSet()
     }
 
     /**

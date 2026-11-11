@@ -6,7 +6,7 @@ package ai.moca.app.vehicle
  *
  * 값의 의미는 PleosVehicleSource 의 읽기 키와 같다.
  *  - oil_engine: 0=정상, 1=LOW, 2=CRITICALLY_LOW, 3=HIGH
- *  - tire_low: 저압 바퀴 수
+ *  - tire_low: 저압 바퀴 수. note 는 위치(예: FL+FR). 위치가 없으면 바퀴를 만들지 않는다.
  *  - soc: 배터리 %
  *  - telltales: 켜진 경고등 수
  */
@@ -28,8 +28,8 @@ enum class DemoScenario(
 
     fun readings(): LinkedHashMap<String, ItemReading> {
         val map = LinkedHashMap<String, ItemReading>()
-        fun put(key: String, value: Double?, supported: Boolean = true) {
-            map[key] = ItemReading(key, supported, value)
+        fun put(key: String, value: Double?, supported: Boolean = true, note: String? = null) {
+            map[key] = ItemReading(key, supported, value, note)
         }
 
         put(PleosVehicleSource.KEY_BRAKE_FLUID, 0.0)
@@ -52,13 +52,13 @@ enum class DemoScenario(
             }
             D2 -> {
                 put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 2.0)
+                put(PleosVehicleSource.KEY_TIRE_LOW, 2.0, note = "FL+FR")
                 put(PleosVehicleSource.KEY_SOC, 62.0)
                 put(PleosVehicleSource.KEY_TELLTALES, 1.0) // TPMS 노랑
             }
             D3 -> {
                 put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0)
+                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0, note = "FL")
                 put(PleosVehicleSource.KEY_SOC, 62.0)
                 put(PleosVehicleSource.KEY_TELLTALES, 2.0) // ABS 빨강 + TPMS 노랑
             }
@@ -70,7 +70,7 @@ enum class DemoScenario(
             }
             D5 -> {
                 put(PleosVehicleSource.KEY_OIL_ENGINE, 1.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0)
+                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0, note = "FL")
                 put(PleosVehicleSource.KEY_SOC, 62.0)
                 put(PleosVehicleSource.KEY_TELLTALES, 1.0)
             }
