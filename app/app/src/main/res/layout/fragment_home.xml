@@ -24,6 +24,17 @@
             android:orientation="vertical"
             android:padding="@dimen/moca_card_padding">
 
+            <TextView
+                android:id="@+id/gradeUpBanner"
+                style="@style/Pleos.Text.Title.S"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/moca_gap"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textColor="@color/pleos_informative_positive"
+                android:visibility="gone" />
+
             <FrameLayout
                 android:layout_width="@dimen/moca_score_ring"
                 android:layout_height="@dimen/moca_score_ring">

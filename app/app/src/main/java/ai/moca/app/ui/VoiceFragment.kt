@@ -10,6 +10,7 @@ import ai.moca.app.voice.Answer
 import ai.moca.app.voice.ChatClient
 import ai.moca.app.voice.Tools
 import ai.moca.app.voice.VoiceAgent
+import ai.pleos.ds.PleosToast
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,7 +21,9 @@ import android.speech.tts.TextToSpeech
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
+import moca.core.Priority
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -43,7 +46,8 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private lateinit var chipText: TextView
     private lateinit var offlineBadge: TextView
     private lateinit var demoBadge: TextView
-    private lateinit var micButton: Button
+    private lateinit var micButton: ImageButton
+    private lateinit var fixButton: Button
     private lateinit var input: EditText
 
     private var tts: TextToSpeech? = null
@@ -60,6 +64,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         offlineBadge = view.findViewById(R.id.voiceOfflineBadge)
         demoBadge = view.findViewById(R.id.voiceDemoBadge)
         micButton = view.findViewById(R.id.micButton)
+        fixButton = view.findViewById(R.id.voiceFixAction)
         input = view.findViewById<EditText>(R.id.questionInput)
 
         val app = requireActivity().application as MocaApp
@@ -78,6 +83,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         view.findViewById<View>(R.id.suggestion1).setOnClickListener { ask(getString(R.string.voice_recent_1)) }
         view.findViewById<View>(R.id.suggestion2).setOnClickListener { ask(getString(R.string.voice_recent_2)) }
         view.findViewById<View>(R.id.suggestion3).setOnClickListener { ask(getString(R.string.voice_recent_3)) }
+        view.findViewById<View>(R.id.suggestion4).setOnClickListener { ask(getString(R.string.voice_recent_4)) }
 
         agent = buildAgent(app)
     }
@@ -192,6 +198,8 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         val activity = requireActivity() as ai.moca.app.MainActivity
         stateText.text = getString(R.string.voice_state_thinking)
         chipText.text = ""
+        chipText.visibility = View.GONE
+        fixButton.visibility = View.GONE
         viewLifecycleOwner.lifecycleScope.launch {
             val answer: Answer = runCatching {
                 // 1턴 빠른 경로(의도 분류 → 도구 선실행). 실패하면 일반 경로로 되돌아간다.
@@ -207,13 +215,38 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private fun render(answer: Answer) {
         answerText.text = answer.text
         offlineBadge.visibility = if (answer.usedOffline) View.VISIBLE else View.GONE
-        chipText.text = if (answer.toolCalls.isEmpty()) {
-            ""
+        if (answer.toolCalls.isEmpty()) {
+            chipText.text = ""
+            chipText.visibility = View.GONE
         } else {
-            getString(R.string.voice_tool_chip_done) + " · " + answer.toolCalls.joinToString(", ")
+            chipText.visibility = View.VISIBLE
+            chipText.text = getString(R.string.voice_tool_chip_done) + " · " + answer.toolCalls.joinToString(", ")
         }
+        showFixAction(answer)
         stateText.text = getString(R.string.voice_state_speaking)
         speak(answer.text)
+    }
+
+    /**
+     * 최근 점검에 감점이 있고, 방금 답이 차량 상태 도구를 썼을 때만 조치 단추를 보인다.
+     */
+    private fun showFixAction(answer: Answer) {
+        val inspection = (requireActivity().application as MocaApp).latestInspection
+        val problem = inspection?.let { Priority.topProblem(it.engine) }
+        val usedStatus = answer.toolCalls.any { it in STATUS_TOOLS }
+        if (inspection == null || problem == null || !usedStatus) {
+            fixButton.visibility = View.GONE
+            return
+        }
+        val action = Priority.actionFor(problem, inspection.engine)
+        fixButton.visibility = View.VISIBLE
+        fixButton.text = action.label
+        fixButton.setOnClickListener {
+            val host = activity as? ai.moca.app.MainActivity ?: return@setOnClickListener
+            FixLinks.start(host, action, host.isDrivingLimited()) { result ->
+                PleosToast.show(host, result.message)
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -236,5 +269,11 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
 
     private companion object {
         const val REQ_AUDIO = 1001
+        val STATUS_TOOLS = setOf(
+            "get_active_warnings",
+            "get_latest_inspection",
+            "get_part_status",
+            "run_inspection",
+        )
     }
 }

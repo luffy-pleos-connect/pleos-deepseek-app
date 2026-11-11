@@ -164,18 +164,20 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             isSelected = row.isMe
             val pad = resources.getDimensionPixelSize(R.dimen.moca_gap_small)
             setPadding(pad, 0, pad, 0)
+            val rowHeight = resources.getDimensionPixelSize(R.dimen.moca_status_row_min)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                rowHeight,
+                1f,
             )
         }
         val gap = resources.getDimensionPixelSize(R.dimen.moca_gap)
         line.addView(rankText(place.toString(), ai.pleos.ds.R.style.Pleos_Text_Title_S, false))
         val name = if (row.isMe) getString(R.string.rank_me_name, row.nickname) else row.nickname
-        line.addView(rankText(name, ai.pleos.ds.R.style.Pleos_Text_Body_L, true).also {
+        line.addView(rankText(name, ai.pleos.ds.R.style.Pleos_Text_Title_S, true).also {
             it.setPadding(gap, 0, 0, 0)
         })
-        line.addView(rankText(row.grade.label, ai.pleos.ds.R.style.Pleos_Text_Body_L, false))
+        line.addView(rankText(row.grade.label, ai.pleos.ds.R.style.Pleos_Text_Title_S, false))
         line.addView(rankText(row.overall.toString(), ai.pleos.ds.R.style.Pleos_Text_Title_S, false).also {
             it.setPadding(gap, 0, 0, 0)
         })
@@ -253,7 +255,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         cell.addView(TextView(ctx).apply {
             text = round.category.label
             gravity = Gravity.CENTER
-            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Label_M)
+            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Body_L)
             setTextColor(ContextCompat.getColor(ctx, ai.pleos.ds.R.color.pleos_text_dark_secondary))
         })
         val mine = round.mine?.toString() ?: getString(R.string.home_grade_placeholder)

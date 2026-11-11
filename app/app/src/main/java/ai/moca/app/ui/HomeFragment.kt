@@ -41,6 +41,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var careValue: TextView
     private lateinit var lastInspection: TextView
     private lateinit var scoreRing: ScoreRingView
+    private lateinit var gradeUpBanner: TextView
     private lateinit var topProblemText: TextView
     private lateinit var homeStreak: TextView
     private lateinit var topProblemAction: View
@@ -60,6 +61,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         careValue = view.findViewById(R.id.careValue)
         lastInspection = view.findViewById(R.id.lastInspection)
         scoreRing = view.findViewById(R.id.scoreRing)
+        gradeUpBanner = view.findViewById(R.id.gradeUpBanner)
         topProblemText = view.findViewById(R.id.topProblemText)
         homeStreak = view.findViewById(R.id.homeStreak)
         topProblemAction = view.findViewById(R.id.topProblemAction)
@@ -104,7 +106,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     /** 주행 중에는 카테고리 줄만 막는다. 할 일 단추는 남긴다. */
     fun setDrivingLimited(limited: Boolean) {
         drivingLimited = limited
-        if (view != null) applyDriving()
+        if (view == null) return
+        applyDriving()
+        if (limited && ::scoreRing.isInitialized) {
+            gradeUpBanner.visibility = View.GONE
+            scoreRing.hold(scoreRing.progress)
+        }
     }
 
     private fun applyDriving() {
@@ -122,12 +129,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         topProblemText.text = getString(R.string.c20_not_enough_data)
         topProblemAction.visibility = View.GONE
         homeStreak.visibility = View.GONE
+        gradeUpBanner.visibility = View.GONE
+        scoreRing.hold(0)
     }
 
     private fun render(result: InspectionResult) {
         val evaluation = result.evaluation
         renderGrade(evaluation)
         renderRank(evaluation)
+        applyGradeMoment(result.demo, evaluation)
         renderWarnings(result.warnings)
         renderTop(result)
         renderCategories(evaluation)
@@ -149,7 +159,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             totalValue.text = getString(R.string.home_total_value, placeholder)
             healthValue.text = getString(R.string.home_health_value, placeholder)
             careValue.text = getString(R.string.home_care_value, placeholder)
-            scoreRing.progress = 0
             scoreRing.hasRed = evaluation?.hasRed == true
             return
         }
@@ -172,8 +181,35 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 getString(R.string.c04_next_grade, evaluation.nextGrade.label, evaluation.pointsToNext)
             else -> getString(R.string.c03_first_grade)
         }
-        scoreRing.progress = evaluation.displayedOverall ?: 0
         scoreRing.hasRed = evaluation.hasRed
+    }
+
+    /**
+     * 지난번에 본 등급보다 지금이 높고 정차 중이면 한 줄을 보이고 고리를 한 번 채운다.
+     * 비교한 뒤에는 지금 값을 저장한다. 주행 중에는 고리가 움직이지 않는다.
+     */
+    private fun applyGradeMoment(demo: Boolean, evaluation: Evaluation?) {
+        val app = requireActivity().application as MocaApp
+        val seen = app.prefs.seen(demo)
+        val nowGrade = evaluation?.grade
+        val nowRank = if (evaluation == null || nowGrade == null) {
+            null
+        } else {
+            DailyRank.board(app.prefs.nickname, evaluation)?.rank
+        }
+        val nowScore = evaluation?.displayedOverall
+        val moment = GradeMoment.decide(seen.grade, seen.rank, nowGrade, nowRank, drivingLimited)
+        app.prefs.rememberSeen(demo, nowGrade?.label, nowRank, nowScore)
+        val score = nowScore ?: 0
+        if (moment == null) {
+            gradeUpBanner.visibility = View.GONE
+            scoreRing.hold(score)
+            return
+        }
+        gradeUpBanner.visibility = View.VISIBLE
+        gradeUpBanner.text = moment.text
+        val from = seen.score ?: score
+        scoreRing.play(from, score)
     }
 
     /** 등급이 없으면 순위를 숨긴다. 줄은 누르지 않는다. 이동은 아래 탭뿐이다. */

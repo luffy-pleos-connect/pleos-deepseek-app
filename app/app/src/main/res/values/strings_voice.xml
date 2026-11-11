@@ -3,6 +3,7 @@
     <string name="voice_badge_demo">데모 데이터</string>
     <string name="voice_badge_offline">오프라인 음성</string>
     <string name="voice_state_idle">대기</string>
+    <string name="voice_ask_anything">무엇이든 물어보세요</string>
     <string name="voice_state_listening">듣는 중…</string>
     <string name="voice_state_thinking">생각 중…</string>
     <string name="voice_state_speaking">말하는 중…</string>
