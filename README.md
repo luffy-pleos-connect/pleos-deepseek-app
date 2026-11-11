@@ -14,7 +14,7 @@ Pleos Connect(현대차·기아·제네시스 차량용 인포테인먼트) 앱.
 
 | 항목 | 결과 |
 |---|---|
-| 점수 엔진 단위 테스트 | **184 / 184** (`core/run-tests.sh`, JDK 17만) |
+| 점수 엔진 단위 테스트 | **186 / 186** (`core/run-tests.sh`, JDK 17만) |
 | 서버 테스트 | **68 / 68** (`server/node --test`) |
 | 앱 단위 테스트 | **39 / 39** (`app/gradlew :app:testDebugUnitTest`) |
 | Pleos 디자인 시스템 정적 검사 | **0 findings / 51 files** (`pleos_lint.py`) |

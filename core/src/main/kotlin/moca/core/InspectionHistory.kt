@@ -51,6 +51,15 @@ object InspectionHistory {
 
     fun homeLabel(text: String): String = latestLabel(text) ?: EMPTY_HOME_LABEL
 
+    /** 오늘보다 뒤의 날짜는 기기 시계가 바뀐 기록이므로 뺀다. Care.evaluate 와 같은 기준이다. */
+    fun latestLabel(text: String, today: LocalDate): String? {
+        val dates = read(text, Profile.REAL).map { it.inspectedAt }.filter { !it.isAfter(today) }
+        val last = dates.maxOrNull() ?: return null
+        return label(last)
+    }
+
+    fun homeLabel(text: String, today: LocalDate): String = latestLabel(text, today) ?: EMPTY_HOME_LABEL
+
     fun careScore(text: String, today: LocalDate): Int =
         Care.evaluate(read(text, Profile.REAL), Profile.REAL, today).score
 

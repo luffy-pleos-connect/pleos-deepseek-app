@@ -1,0 +1,88 @@
+{
+  "package": "ai.moca.app",
+  "repo": "moca",
+  "ops": {
+    "조작-1": {
+      "켜기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/switchDemo"],
+      "끄기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/switchDemo"]
+    },
+    "조작-2": {
+      "D0": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD0"],
+      "D1": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD1"],
+      "D2": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD2"],
+      "D3": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD3"],
+      "D4": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD4"],
+      "D5": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD5"],
+      "D6": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD6"]
+    },
+    "조작-3": {
+      "점검하기": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileInspect"],
+      "상태관리": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileStatus"],
+      "AI 보이스": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileVoice"],
+      "대전하기": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileBattle"],
+      "설정": ["ai.moca.app:id/tabSettings"],
+      "홈": ["ai.moca.app:id/tabHome"]
+    },
+    "조작-4": {
+      "시작": ["ai.moca.app:id/tileInspect"],
+      "다시": ["ai.moca.app:id/buttonInspectAgain"]
+    },
+    "조작-5": {
+      "ids": [],
+      "container": "ai.moca.app:id/categoryContainer",
+      "rule": "text 가 동력·제동·조향·타이어·전기·안전 과 같은 노드를 누른다. 카드에는 resource-id 가 없다."
+    },
+    "조작-6": {
+      "질문-등급": ["ai.moca.app:id/suggestion1"],
+      "질문-경고": ["ai.moca.app:id/suggestion2"],
+      "질문-무관": ["ai.moca.app:id/questionInput", "ai.moca.app:id/sendButton"],
+      "음성": ["ai.moca.app:id/micButton"]
+    },
+    "조작-7": ["ai.moca.app:id/buttonStartBattle"],
+    "조작-8": {
+      "주소": "http://127.0.0.1:8787",
+      "켜는명령": "cd server && node local.mjs"
+    },
+    "첫실행": ["ai.moca.app:id/buttonSkip"],
+    "대전건너뛰기": ["ai.moca.app:id/buttonSkip"]
+  },
+  "places": {
+    "홈.등급": {"id": "ai.moca.app:id/gradeValue"},
+    "홈.종합": {"id": "ai.moca.app:id/totalValue"},
+    "홈.건강": {"id": "ai.moca.app:id/healthValue"},
+    "홈.관리": {"id": "ai.moca.app:id/careValue"},
+    "홈.남은점수": {"id": "ai.moca.app:id/gradeHint"},
+    "홈.마지막점검": {"id": "ai.moca.app:id/lastInspection"},
+    "점검.결과": {"id": "ai.moca.app:id/resultGrade"},
+    "점검.카테고리": {"id": "ai.moca.app:id/resultDelta"},
+    "점검.시작": {"id": "ai.moca.app:id/buttonInspectAgain"},
+    "상태.카드": {
+      "container": "ai.moca.app:id/categoryContainer",
+      "rule": "text 가 카테고리 이름과 같은 노드의 다음 형제가 상태 글자다"
+    },
+    "상태.상세": {
+      "container": "ai.moca.app:id/categoryContainer",
+      "rule": "카테고리 이름 노드에서 두 번째 다음 형제가 상세 글자다"
+    },
+    "상태.추이": {
+      "container": "ai.moca.app:id/trendContainer",
+      "rule": "container 안 text 를 이어 붙인다"
+    },
+    "보이스.답": {"id": "ai.moca.app:id/answerText"},
+    "보이스.상태": {"id": "ai.moca.app:id/voiceState"},
+    "보이스.질문": {"id": "ai.moca.app:id/questionInput"},
+    "대전.상대": {"ids": ["ai.moca.app:id/opponentName", "ai.moca.app:id/opponentScore"]},
+    "대전.라운드": {
+      "container": "ai.moca.app:id/roundContainer",
+      "rule": "자식 노드 다섯 개를 차례로 읽는다"
+    },
+    "대전.결과": {"id": "ai.moca.app:id/battleResult"},
+    "대전.전적": {"id": "ai.moca.app:id/battleRecord"},
+    "대전.시작": {"id": "ai.moca.app:id/buttonStartBattle"}
+  },
+  "questions": {
+    "질문-등급": "내 차 등급 몇이야?",
+    "질문-경고": "이 경고등 뭐야?",
+    "질문-무관": "what is the weather today"
+  }
+}

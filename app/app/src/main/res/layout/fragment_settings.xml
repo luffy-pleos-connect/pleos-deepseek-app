@@ -43,6 +43,92 @@
             android:layout_marginTop="@dimen/moca_gap"
             android:text="@string/settings_demo" />
 
+        <LinearLayout
+            android:id="@+id/scenarioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ToggleButton
+                android:id="@+id/scenarioD0"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d0"
+                android:textOn="@string/settings_scenario_d0" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD1"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d1"
+                android:textOn="@string/settings_scenario_d1" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD2"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d2"
+                android:textOn="@string/settings_scenario_d2" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD3"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="true"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d3"
+                android:textOn="@string/settings_scenario_d3" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD4"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d4"
+                android:textOn="@string/settings_scenario_d4" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD5"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d5"
+                android:textOn="@string/settings_scenario_d5" />
+
+            <ToggleButton
+                android:id="@+id/scenarioD6"
+                style="@style/Widget.Pleos.ToggleButton"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pleos_toggle_button_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:checked="false"
+                android:textAppearance="@style/Pleos.Text.Body.L.Strong"
+                android:textOff="@string/settings_scenario_d6"
+                android:textOn="@string/settings_scenario_d6" />
+        </LinearLayout>
+
         <Switch
             android:id="@+id/switchConsent"
             style="@style/Widget.Pleos.Switch"
