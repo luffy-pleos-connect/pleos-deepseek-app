@@ -215,12 +215,13 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private fun render(answer: Answer) {
         answerText.text = answer.text
         offlineBadge.visibility = if (answer.usedOffline) View.VISIBLE else View.GONE
-        if (answer.toolCalls.isEmpty()) {
+        val labels = answer.toolCalls.mapNotNull { toolLabel(it) }
+        if (labels.isEmpty()) {
             chipText.text = ""
             chipText.visibility = View.GONE
         } else {
             chipText.visibility = View.VISIBLE
-            chipText.text = getString(R.string.voice_tool_chip_done) + " · " + answer.toolCalls.joinToString(", ")
+            chipText.text = getString(R.string.voice_tool_chip_done) + " · " + labels.joinToString(", ")
         }
         showFixAction(answer)
         stateText.text = getString(R.string.voice_state_speaking)
@@ -265,6 +266,19 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         tts?.shutdown()
         tts = null
         super.onDestroyView()
+    }
+
+    /** 도구 이름을 사람이 읽는 말로 바꾼다. 표에 없는 이름은 칩에 넣지 않는다. */
+    private fun toolLabel(name: String): String? = when (name) {
+        "get_latest_inspection" -> getString(R.string.voice_tool_get_latest_inspection)
+        "get_active_warnings" -> getString(R.string.voice_tool_get_active_warnings)
+        "run_inspection" -> getString(R.string.voice_tool_run_inspection)
+        "get_part_status" -> getString(R.string.voice_tool_get_part_status)
+        "get_energy_and_distance" -> getString(R.string.voice_tool_get_energy_and_distance)
+        "start_battle" -> getString(R.string.voice_tool_start_battle)
+        "open_screen" -> getString(R.string.voice_tool_open_screen)
+        "start_navigation_to_service" -> getString(R.string.voice_tool_start_navigation_to_service)
+        else -> null
     }
 
     private companion object {

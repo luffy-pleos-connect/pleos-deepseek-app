@@ -33,7 +33,6 @@
     <string name="nav_battle">순위·대전</string>
     <string name="nav_settings">설정</string>
 
-    <string name="home_title">내 차 등급</string>
     <string name="home_grade_placeholder">—</string>
     <string name="home_warning_none">주의 없음</string>
     <string name="home_warning_count">주의 %1$d</string>
@@ -116,9 +115,13 @@
     <string name="rank_me_name">%1$s (나)</string>
 
     <string name="settings_title">설정</string>
+    <string name="settings_group_profile">내 정보</string>
+    <string name="settings_group_demo">데모</string>
+    <string name="settings_group_data">데이터</string>
     <string name="settings_nickname">닉네임</string>
     <string name="settings_consent">데이터 동의</string>
     <string name="settings_demo">데모 모드</string>
+    <string name="settings_demo_help">차 없이 시나리오로 앱을 살펴봐요. 화면 위에 \'데모 데이터\'가 보여요</string>
     <string name="settings_scenario_d0">D0 · 정상, 연료 62%</string>
     <string name="settings_scenario_d1">D1 · 엔진오일 부족</string>
     <string name="settings_scenario_d2">D2 · TPMS 노랑 + 바퀴 2개 저압</string>
@@ -127,10 +130,16 @@
     <string name="settings_scenario_d5">D5 · 엔진오일 부족 + TPMS 노랑 + 바퀴 1개 저압</string>
     <string name="settings_scenario_d6">D6 · 타이어 미지원</string>
     <string name="settings_delete_data">내 데이터 삭제</string>
+    <string name="settings_delete_title">내 데이터를 지울까요?</string>
+    <string name="settings_delete_body">점검 기록, 전적, 닉네임, 동의가 모두 지워져요</string>
+    <string name="settings_delete_confirm">지우기</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
     <string name="settings_about">앱 정보</string>
 
     <string name="onboarding_title">MOCA를 시작해 볼까요?</string>
+    <string name="onboarding_feature_1">시동을 걸면 차가 스스로 점검해요</string>
+    <string name="onboarding_feature_2">고칠 곳까지 바로 이어 줘요</string>
+    <string name="onboarding_feature_3">오늘의 순위로 관리 습관을 만들어요</string>
     <string name="onboarding_consent_1">차량 상태로 점수를 계산해요</string>
     <string name="onboarding_consent_2">음성 질문과 점수 요약을 서버를 거쳐 AI에 보내요</string>
     <string name="onboarding_consent_3">대전 상대에게 닉네임·등급·점수가 보여요</string>
@@ -142,7 +151,6 @@
     <string name="common_confirm">확인</string>
     <string name="common_close">닫기</string>
     <string name="common_loading">불러오는 중…</string>
-    <string name="placeholder_preparing">준비 중이에요</string>
 
     <string name="link_blocked_driving">정차한 뒤에 볼 수 있어요</string>
     <string name="link_find_in_navi">내비게이션에서 직접 찾아 주세요</string>

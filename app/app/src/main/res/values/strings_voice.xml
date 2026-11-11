@@ -11,6 +11,14 @@
     <string name="voice_send">보내기</string>
     <string name="voice_tool_chip_running">확인 중</string>
     <string name="voice_tool_chip_done">확인 완료</string>
+    <string name="voice_tool_get_latest_inspection">점검 결과</string>
+    <string name="voice_tool_get_active_warnings">경고등</string>
+    <string name="voice_tool_run_inspection">다시 점검</string>
+    <string name="voice_tool_get_part_status">부품 상태</string>
+    <string name="voice_tool_get_energy_and_distance">잔량·주행 가능 거리</string>
+    <string name="voice_tool_start_battle">대전</string>
+    <string name="voice_tool_open_screen">화면 이동</string>
+    <string name="voice_tool_start_navigation_to_service">정비소 안내</string>
     <string name="voice_recent_1">내 차 등급 몇이야?</string>
     <string name="voice_recent_2">이 경고등 뭐야?</string>
     <string name="voice_recent_3">엔진오일 괜찮아?</string>

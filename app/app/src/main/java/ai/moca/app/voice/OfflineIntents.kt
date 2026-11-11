@@ -73,9 +73,9 @@ object OfflineIntents {
                 val points = if (obj.isNull("pointsToNext")) null else obj.optInt("pointsToNext")
                 buildString {
                     if (grade.isNotEmpty()) append("지금 등급은 $grade").append(
-                        if (overall != null) "이고 종합 $overall 점이에요. " else "이에요. ",
+                        if (overall != null) "이고 종합 ${overall}점이에요. " else "이에요. ",
                     )
-                    if (next.isNotEmpty() && points != null) append("$next 까지 $points 점 남았어요.")
+                    if (next.isNotEmpty() && points != null) append("${next}까지 ${points}점 남았어요.")
                 }.ifEmpty { "점검 결과를 확인했어요." }
             }
             OfflineIntent.WARNINGS -> {
@@ -86,7 +86,7 @@ object OfflineIntents {
                 } else {
                     buildString {
                         if (red > 0) append("안전한 곳에 정차한 뒤 점검을 받으세요. ")
-                        append("지금 경고등 $total 개가 켜져 있어요.")
+                        append("지금 경고등 ${total}개가 켜져 있어요.")
                     }
                 }
             }

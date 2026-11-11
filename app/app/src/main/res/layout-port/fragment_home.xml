@@ -162,7 +162,7 @@
 
             <Button
                 android:id="@+id/topProblemAction"
-                style="@style/Widget.Pleos.Button.Primary.L"
+                style="@style/Widget.Pleos.Button.Secondary.L"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/moca_gap"

@@ -176,7 +176,7 @@
 
         <Button
             android:id="@+id/buttonStartBattle"
-            style="@style/Widget.Pleos.Button.Primary.L"
+            style="@style/Widget.Pleos.Button.Secondary.L"
             android:layout_width="match_parent"
             android:layout_height="@dimen/pleos_button_height_l"
             android:layout_marginTop="@dimen/moca_gap"
@@ -184,7 +184,7 @@
 
         <Button
             android:id="@+id/buttonSkip"
-            style="@style/Widget.Pleos.Button.Secondary.L"
+            style="@style/Widget.Pleos.Button.Primary.L"
             android:layout_width="match_parent"
             android:layout_height="@dimen/pleos_button_height_s"
             android:layout_marginTop="@dimen/moca_gap_small"

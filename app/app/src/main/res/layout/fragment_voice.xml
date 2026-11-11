@@ -62,7 +62,7 @@
 
         <Button
             android:id="@+id/voiceFixAction"
-            style="@style/Widget.Pleos.Button.Primary.L"
+            style="@style/Widget.Pleos.Button.Secondary.L"
             android:layout_width="match_parent"
             android:layout_height="@dimen/pleos_button_height_l"
             android:layout_marginTop="@dimen/moca_gap"
@@ -101,7 +101,7 @@
 
             <Button
                 android:id="@+id/suggestion1"
-                style="@style/Widget.Pleos.Button.Secondary.M"
+                style="@style/Widget.Pleos.Button.Primary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_marginEnd="@dimen/moca_gap"
@@ -110,7 +110,7 @@
 
             <Button
                 android:id="@+id/suggestion2"
-                style="@style/Widget.Pleos.Button.Secondary.M"
+                style="@style/Widget.Pleos.Button.Primary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_weight="1"
@@ -125,7 +125,7 @@
 
             <Button
                 android:id="@+id/suggestion3"
-                style="@style/Widget.Pleos.Button.Secondary.M"
+                style="@style/Widget.Pleos.Button.Primary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_marginEnd="@dimen/moca_gap"
@@ -134,7 +134,7 @@
 
             <Button
                 android:id="@+id/suggestion4"
-                style="@style/Widget.Pleos.Button.Secondary.M"
+                style="@style/Widget.Pleos.Button.Primary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_weight="1"
@@ -161,7 +161,7 @@
 
         <Button
             android:id="@+id/sendButton"
-            style="@style/Widget.Pleos.Button.Secondary.L"
+            style="@style/Widget.Pleos.Button.Primary.L"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/pleos_button_height_l"
             android:text="@string/voice_send" />
