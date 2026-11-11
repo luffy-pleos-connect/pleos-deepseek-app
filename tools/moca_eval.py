@@ -54,6 +54,10 @@ ITEMS = [
     ("보이스-5", "자동"), ("보이스-6", "수동"),
     ("대전-1", "자동"), ("대전-2", "자동"), ("대전-3", "자동"), ("대전-4", "자동"),
     ("공통-1", "자동"), ("공통-2", "수동"), ("공통-3", "자동"),
+    ("이어-1", "자동"), ("이어-2", "수동"), ("이어-3", "자동"),
+    ("순위-1", "자동"), ("순위-2", "자동"),
+    ("화면-1", "수동"), ("화면-2", "자동"), ("화면-3", "수동"), ("화면-4", "자동"),
+    ("화면-5", "자동"), ("화면-6", "자동"), ("화면-7", "자동"), ("화면-8", "수동"),
 ]
 
 MANUAL = {
@@ -63,11 +67,18 @@ MANUAL = {
     "보이스-2": "수동. 까닭: 서버를 연결한 상태에서 같은 질문을 세 번 보내야 한다.",
     "보이스-6": "수동. 까닭: 화면 녹화(기준표 명령 4)로 6초를 재야 한다.",
     "공통-2": "수동. 까닭: 주행 제한 코드 검색과 주행 상태는 에뮬레이터에서 자동으로 재지 않는다.",
+    "이어-2": "수동. 까닭: 데모 D0~D6 에 워셔액만 부족한 시나리오가 없다. 기준표는 이 경우를 잴 수 없음으로 둔다.",
+    "화면-1": "수동. 까닭: 누르는 횟수는 화면 글자 한 장이 아니라 조작을 세어야 한다.",
+    "화면-3": "수동. 까닭: 채워진 강조 단추인지는 화면 글자에 없다.",
+    "화면-8": "수동. 까닭: 목적지가 같은지는 화면 글자에 없다.",
 }
 
+# 기준표 3-5. lead 가 2026-11-11 에 잰 값. 없는 시나리오는 재지 않았다.
+MEASURED_RANKS = {"D3": 9, "D0": 5}
+
 PARTIAL = "서버 연결 쪽은 수동. 까닭: 자동으로 재는 것은 서버 끊김 쪽뿐이다."
-COMMON_SCREENS = ["홈", "점검하기", "상태관리", "AI 보이스", "대전하기", "설정"]
-HOME_BUTTONS = ["점검하기", "상태관리", "AI 보이스", "대전하기"]
+COMMON_SCREENS = ["홈", "결과가 보이는 화면", "상태관리", "AI 보이스", "대전하기", "설정"]
+HOME_BUTTONS = ["결과가 보이는 화면", "상태관리", "AI 보이스", "대전하기"]
 
 
 class Verdict:
@@ -125,6 +136,11 @@ def answer_text():
         ]))
     lines.append("D3 과 D5 는 계획이 진행을 정해 둔 시연용 시나리오다. 위 규칙으로 계산한 결과와 다르므로, 화면에 「데모 시나리오」라는 글자가 함께 나와야 한다.")
     lines.append("상대의 카테고리 점수(동력, 제동·조향, 타이어, 전기, 안전): 달리는곰 100·100·75·100·100, 세차는사랑 100·100·100·90·100, 출근길요정 100·100·80·100·100, 주말캠퍼 100·100·100·100·100, 퇴근길질주 60·100·75·100·100.")
+    lines.append("")
+    lines.append("3-5 순위 정답")
+    lines.append("D3\t9위\t13명")
+    lines.append("D0\t5위\t13명")
+    lines.append("다른 시나리오는 2026-11-11 에 재지 않았다.")
     lines.append("")
     return "\n".join(lines)
 
@@ -241,17 +257,29 @@ def find_nodes(xml, resource_id, package):
                 "bounds": node.attrib.get("bounds", ""),
                 "enabled": node.attrib.get("enabled", ""),
                 "checked": node.attrib.get("checked", ""),
+                "clickable": node.attrib.get("clickable", ""),
+                "scrollable": node.attrib.get("scrollable", ""),
+                "selected": node.attrib.get("selected", ""),
                 "resource_id": resource_id,
             })
     return found
 
 
-def bounds_center(bounds):
+def bounds_box(bounds):
     matched = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", bounds.strip())
     if not matched:
         raise ValueError(f"bounds 형식이 아니다: {bounds}")
-    x1, y1, x2, y2 = (int(group) for group in matched.groups())
+    return tuple(int(group) for group in matched.groups())
+
+
+def bounds_center(bounds):
+    x1, y1, x2, y2 = bounds_box(bounds)
     return (x1 + x2) // 2, (y1 + y2) // 2
+
+
+def bounds_height(bounds):
+    _x1, y1, _x2, y2 = bounds_box(bounds)
+    return y2 - y1
 
 
 def first_element(xml, resource_id, package):
@@ -307,7 +335,16 @@ def _packaged_children(parent, package):
 
 
 def category_states(xml, app):
-    container = first_element(xml, app["places"]["상태.카드"]["container"], app["package"])
+    spec = app["places"]["상태.카드"]
+    if "rows" in spec:
+        found = {}
+        package = app["package"]
+        for row in spec["rows"]:
+            status = " ".join(node["text"] for node in find_nodes(xml, row["status"], package))
+            score = " ".join(node["text"] for node in find_nodes(xml, row["score"], package))
+            found[row["name"]] = f"{status} {score}".strip()
+        return found
+    container = first_element(xml, spec["container"], app["package"])
     if container is None:
         return {}
     found = {}
@@ -322,7 +359,10 @@ def category_states(xml, app):
 
 
 def category_detail(xml, app, name):
-    container = first_element(xml, app["places"]["상태.상세"]["container"], app["package"])
+    spec = app["places"]["상태.상세"]
+    if "ids" in spec or "id" in spec:
+        return place_text(xml, app, "상태.상세")
+    container = first_element(xml, spec["container"], app["package"])
     if container is None:
         return ""
     package = app["package"]
@@ -332,6 +372,64 @@ def category_detail(xml, app, name):
             if kid.attrib.get("text", "") == name and index + 2 < len(kids):
                 return kids[index + 2].attrib.get("text", "")
     return ""
+
+
+def place_found(xml, app, name):
+    spec = app["places"][name]
+    package = app["package"]
+    if "id" in spec:
+        return bool(find_nodes(xml, spec["id"], package))
+    if "ids" in spec:
+        return all(find_nodes(xml, resource_id, package) for resource_id in spec["ids"])
+    if "rows" in spec:
+        return all(find_nodes(xml, row["status"], package) for row in spec["rows"])
+    if "container" in spec:
+        return first_element(xml, spec["container"], package) is not None
+    return False
+
+
+def any_text(xml):
+    parts = []
+    if not xml or "<" not in xml:
+        return ""
+    for node in parse_root(xml).iter("node"):
+        text = node.attrib.get("text", "")
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
+
+
+def rank_number(text):
+    """`위` 바로 앞의 숫자. 없으면 첫 숫자."""
+    matched = re.search(r"(?<!\d)(\d+)\s*위", text)
+    if matched:
+        return int(matched.group(1))
+    return first_number(text)
+
+
+def my_rank_number(xml, app):
+    spec = app["places"]["순위.내줄"]
+    container = first_element(xml, spec["container"], app["package"])
+    if container is None:
+        return None
+    package = app["package"]
+    for kid in container.iter("node"):
+        if kid is container or kid.attrib.get("package") != package:
+            continue
+        if kid.attrib.get("selected") != "true":
+            continue
+        texts = []
+        own = kid.attrib.get("text", "")
+        if own:
+            texts.append(own)
+        for node in kid.iter("node"):
+            if node is kid:
+                continue
+            text = node.attrib.get("text", "")
+            if text:
+                texts.append(text)
+        return rank_number(" ".join(texts))
+    return None
 
 
 def round_verdicts(xml, app):
@@ -399,13 +497,12 @@ def judge_home_2(screens, app):
 def judge_home_3(steps, app):
     package = app["package"]
     checks = [
-        ("점검하기", lambda xml: bool(
-            find_nodes(xml, app["places"]["점검.결과"]["id"], package)
-            or find_nodes(xml, app["places"]["점검.시작"]["id"], package)
+        ("결과가 보이는 화면", lambda xml: place_found(xml, app, "점검.결과")),
+        ("상태관리", lambda xml: place_found(xml, app, "상태.카드") or all(
+            count_exact(xml, package, name) >= 1 for name in CATEGORY_NAMES
         )),
-        ("상태관리", lambda xml: all(count_exact(xml, package, name) >= 1 for name in CATEGORY_NAMES)),
-        ("AI 보이스", lambda xml: bool(find_nodes(xml, app["places"]["보이스.상태"]["id"], package))),
-        ("대전하기", lambda xml: bool(find_nodes(xml, app["places"]["대전.시작"]["id"], package))),
+        ("AI 보이스", lambda xml: place_found(xml, app, "보이스.상태")),
+        ("대전하기", lambda xml: place_found(xml, app, "대전.시작")),
     ]
     if len(steps) != 4:
         return Verdict(False, "화면 수가 4가 아니다")
@@ -460,10 +557,15 @@ def judge_inspect_5(before_xml, after_xml, app):
 
 @pure
 def judge_status_1(xml, app):
-    package = app["package"]
-    counts_ok = all(count_exact(xml, package, name) == 1 for name in CATEGORY_NAMES)
+    spec = app["places"]["상태.카드"]
     states = category_states(xml, app)
     numbers_ok = all(first_number(states.get(name, "")) is not None for name in CATEGORY_NAMES)
+    if "rows" in spec and "container" in spec:
+        blob = container_text(xml, spec["container"], app["package"])
+        names_ok = all(name in blob for name in CATEGORY_NAMES)
+        return Verdict(names_ok and numbers_ok and len(states) == len(CATEGORY_NAMES), str(states))
+    package = app["package"]
+    counts_ok = all(count_exact(xml, package, name) == 1 for name in CATEGORY_NAMES)
     return Verdict(counts_ok and numbers_ok, str(states))
 
 
@@ -599,6 +701,136 @@ def judge_common_1(on_xmls, off_xmls, app):
     on_ok = len(on_xmls) == 6 and all("데모 데이터" in all_text(xml, package) for xml in on_xmls)
     off_ok = len(off_xmls) == 6 and all("데모 데이터" not in all_text(xml, package) for xml in off_xmls)
     return Verdict(on_ok and off_ok, f"켜짐 {len(on_xmls)} 꺼짐 {len(off_xmls)}")
+
+
+@pure
+def judge_link_1(xml, app, taps):
+    keyword = app["ops"]["검색어"]
+    blob = any_text(xml)
+    others = []
+    if xml and "<" in xml:
+        for node in parse_root(xml).iter("node"):
+            text = node.attrib.get("text", "").strip()
+            if text and text != keyword:
+                others.append(text)
+    ok = taps <= 2 and keyword in blob and len(others) >= 1
+    return Verdict(ok, f"횟수 {taps} / {blob}")
+
+
+@pure
+def judge_link_3(xml, app):
+    nodes = find_nodes(xml, app["places"]["해결.단추"]["id"], app["package"])
+    return Verdict(len(nodes) == 0, f"해결 단추 {len(nodes)}")
+
+
+@pure
+def judge_rank_1(pairs, app):
+    ok = True
+    bits = []
+    for sid, (home_xml, rank_xml) in pairs.items():
+        home_n = rank_number(place_text(home_xml, app, "홈.순위"))
+        mine = my_rank_number(rank_xml, app)
+        row_ok = home_n is not None and home_n == mine
+        if sid in MEASURED_RANKS:
+            row_ok = row_ok and home_n == MEASURED_RANKS[sid]
+        ok = ok and row_ok
+        bits.append(f"{sid} 홈 {home_n} 내줄 {mine}")
+    return Verdict(ok, " / ".join(bits))
+
+
+@pure
+def judge_rank_2(xml, app):
+    text = all_text(xml, app["package"])
+    return Verdict("연습 순위" in text, text)
+
+
+def _same_line(one, other):
+    return one[1] < other[3] and other[1] < one[3]
+
+
+@pure
+def judge_screen_2(xml, app):
+    tabs = set(app["ops"]["아래탭"])
+    count = 0
+    for node in elements(xml, app["package"]):
+        if node.attrib.get("clickable") == "true" and node.attrib.get("resource-id") not in tabs:
+            count += 1
+    return Verdict(count <= 6, str(count))
+
+
+@pure
+def judge_screen_4(xml, app):
+    boxes = []
+    texts = []
+    for node in elements(xml, app["package"]):
+        raw = node.attrib.get("bounds", "")
+        if not raw:
+            continue
+        box = bounds_box(raw)
+        boxes.append(box)
+        if node.attrib.get("text", ""):
+            texts.append(box)
+    if not boxes:
+        return Verdict(False, "창 없음")
+    top = min(box[1] for box in boxes)
+    bottom = max(box[3] for box in boxes)
+    mid = (top + bottom) / 2
+    lower = [box for box in texts if (box[1] + box[3]) / 2 > mid]
+    return Verdict(len(lower) >= 3, str(len(lower)))
+
+
+@pure
+def judge_screen_5(xml, app):
+    grade_id = app["places"]["화면.등급"]["id"]
+    nodes = find_nodes(xml, grade_id, app["package"])
+    if not nodes or not nodes[0]["bounds"]:
+        return Verdict(False, "등급 노드 없음")
+    height = bounds_height(nodes[0]["bounds"])
+    others = []
+    for node in elements(xml, app["package"]):
+        if node.attrib.get("resource-id") == grade_id or not node.attrib.get("text"):
+            continue
+        raw = node.attrib.get("bounds", "")
+        if not raw:
+            continue
+        others.append(bounds_height(raw))
+    ok = bool(others) and all(height > other for other in others)
+    return Verdict(ok, f"등급 {height} / 다른 글자 {others}")
+
+
+def _scrolls(xml, package):
+    return any(node.attrib.get("scrollable") == "true" for node in elements(xml, package))
+
+
+@pure
+def judge_screen_6(home_xml, detail_xml, app):
+    package = app["package"]
+    home = _scrolls(home_xml, package)
+    detail = _scrolls(detail_xml, package)
+    return Verdict(not home and not detail, f"홈 {home} 상세 {detail}")
+
+
+@pure
+def judge_screen_7(xml, app):
+    package = app["package"]
+    seen = 0
+    ok = True
+    for status_id, score_id in app["places"]["화면.줄"]:
+        status = find_nodes(xml, status_id, package)
+        score = find_nodes(xml, score_id, package)
+        if not status or not score:
+            continue
+        seen += 1
+        if not any(word in status[0]["text"] for word in STATUS_WORDS):
+            ok = False
+        if not score[0]["text"]:
+            ok = False
+        if not status[0]["bounds"] or not score[0]["bounds"]:
+            ok = False
+            continue
+        if not _same_line(bounds_box(status[0]["bounds"]), bounds_box(score[0]["bounds"])):
+            ok = False
+    return Verdict(ok and seen >= 5, str(seen))
 
 
 @pure
@@ -752,7 +984,7 @@ class Runner:
 
     def run_inspect(self):
         self.tap_seq(self.ops["조작-3"]["홈"])
-        self.tap_seq(self.ops["조작-4"]["시작"])
+        self.tap_seq(self.ops["조작-4"].get("시작") or [])
 
         def ready(xml):
             text = place_text(xml, self.app, "점검.결과")
@@ -830,6 +1062,15 @@ class Runner:
             "대전-4": self.item_battle_4,
             "공통-1": self.item_common_1,
             "공통-3": self.item_common_3,
+            "이어-1": self.item_link_1,
+            "이어-3": self.item_link_3,
+            "순위-1": self.item_rank_1,
+            "순위-2": self.item_rank_2,
+            "화면-2": self.item_screen_2,
+            "화면-4": self.item_screen_4,
+            "화면-5": self.item_screen_5,
+            "화면-6": self.item_screen_6,
+            "화면-7": self.item_screen_7,
         }[item]()
 
     def item_home_1(self):
@@ -904,9 +1145,9 @@ class Runner:
         self.select_scenario("D3")
         self.run_inspect()
         self.go("상태관리")
-        self.tap_text("제동·조향")
+        self.tap_seq(self.ops["조작-5"]["제동·조향"])
         brake = self.dump()
-        self.tap_text("타이어")
+        self.tap_seq(self.ops["조작-5"]["타이어"])
         verdict = judge_status_4(brake, self.dump(), self.app)
         return _done(verdict.ok, verdict.measured)
 
@@ -1008,6 +1249,63 @@ class Runner:
         verdict = judge_common_3(bundle, self.app)
         return _done(verdict.ok, verdict.measured)
 
+    def _home_ready(self, sid):
+        self.select_scenario(sid)
+        self.run_inspect()
+        self.go("홈")
+        return self.wait_until(lambda xml: place_text(xml, self.app, "홈.등급") != "")
+
+    def item_link_1(self):
+        self._home_ready("D3")
+        ids = self.ops["조작-9"]
+        self.tap_seq(ids)
+        verdict = judge_link_1(self.dump(), self.app, len(ids))
+        return _done(verdict.ok, verdict.measured)
+
+    def item_link_3(self):
+        verdict = judge_link_3(self._home_ready("D0"), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_rank_1(self):
+        pairs = {}
+        for sid in ("D3", "D0"):
+            home = self._home_ready(sid)
+            self.go("대전하기")
+            pairs[sid] = (home, self.dump())
+        verdict = judge_rank_1(pairs, self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_rank_2(self):
+        self.go("대전하기")
+        verdict = judge_rank_2(self.dump(), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_screen_2(self):
+        verdict = judge_screen_2(self._home_ready("D3"), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_screen_4(self):
+        verdict = judge_screen_4(self._home_ready("D3"), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_screen_5(self):
+        verdict = judge_screen_5(self._home_ready("D3"), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_screen_6(self):
+        home = self._home_ready("D3")
+        self.go("상태관리")
+        verdict = judge_screen_6(home, self.dump(), self.app)
+        return _done(verdict.ok, verdict.measured)
+
+    def item_screen_7(self):
+        home = self._home_ready("D3")
+        home_verdict = judge_screen_7(home, self.app)
+        self.go("상태관리")
+        detail_verdict = judge_screen_7(self.dump(), self.app)
+        ok = home_verdict.ok and detail_verdict.ok
+        return _done(ok, f"홈 {home_verdict.measured} / 상세 {detail_verdict.measured}")
+
 
 def _cell(text):
     cleaned = (text or "").replace("|", "/").replace("\n", " ").strip()
@@ -1032,7 +1330,7 @@ def render_report(app, rows, day, board):
         lines.append(f"| {item} | {_cell(result)} | {_cell(measured)} | {_cell(note)} |")
     gate = [item for item in ("점검-2", "보이스-3", "공통-1") if by_id[item][1] == "실패"]
     lines.append("")
-    lines.append(f"통과 수: {passed} / 26")
+    lines.append(f"통과 수: {passed} / {len(ITEMS)}")
     lines.append("후보에서 빼는 항목(점검-2, 보이스-3, 공통-1) 가운데 실패: " + (", ".join(gate) if gate else "없음"))
     lines.append("점검-4 평균 시간:        초      보이스-6 평균 시간:        초")
     lines.append("")

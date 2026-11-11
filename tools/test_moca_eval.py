@@ -11,10 +11,12 @@ spec.loader.exec_module(mod)
 PKG = "ai.moca.app"
 
 
-def node(resource_id, text, bounds="[0,0][10,10]", enabled="true", package=PKG, inner=""):
+def node(resource_id, text, bounds="[0,0][10,10]", enabled="true", package=PKG, inner="",
+         clickable="false", selected="false", scrollable="false"):
     return (
         f'<node package="{package}" resource-id="{resource_id}" text="{text}" '
-        f'bounds="{bounds}" enabled="{enabled}">{inner}</node>'
+        f'bounds="{bounds}" enabled="{enabled}" clickable="{clickable}" '
+        f'selected="{selected}" scrollable="{scrollable}">{inner}</node>'
     )
 
 
@@ -128,7 +130,10 @@ class EvalTests(unittest.TestCase):
         self.assertFalse(mod.judge_home_2(screens, self.app).ok)
 
     def _inspect(self, grade, overall):
-        return xml_of(node(self.place("점검.결과"), f"{grade} · {overall}"))
+        spec = self.app["places"]["점검.결과"]
+        if "ids" in spec:
+            return xml_of(node(spec["ids"][0], grade), node(spec["ids"][1], str(overall)))
+        return xml_of(node(spec["id"], f"{grade} · {overall}"))
 
     def test_inspect_3_passes_matching_screens(self):
         screens = {sid: self._inspect(mod.SCENARIOS[sid]["등급"], mod.SCENARIOS[sid]["종합"]) for sid in mod.SCENARIO_ORDER}
@@ -193,14 +198,22 @@ class EvalTests(unittest.TestCase):
         self.assertIn(["adb", "shell", "uiautomator", "dump", "/sdcard/u.xml"], calls)
         self.assertIn(["adb", "shell", "cat", "/sdcard/u.xml"], calls)
 
-    def test_list_marks_26_items(self):
+    def test_list_marks_items(self):
         lines = [line for line in mod.list_text().splitlines() if line]
-        self.assertEqual(len(lines), 26)
+        self.assertEqual(len(lines), 39)
         self.assertTrue(all(line.endswith(" 자동") or line.endswith(" 수동") for line in lines))
         self.assertIn("홈-1 자동", lines)
         self.assertIn("점검-1 수동", lines)
         self.assertIn("보이스-3 자동", lines)
         self.assertIn("공통-2 수동", lines)
+        self.assertIn("이어-1 자동", lines)
+        self.assertIn("이어-2 수동", lines)
+        self.assertIn("이어-3 자동", lines)
+        self.assertIn("순위-1 자동", lines)
+        self.assertIn("순위-2 자동", lines)
+        self.assertIn("화면-1 수동", lines)
+        self.assertIn("화면-2 자동", lines)
+        self.assertIn("화면-8 수동", lines)
 
     def test_json_scenario_buttons(self):
         self.assertEqual(self.app["package"], PKG)
@@ -219,6 +232,99 @@ class EvalTests(unittest.TestCase):
 
         xml = mod.Adb(run=run, sleep=lambda _seconds: None).dump()
         self.assertEqual(xml, "")
+
+    def test_link_1_passes_when_keyword_and_another_text_exist(self):
+        xml = xml_of(
+            node("nav:id/query", "정비소", package="ai.navi"),
+            node("nav:id/result", "강남점", package="ai.navi"),
+        )
+        self.assertTrue(mod.judge_link_1(xml, self.app, 1).ok)
+
+    def test_link_1_fails_when_only_the_keyword_is_present(self):
+        xml = xml_of(node("nav:id/query", "정비소", package="ai.navi"))
+        self.assertFalse(mod.judge_link_1(xml, self.app, 1).ok)
+
+    def test_link_1_fails_when_taps_exceed_two(self):
+        xml = xml_of(
+            node("nav:id/query", "정비소", package="ai.navi"),
+            node("nav:id/result", "강남점", package="ai.navi"),
+        )
+        self.assertFalse(mod.judge_link_1(xml, self.app, 3).ok)
+
+    def test_link_3_passes_when_action_node_is_absent(self):
+        xml = xml_of(node(self.place("홈.등급"), "A"))
+        self.assertTrue(mod.judge_link_3(xml, self.app).ok)
+
+    def test_link_3_fails_when_action_node_is_present(self):
+        xml = xml_of(node(self.app["places"]["해결.단추"]["id"], "가까운 정비소 안내"))
+        self.assertFalse(mod.judge_link_3(xml, self.app).ok)
+
+    def _rank_pair(self, home_line, place):
+        home = xml_of(node(self.app["places"]["홈.순위"]["id"], home_line))
+        row = node("", "", selected="true", inner=node("", str(place)))
+        rank = xml_of(
+            node(self.app["places"]["순위.내줄"]["container"], "", inner=row),
+            node(self.app["places"]["순위.표기"]["id"], "연습 순위"),
+        )
+        return home, rank
+
+    def test_rank_1_passes_measured_scenarios(self):
+        pairs = {
+            "D3": self._rank_pair("오늘 9위 · 13명 중 · 연습 순위", 9),
+            "D0": self._rank_pair("오늘 5위 · 13명 중 · 연습 순위", 5),
+        }
+        self.assertTrue(mod.judge_rank_1(pairs, self.app).ok)
+
+    def test_rank_1_fails_when_home_and_row_differ(self):
+        pairs = {"D3": self._rank_pair("오늘 9위 · 13명 중 · 연습 순위", 8)}
+        self.assertFalse(mod.judge_rank_1(pairs, self.app).ok)
+
+    def test_rank_2_passes_when_practice_label_is_present(self):
+        xml = xml_of(node(self.app["places"]["순위.표기"]["id"], "연습 순위"))
+        self.assertTrue(mod.judge_rank_2(xml, self.app).ok)
+
+    def test_rank_2_fails_when_practice_label_is_absent(self):
+        xml = xml_of(node(self.app["places"]["순위.표기"]["id"], "실시간 순위"))
+        self.assertFalse(mod.judge_rank_2(xml, self.app).ok)
+
+    def test_screen_2_counts_clickable_nodes_except_tabs(self):
+        tabs = "".join(node(tab, "탭", clickable="true") for tab in self.app["ops"]["아래탭"])
+        rows = "".join(
+            node(f"ai.moca.app:id/row{index}", "줄", clickable="true") for index in range(6)
+        )
+        self.assertTrue(mod.judge_screen_2(xml_of(tabs, rows), self.app).ok)
+        extra = node("ai.moca.app:id/row6", "줄", clickable="true")
+        self.assertFalse(mod.judge_screen_2(xml_of(tabs, rows, extra), self.app).ok)
+
+    def test_screen_4_needs_three_text_nodes_in_the_lower_half(self):
+        high = "".join(node(f"ai.moca.app:id/h{index}", "위", bounds="[0,0][10,10]") for index in range(3))
+        low = "".join(
+            node(f"ai.moca.app:id/l{index}", "아래", bounds="[0,40][10,50]") for index in range(3)
+        )
+        self.assertTrue(mod.judge_screen_4(xml_of(high, low), self.app).ok)
+        self.assertFalse(mod.judge_screen_4(xml_of(high), self.app).ok)
+
+    def test_screen_5_grade_is_taller_than_other_text(self):
+        grade = node(self.app["places"]["화면.등급"]["id"], "B", bounds="[0,0][40,40]")
+        other = node(self.place("홈.종합"), "종합 75", bounds="[0,40][40,50]")
+        self.assertTrue(mod.judge_screen_5(xml_of(grade, other), self.app).ok)
+        short = node(self.app["places"]["화면.등급"]["id"], "B", bounds="[0,0][40,8]")
+        self.assertFalse(mod.judge_screen_5(xml_of(short, other), self.app).ok)
+
+    def test_screen_6_fails_when_a_node_scrolls(self):
+        plain = xml_of(node(self.place("홈.등급"), "B"))
+        scrolling = xml_of(node(self.place("홈.등급"), "B", scrollable="true"))
+        self.assertTrue(mod.judge_screen_6(plain, plain, self.app).ok)
+        self.assertFalse(mod.judge_screen_6(scrolling, plain, self.app).ok)
+
+    def test_screen_7_status_and_score_share_a_line(self):
+        parts = []
+        for status_id, score_id in self.app["places"]["화면.줄"][:5]:
+            parts.append(node(status_id, "정상", bounds="[0,10][20,20]"))
+            parts.append(node(score_id, "100", bounds="[30,10][50,20]"))
+        self.assertTrue(mod.judge_screen_7(xml_of(*parts), self.app).ok)
+        parts[1] = node(self.app["places"]["화면.줄"][0][1], "100", bounds="[30,40][50,50]")
+        self.assertFalse(mod.judge_screen_7(xml_of(*parts), self.app).ok)
 
 
 if __name__ == "__main__":

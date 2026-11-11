@@ -1,6 +1,10 @@
 # MOCA 기능별 평가 도구
 
-기준표 26항목을 연결된 에뮬레이터에서 재고 기록지를 만든다. 에뮬레이터는 이미 켜져 있어야 한다. 이 도구는 에뮬레이터를 켜지 않는다.
+기준표 39항목을 연결된 에뮬레이터에서 재고 기록지를 만든다. 에뮬레이터는 이미 켜져 있어야 한다. 이 도구는 에뮬레이터를 켜지 않는다.
+
+띄울 때는 아래를 쓴다. `-gpu swiftshader_indirect` 로 띄우면 주행 화면 앱 `ai.umos.drivingview` 가 1~2초마다 죽고 다시 떠서, 터치가 앱에 전달되지 않고 화면 읽기가 멈춘다.
+
+    emulator -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu host -no-audio -no-window
 
     python3 tools/moca_eval.py --list
     python3 tools/moca_eval.py --answers

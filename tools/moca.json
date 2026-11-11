@@ -3,34 +3,36 @@
   "repo": "moca",
   "ops": {
     "조작-1": {
-      "켜기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/switchDemo"],
-      "끄기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/switchDemo"]
+      "켜기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/switchDemo"],
+      "끄기": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/switchDemo"]
     },
     "조작-2": {
-      "D0": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD0"],
-      "D1": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD1"],
-      "D2": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD2"],
-      "D3": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD3"],
-      "D4": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD4"],
-      "D5": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD5"],
-      "D6": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/scenarioD6"]
+      "D0": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD0"],
+      "D1": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD1"],
+      "D2": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD2"],
+      "D3": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD3"],
+      "D4": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD4"],
+      "D5": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD5"],
+      "D6": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD6"]
     },
     "조작-3": {
-      "점검하기": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileInspect"],
-      "상태관리": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileStatus"],
-      "AI 보이스": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileVoice"],
-      "대전하기": ["ai.moca.app:id/tabHome", "ai.moca.app:id/tileBattle"],
+      "결과가 보이는 화면": [],
+      "상태관리": ["ai.moca.app:id/tabStatus"],
+      "AI 보이스": ["ai.moca.app:id/tabVoice"],
+      "대전하기": ["ai.moca.app:id/tabBattle"],
       "설정": ["ai.moca.app:id/tabSettings"],
       "홈": ["ai.moca.app:id/tabHome"]
     },
     "조작-4": {
-      "시작": ["ai.moca.app:id/tileInspect"],
-      "다시": ["ai.moca.app:id/buttonInspectAgain"]
+      "시작": [],
+      "설명": "앱을 연다"
     },
     "조작-5": {
-      "ids": [],
-      "container": "ai.moca.app:id/categoryContainer",
-      "rule": "text 가 동력·제동·조향·타이어·전기·안전 과 같은 노드를 누른다. 카드에는 resource-id 가 없다."
+      "동력": ["ai.moca.app:id/statusPower"],
+      "제동·조향": ["ai.moca.app:id/statusBrake"],
+      "타이어": ["ai.moca.app:id/statusTire"],
+      "전기": ["ai.moca.app:id/statusElectric"],
+      "안전": ["ai.moca.app:id/statusSafety"]
     },
     "조작-6": {
       "질문-등급": ["ai.moca.app:id/suggestion1"],
@@ -43,6 +45,16 @@
       "주소": "http://127.0.0.1:8787",
       "켜는명령": "cd server && node local.mjs"
     },
+    "조작-9": ["ai.moca.app:id/topProblemAction"],
+    "검색어": "정비소",
+    "조작-10": ["ai.moca.app:id/topProblemAction"],
+    "아래탭": [
+      "ai.moca.app:id/tabHome",
+      "ai.moca.app:id/tabStatus",
+      "ai.moca.app:id/tabVoice",
+      "ai.moca.app:id/tabBattle",
+      "ai.moca.app:id/tabSettings"
+    ],
     "첫실행": ["ai.moca.app:id/buttonSkip"],
     "대전건너뛰기": ["ai.moca.app:id/buttonSkip"]
   },
@@ -53,21 +65,21 @@
     "홈.관리": {"id": "ai.moca.app:id/careValue"},
     "홈.남은점수": {"id": "ai.moca.app:id/gradeHint"},
     "홈.마지막점검": {"id": "ai.moca.app:id/lastInspection"},
-    "점검.결과": {"id": "ai.moca.app:id/resultGrade"},
-    "점검.카테고리": {"id": "ai.moca.app:id/resultDelta"},
-    "점검.시작": {"id": "ai.moca.app:id/buttonInspectAgain"},
+    "홈.순위": {"id": "ai.moca.app:id/rankText"},
+    "점검.결과": {"ids": ["ai.moca.app:id/gradeValue", "ai.moca.app:id/totalValue"]},
+    "점검.카테고리": {"container": "ai.moca.app:id/categoryList"},
     "상태.카드": {
-      "container": "ai.moca.app:id/categoryContainer",
-      "rule": "text 가 카테고리 이름과 같은 노드의 다음 형제가 상태 글자다"
+      "container": "ai.moca.app:id/statusCategoryList",
+      "rows": [
+        {"name": "동력", "status": "ai.moca.app:id/statusPowerStatus", "score": "ai.moca.app:id/statusPowerScore"},
+        {"name": "제동·조향", "status": "ai.moca.app:id/statusBrakeStatus", "score": "ai.moca.app:id/statusBrakeScore"},
+        {"name": "타이어", "status": "ai.moca.app:id/statusTireStatus", "score": "ai.moca.app:id/statusTireScore"},
+        {"name": "전기", "status": "ai.moca.app:id/statusElectricStatus", "score": "ai.moca.app:id/statusElectricScore"},
+        {"name": "안전", "status": "ai.moca.app:id/statusSafetyStatus", "score": "ai.moca.app:id/statusSafetyScore"}
+      ]
     },
-    "상태.상세": {
-      "container": "ai.moca.app:id/categoryContainer",
-      "rule": "카테고리 이름 노드에서 두 번째 다음 형제가 상세 글자다"
-    },
-    "상태.추이": {
-      "container": "ai.moca.app:id/trendContainer",
-      "rule": "container 안 text 를 이어 붙인다"
-    },
+    "상태.상세": {"ids": ["ai.moca.app:id/detailValues", "ai.moca.app:id/detailDeductions", "ai.moca.app:id/detailAdvice"]},
+    "상태.추이": {"id": "ai.moca.app:id/trendGraph"},
     "보이스.답": {"id": "ai.moca.app:id/answerText"},
     "보이스.상태": {"id": "ai.moca.app:id/voiceState"},
     "보이스.질문": {"id": "ai.moca.app:id/questionInput"},
@@ -78,7 +90,24 @@
     },
     "대전.결과": {"id": "ai.moca.app:id/battleResult"},
     "대전.전적": {"id": "ai.moca.app:id/battleRecord"},
-    "대전.시작": {"id": "ai.moca.app:id/buttonStartBattle"}
+    "대전.시작": {"id": "ai.moca.app:id/buttonStartBattle"},
+    "순위.내줄": {"container": "ai.moca.app:id/rankList"},
+    "순위.표기": {"id": "ai.moca.app:id/rankPracticeBadge"},
+    "해결.단추": {"id": "ai.moca.app:id/topProblemAction"},
+    "QR.도메인": {"id": "ai.moca.app:id/qrDomain"},
+    "화면.등급": {"id": "ai.moca.app:id/gradeValue"},
+    "화면.줄": [
+      ["ai.moca.app:id/catPowerStatus", "ai.moca.app:id/catPowerScore"],
+      ["ai.moca.app:id/catBrakeStatus", "ai.moca.app:id/catBrakeScore"],
+      ["ai.moca.app:id/catTireStatus", "ai.moca.app:id/catTireScore"],
+      ["ai.moca.app:id/catElectricStatus", "ai.moca.app:id/catElectricScore"],
+      ["ai.moca.app:id/catSafetyStatus", "ai.moca.app:id/catSafetyScore"],
+      ["ai.moca.app:id/statusPowerStatus", "ai.moca.app:id/statusPowerScore"],
+      ["ai.moca.app:id/statusBrakeStatus", "ai.moca.app:id/statusBrakeScore"],
+      ["ai.moca.app:id/statusTireStatus", "ai.moca.app:id/statusTireScore"],
+      ["ai.moca.app:id/statusElectricStatus", "ai.moca.app:id/statusElectricScore"],
+      ["ai.moca.app:id/statusSafetyStatus", "ai.moca.app:id/statusSafetyScore"]
+    ]
   },
   "questions": {
     "질문-등급": "내 차 등급 몇이야?",
