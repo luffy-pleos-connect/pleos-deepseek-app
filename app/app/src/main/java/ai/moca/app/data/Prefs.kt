@@ -1,6 +1,8 @@
 package ai.moca.app.data
 
 import android.content.Context
+import ai.moca.app.score.ScoreBridge
+import moca.core.InspectionHistory
 import java.util.UUID
 
 /**
@@ -88,9 +90,8 @@ class Prefs(context: Context) {
         sp.getString(logKey(demo), "").orEmpty()
 
     fun appendInspection(demo: Boolean, line: String) {
-        val key = logKey(demo)
-        val kept = inspectionLog(demo).lines().filter { it.isNotBlank() }.takeLast(59)
-        sp.edit().putString(key, (kept + line).joinToString("\n")).apply()
+        val merged = InspectionHistory.append(inspectionLog(demo), line, ScoreBridge.today())
+        sp.edit().putString(logKey(demo), merged).apply()
     }
 
     fun clearAll() {

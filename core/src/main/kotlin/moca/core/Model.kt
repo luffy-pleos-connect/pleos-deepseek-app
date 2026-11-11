@@ -10,6 +10,22 @@ enum class Category(val label: String) {
     SAFETY("안전"),
 }
 
+enum class CategoryStatus(val label: String) {
+    OK("정상"),
+    CAUTION("주의"),
+    DANGER("위험"),
+    UNMEASURED("측정 불가");
+
+    companion object {
+        fun of(score: Int?): CategoryStatus = when {
+            score == null -> UNMEASURED
+            score >= 100 -> OK
+            score >= 70 -> CAUTION
+            else -> DANGER
+        }
+    }
+}
+
 enum class WheelArea(val label: String) {
     FL("앞왼쪽"),
     FR("앞오른쪽"),

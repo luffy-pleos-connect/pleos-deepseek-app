@@ -1,6 +1,7 @@
 package moca.core
 
 import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * 점검 한 줄을 텍스트로 넣고 뺀다. 화면과 SharedPreferences 는 이 문자열만 저장한다.
@@ -30,6 +31,20 @@ object InspectionHistory {
             unsupported,
             telltales,
         ).joinToString(";")
+    }
+
+    /**
+     * 리뷰 결함 4: 줄 수로 자르면 이번 달 점검 날이 사라져 관리 점수가 내려간다.
+     * 줄 수가 아니라 날짜로 자른다. 읽을 수 있고 지난달 1일 이후인 줄만 남기고 맨 뒤에 [line] 을 붙인다.
+     */
+    fun append(text: String, line: String, today: LocalDate): String {
+        val cutoff = YearMonth.from(today).minusMonths(1).atDay(1)
+        val kept = text.lines().mapNotNull { raw ->
+            val trimmed = raw.trim()
+            val parsed = decode(trimmed) ?: return@mapNotNull null
+            if (parsed.first.isBefore(cutoff)) null else trimmed
+        }
+        return (kept + line).joinToString("\n")
     }
 
     fun read(text: String, profile: Profile): List<Inspection> {
@@ -62,6 +77,21 @@ object InspectionHistory {
 
     fun careScore(text: String, today: LocalDate): Int =
         Care.evaluate(read(text, Profile.REAL), Profile.REAL, today).score
+
+    /** 오늘부터 거꾸로 점검이 하루도 빠지지 않고 이어진 날 수. 같은 날 여러 번은 하루로 센다. */
+    fun streakDays(text: String, today: LocalDate): Int {
+        val days = read(text, Profile.REAL)
+            .map { it.inspectedAt }
+            .filter { !it.isAfter(today) }
+            .toSortedSet()
+        var streak = 0
+        var day = today
+        while (day in days) {
+            streak++
+            day = day.minusDays(1)
+        }
+        return streak
+    }
 
     fun trendRows(text: String, profile: Profile): List<String> {
         val records = read(text, profile)
