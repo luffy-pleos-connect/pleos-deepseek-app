@@ -8,7 +8,10 @@
     <dimen name="moca_tile_min_height">120dp</dimen>
     <dimen name="moca_grade_card_min_width">360dp</dimen>
     <dimen name="moca_category_min_height">64dp</dimen>
-    <dimen name="moca_cat_icon">48dp</dimen>
-    <dimen name="moca_score_ring">160dp</dimen>
-    <dimen name="moca_status_dot">16dp</dimen>
+    <dimen name="moca_status_row_min">88dp</dimen>
+    <dimen name="moca_cat_icon">56dp</dimen>
+    <dimen name="moca_score_ring">400dp</dimen>
+    <dimen name="moca_score_ring_port">280dp</dimen>
+    <dimen name="moca_score_ring_stroke">24dp</dimen>
+    <dimen name="moca_status_dot">20dp</dimen>
 </resources>

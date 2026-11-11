@@ -112,7 +112,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun showInspectFailed() {
-        gradeHint.text = getString(R.string.c20_not_enough_data)
+        gradeHint.text = ""
         topProblemText.text = getString(R.string.c20_not_enough_data)
         topProblemAction.visibility = View.GONE
         homeStreak.visibility = View.GONE
@@ -129,29 +129,35 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun renderGrade(evaluation: Evaluation?) {
+        val placeholder = getString(R.string.home_grade_placeholder)
         if (evaluation == null || evaluation.grade == null) {
-            gradeValue.text = getString(R.string.home_grade_placeholder)
-            gradeHint.text = if (evaluation != null && evaluation.categories.values.any { it != null }) {
-                getString(R.string.c20_not_enough_data)
+            gradeValue.text = placeholder
+            val notEnough = getString(R.string.c20_not_enough_data)
+            val hint = if (evaluation != null && evaluation.categories.values.any { it != null }) {
+                notEnough
             } else {
                 getString(R.string.c03_first_grade)
             }
-            totalValue.text = getString(R.string.home_grade_placeholder)
-            healthValue.text = getString(R.string.home_health_value, getString(R.string.home_grade_placeholder))
-            careValue.text = getString(R.string.home_care_value, getString(R.string.home_grade_placeholder))
+            gradeHint.text = if (hint == notEnough) "" else hint
+            totalValue.text = getString(R.string.home_total_value, placeholder)
+            healthValue.text = getString(R.string.home_health_value, placeholder)
+            careValue.text = getString(R.string.home_care_value, placeholder)
             scoreRing.progress = 0
-            scoreRing.cappedByRed = evaluation?.redCap == true
+            scoreRing.hasRed = evaluation?.hasRed == true
             return
         }
         gradeValue.text = evaluation.grade.label
-        totalValue.text = evaluation.displayedOverall?.toString() ?: getString(R.string.home_grade_placeholder)
+        totalValue.text = getString(
+            R.string.home_total_value,
+            evaluation.displayedOverall?.toString() ?: placeholder,
+        )
         healthValue.text = getString(
             R.string.home_health_value,
-            evaluation.health?.toInt()?.toString() ?: getString(R.string.home_grade_placeholder),
+            evaluation.health?.toInt()?.toString() ?: placeholder,
         )
         careValue.text = getString(
             R.string.home_care_value,
-            evaluation.care?.toString() ?: getString(R.string.home_grade_placeholder),
+            evaluation.care?.toString() ?: placeholder,
         )
         gradeHint.text = when {
             evaluation.redCapNotice != null -> evaluation.redCapNotice
@@ -160,7 +166,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             else -> getString(R.string.c03_first_grade)
         }
         scoreRing.progress = evaluation.displayedOverall ?: 0
-        scoreRing.cappedByRed = evaluation.redCap
+        scoreRing.hasRed = evaluation.hasRed
     }
 
     private fun renderWarnings(summary: WarningSummary) {

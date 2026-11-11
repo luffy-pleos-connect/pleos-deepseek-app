@@ -25,4 +25,38 @@ object Priority {
         }
         else -> FixAction.REPAIR_SHOP
     }
+
+    /**
+     * 감점 종류별 조치 한 줄.
+     * 경고등 문구는 점수(50/25)가 아니라 스냅샷에 찍힌 색으로 가른다.
+     */
+    fun advice(deduction: Deduction, snapshot: VehicleSnapshot): String {
+        when (warningColor(deduction, snapshot)) {
+            Color.RED -> return "운행을 멈추고 가까운 정비소에서 점검받으세요"
+            Color.YELLOW -> return "가까운 시일 안에 정비소에서 점검받으세요"
+            else -> Unit
+        }
+        return when (deduction.group) {
+            "ENGINE_OIL", "TRANSMISSION_OIL", "BRAKE_FLUID" -> "정비소에서 보충하거나 교환하세요"
+            "TIRE_PRESSURE" -> "공기압을 보충하세요. 계속 낮으면 정비소에서 확인하세요"
+            "WASHER" -> "워셔액을 보충하세요"
+            "ENERGY" -> "가까운 충전소나 주유소에 들르세요"
+            "AIRBAG" -> "정비소에서 에어백 계통을 점검받으세요"
+            else -> "가까운 시일 안에 정비소에서 점검받으세요"
+        }
+    }
+
+    private fun warningColor(deduction: Deduction, snapshot: VehicleSnapshot): Color? {
+        if (Item.TELLTALES in snapshot.unsupported) return null
+        val matched = snapshot.telltales.filter { state ->
+            state.active &&
+                Rules.groupOf(state.telltale) == deduction.group &&
+                deduction.label == "${state.telltale.label} 경고등"
+        }
+        return when {
+            matched.any { it.color == Color.RED } -> Color.RED
+            matched.any { it.color == Color.YELLOW } -> Color.YELLOW
+            else -> null
+        }
+    }
 }

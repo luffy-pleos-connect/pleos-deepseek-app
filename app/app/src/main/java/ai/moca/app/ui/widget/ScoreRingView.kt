@@ -25,8 +25,8 @@ class ScoreRingView @JvmOverloads constructor(
             invalidate()
         }
 
-    /** 빨간 경고로 등급이 묶였으면 호의 색이 부정 색이다. */
-    var cappedByRed: Boolean = false
+    /** 빨간 경고가 하나라도 있으면 호의 색이 부정 색이다. */
+    var hasRed: Boolean = false
         set(value) {
             field = value
             invalidate()
@@ -37,12 +37,12 @@ class ScoreRingView @JvmOverloads constructor(
     private val bounds = RectF()
 
     override fun onDraw(canvas: Canvas) {
-        val stroke = resources.displayMetrics.density * 12f
+        val stroke = resources.getDimension(ai.moca.app.R.dimen.moca_score_ring_stroke)
         track.strokeWidth = stroke
         arc.strokeWidth = stroke
         track.color = context.getColor(R.color.pleos_text_dark_quaternary)
         arc.color = context.getColor(
-            if (cappedByRed) R.color.pleos_informative_negative else R.color.pleos_informative_positive,
+            if (hasRed) R.color.pleos_informative_negative else R.color.pleos_informative_positive,
         )
         val inset = stroke / 2f
         bounds.set(inset, inset, width - inset, height - inset)

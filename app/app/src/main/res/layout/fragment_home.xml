@@ -20,21 +20,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center_horizontal"
+            android:gravity="center"
             android:orientation="vertical"
             android:padding="@dimen/moca_card_padding">
 
-            <TextView
-                android:id="@+id/gradeValue"
-                style="@style/Pleos.Text.Headline.L.Bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/home_grade_placeholder" />
-
             <FrameLayout
                 android:layout_width="@dimen/moca_score_ring"
-                android:layout_height="@dimen/moca_score_ring"
-                android:layout_marginTop="@dimen/moca_gap">
+                android:layout_height="@dimen/moca_score_ring">
 
                 <ai.moca.app.ui.widget.ScoreRingView
                     android:id="@+id/scoreRing"
@@ -42,18 +34,33 @@
                     android:layout_height="match_parent"
                     android:importantForAccessibility="no" />
 
-                <TextView
-                    android:id="@+id/totalValue"
-                    style="@style/Pleos.Text.Title.L"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@string/home_grade_placeholder" />
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/gradeValue"
+                        style="@style/Pleos.Text.Headline.L.Bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_grade_placeholder" />
+
+                    <TextView
+                        android:id="@+id/totalValue"
+                        style="@style/Pleos.Text.Title.M"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/home_grade_placeholder" />
+                </LinearLayout>
             </FrameLayout>
 
             <TextView
                 android:id="@+id/gradeHint"
-                style="@style/Pleos.Text.Body.M"
+                style="@style/Pleos.Text.Title.S"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/moca_gap"
@@ -69,14 +76,14 @@
 
                 <TextView
                     android:id="@+id/healthValue"
-                    style="@style/Pleos.Text.Label.M"
+                    style="@style/Pleos.Text.Body.S"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/home_grade_placeholder" />
 
                 <TextView
                     android:id="@+id/careValue"
-                    style="@style/Pleos.Text.Label.M"
+                    style="@style/Pleos.Text.Body.S"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/moca_gap"
@@ -126,7 +133,7 @@
 
                 <TextView
                     android:id="@+id/topProblemText"
-                    style="@style/Pleos.Text.Title.M"
+                    style="@style/Pleos.Text.Title.L"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/moca_gap_small"
@@ -143,7 +150,7 @@
 
                 <Button
                     android:id="@+id/topProblemAction"
-                    style="@style/Widget.Pleos.Button.Primary.S"
+                    style="@style/Widget.Pleos.Button.Primary.L"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/moca_gap"
@@ -167,6 +174,7 @@
                     android:id="@+id/catPower"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
@@ -181,7 +189,7 @@
                         android:tint="@color/pleos_text_dark_primary" />
 
                     <TextView
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -196,7 +204,7 @@
 
                     <TextView
                         android:id="@+id/catPowerStatus"
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Body.L"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -204,7 +212,7 @@
 
                     <TextView
                         android:id="@+id/catPowerScore"
-                        style="@style/Pleos.Text.Body.M.Strong"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap"
@@ -215,6 +223,7 @@
                     android:id="@+id/catBrake"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
@@ -229,7 +238,7 @@
                         android:tint="@color/pleos_text_dark_primary" />
 
                     <TextView
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -244,7 +253,7 @@
 
                     <TextView
                         android:id="@+id/catBrakeStatus"
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Body.L"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -252,7 +261,7 @@
 
                     <TextView
                         android:id="@+id/catBrakeScore"
-                        style="@style/Pleos.Text.Body.M.Strong"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap"
@@ -263,6 +272,7 @@
                     android:id="@+id/catTire"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
@@ -277,7 +287,7 @@
                         android:tint="@color/pleos_text_dark_primary" />
 
                     <TextView
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -292,7 +302,7 @@
 
                     <TextView
                         android:id="@+id/catTireStatus"
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Body.L"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -300,7 +310,7 @@
 
                     <TextView
                         android:id="@+id/catTireScore"
-                        style="@style/Pleos.Text.Body.M.Strong"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap"
@@ -311,6 +321,7 @@
                     android:id="@+id/catElectric"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
@@ -325,7 +336,7 @@
                         android:tint="@color/pleos_text_dark_primary" />
 
                     <TextView
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -340,7 +351,7 @@
 
                     <TextView
                         android:id="@+id/catElectricStatus"
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Body.L"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -348,7 +359,7 @@
 
                     <TextView
                         android:id="@+id/catElectricScore"
-                        style="@style/Pleos.Text.Body.M.Strong"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap"
@@ -359,6 +370,7 @@
                     android:id="@+id/catSafety"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center_vertical"
@@ -373,7 +385,7 @@
                         android:tint="@color/pleos_text_dark_primary" />
 
                     <TextView
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -388,7 +400,7 @@
 
                     <TextView
                         android:id="@+id/catSafetyStatus"
-                        style="@style/Pleos.Text.Body.M"
+                        style="@style/Pleos.Text.Body.L"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap_small"
@@ -396,7 +408,7 @@
 
                     <TextView
                         android:id="@+id/catSafetyScore"
-                        style="@style/Pleos.Text.Body.M.Strong"
+                        style="@style/Pleos.Text.Title.S"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/moca_gap"
