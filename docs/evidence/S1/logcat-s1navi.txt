@@ -1,0 +1,10 @@
+--------- beginning of main
+11-11 01:51:51.249 28256 28256 I S1Navi  : create
+11-11 01:51:51.288 28256 28256 I S1Navi  : initialize called
+11-11 01:51:51.314 28256 28256 I S1Navi  : onConnected
+11-11 01:51:51.332 28256 28256 I S1Navi  : requestRoute RouteInfo(latitude=37.566535, longitude=126.977969, displayLatitude=null, displayLongitude=null, poiName=서울시청, poiId=, address=서울특별시 중구 세종대로 110, poiSubId=, routeOption=RECOMMENDED, poiProvider=, isMobileRequest=false)
+11-11 01:51:51.335 28256 28256 I S1Navi  : requestRoute returned
+11-11 01:51:58.413 28256 28289 I S1Navi  : onRouteStarted RouteStartInfo(duration=3240, distance=22000, tollFare=700, name=서울시청, remainDestinationChargingValue=74514)
+11-11 01:51:58.418 28256 28289 I S1Navi  : onRouteEnded
+11-11 01:51:58.421 28256 28289 I S1Navi  : onNavigationStatus ROUTE_DRIVE
+11-11 01:51:58.439 28256 28289 I S1Navi  : onRouteStateInfo RouteStateInfo(termsAgreement=true, naviMode=ROUTE_GUIDING, isRouting=false, routeOption=RECOMMENDED, remainDestinationChargingInt=74514, remainWaypointChargingInt=[0, 0], trafficStatus=TrafficStatus(summary=TrafficCongestionSummary(totalCongestionDist=0.0, totalCongestionTime=60, totalCongestionAvrSpeed=0.0), congestionItemList=[], trafficEventList=[]))

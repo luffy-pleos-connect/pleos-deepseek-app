@@ -1,0 +1,50 @@
+# S2 log. Host date at save: Wed Nov 11 19:04:09 KST 2026. Emulator date: Wed Nov 11 02:04:08 PST 2026.
+# Lines below are copied from command output of this task. Emulator clock is PST.
+
+# Trial 1. Installed, never launched. adb reboot exit 0, stdout empty.
+# adb shell cat /proc/uptime right after boot_completed=1: 19.08 30.86
+# 25s later uptime: 55.14 52.99
+# adb logcat -d -s S2Boot:V : empty (no lines)
+# dumpsys package ai.pleos.spike.s2 User 10:
+#   installed=true stopped=true notLaunched=true
+#   POST_NOTIFICATIONS granted=false
+#   RECEIVE_BOOT_COMPLETED granted=true
+# Receiver resolver: android.intent.action.BOOT_COMPLETED -> ai.pleos.spike.s2/.BootReceiver
+# Full buffer /tmp/s2-full-logcat.txt line 17755:
+11-11 01:57:42.739 I/ActivityManager(  764): Posting BOOT_COMPLETED user #10
+# grep S2Boot in that file: no match.
+
+# Trial 2. After one activity launch, then HOME, then adb reboot.
+# am start --user 10 -n ai.pleos.spike.s2/.MainActivity
+# Starting: Intent { cmp=ai.pleos.spike.s2/.MainActivity }
+11-11 02:00:34.689 32388 32388 I S2Boot  : activity onCreate
+# dumpsys after that launch, User 10: stopped=false notLaunched=false
+# adb reboot exit 0. uptime before reboot: 226.71 263.58
+# poll: try=2 uptime=3 ; try=4 uptime=13 boot=1
+# waited 45s. uptime after: 58.93 51.95
+# adb logcat -d -s S2Boot:V :
+11-11 02:01:48.735  5798  5798 I S2Boot  : onReceive action=android.intent.action.BOOT_COMPLETED uid=1010176
+11-11 02:01:48.737  5798  5798 I S2Boot  : startForegroundService returned
+11-11 02:01:48.739  5798  5798 I S2Boot  : onStartCommand uid=1010176
+11-11 02:01:48.814  5798  5868 I S2Boot  : vehicle.initialize returned
+11-11 02:01:50.330  5798  5868 I S2Boot  : getEvBatteryStateOfCharge called
+11-11 02:01:50.350  5798  5826 I S2Boot  : soc=100
+11-11 02:01:50.906  5798  5868 I S2Boot  : registerTelltales returned activity=none
+11-11 02:01:51.022  5798  5826 I S2Boot  : onTelltaleInfoUpdated count=0
+11-11 02:02:10.907  5798  5868 I S2Boot  : still alive 20s after registerTelltales activity=none
+
+# dumpsys activity activities after trial 2. Lines that matched topResumedActivity or spike.s2.
+# No line contained spike.s2.
+topResumedActivity=ActivityRecord{53b2f8c u10 ai.umos.drivingview/.DrivingViewActivity t1004811}
+topResumedActivity=ActivityRecord{22720a0 u10 ai.umos.maps.android.navigation.app/.MainActivity t1004798}
+topResumedActivity=ActivityRecord{c741d4a u10 ai.umos.homescreen/.HomeActivity t1004795}
+
+# dumpsys activity services ai.pleos.spike.s2 (trimmed to printed fields):
+# * ServiceRecord{90d3b3e u10 ai.pleos.spike.s2/.BootService}
+# app=ProcessRecord{45b2894 5798:ai.pleos.spike.s2/u10a176}
+# allowStartForeground=BOOT_COMPLETED
+# startForegroundCount=1
+# infoAllowStartForeground=[callingPackage: ai.pleos.spike.s2; callingUid: 1010176; uidState: RCVR; uidBFSL: n/a; intent: Intent { cmp=ai.pleos.spike.s2/.BootService }; code:BOOT_COMPLETED; tempAllowListReason:<7415c53 android.intent.action.B
+# isForeground=true foregroundId=1 types=00000001
+# lastActivity=-31s388ms createdFromFg=false
+# dumpsys package User 10 after trial 2: stopped=false notLaunched=false
