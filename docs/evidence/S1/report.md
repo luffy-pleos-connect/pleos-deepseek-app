@@ -62,19 +62,19 @@ AAR 매니페스트 [실측] `NaviHelper-3.0.5.aar` 의 `AndroidManifest.xml`: `
 에뮬레이터 [실측] 종료 전까지 백그라운드로 실행. 준비 확인 `adb shell getprop sys.boot_completed` = `1`. `adb shell am get-current-user` = `10`.
 
 ```
-/Users/heodongun/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu swiftshader_indirect -no-audio -no-window
+~/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu swiftshader_indirect -no-audio -no-window
 ```
 
-시험 앱 위치: `/Users/heodongun/Desktop/플레오스/.spike/s1` (저장소 밖).
+시험 앱 위치: `<작업 폴더>/.spike/s1` (저장소 밖).
 
 ```
-cd /Users/heodongun/Desktop/플레오스/.spike/s1 && ./gradlew assembleDebug
+cd <작업 폴더>/.spike/s1 && ./gradlew assembleDebug
 ```
 
 [실측] `BUILD SUCCESSFUL`.
 
 ```
-adb install -r --user 10 /Users/heodongun/Desktop/플레오스/.spike/s1/app/build/outputs/apk/debug/app-debug.apk
+adb install -r --user 10 <작업 폴더>/.spike/s1/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 [실측] `Success`.

@@ -16,19 +16,19 @@ Pleos 에뮬레이터 v2.1.0, 사용자 10에서 시험 앱이 `NaviHelper.reque
 에뮬레이터 [실측] 시험 동안 백그라운드. 준비 확인 `adb shell getprop sys.boot_completed` = `1`. `adb shell am get-current-user` = `10`.
 
 ```
-/Users/heodongun/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu swiftshader_indirect -no-audio -no-window
+~/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu swiftshader_indirect -no-audio -no-window
 ```
 
-시험 앱: `/Users/heodongun/Desktop/플레오스/.spike/s1`
+시험 앱: `<작업 폴더>/.spike/s1`
 
 ```
-cd /Users/heodongun/Desktop/플레오스/.spike/s1 && JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home ./gradlew assembleDebug
+cd <작업 폴더>/.spike/s1 && JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home ./gradlew assembleDebug
 ```
 
 [실측] 첫 빌드 `BUILD SUCCESSFUL` (34 up-to-date). `moveTaskToBack` 를 넣은 뒤 다시 빌드, [실측] `BUILD SUCCESSFUL` (4 executed, 30 up-to-date).
 
 ```
-adb install -r --user 10 /Users/heodongun/Desktop/플레오스/.spike/s1/app/build/outputs/apk/debug/app-debug.apk
+adb install -r --user 10 <작업 폴더>/.spike/s1/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 [실측] `Success`. 두 번 설치했다.

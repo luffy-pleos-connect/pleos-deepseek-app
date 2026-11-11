@@ -4,7 +4,7 @@
 에뮬레이터 시각 [실측] `adb shell date` = Wed Nov 11 02:04:08 PST 2026. logcat 시각은 에뮬레이터 시계다.
 프로세스 [실측] `pgrep -lf qemu-system-aarch64` = `qemu-system-aarch64-headless -avd Pleos_Connect_v2.1.0 -no-snapshot-load -gpu swiftshader_indirect -no-audio -no-window`.
 
-시험 앱은 저장소 밖 `/Users/heodongun/Desktop/플레오스/.spike/s2`. 패키지 `ai.pleos.spike.s2`, 사용자 10, appId=10176. 로그 파일 `logcat-s2boot.txt`.
+시험 앱은 저장소 밖 `<작업 폴더>/.spike/s2`. 패키지 `ai.pleos.spike.s2`, 사용자 10, appId=10176. 로그 파일 `logcat-s2boot.txt`.
 
 ## 결론
 
@@ -25,7 +25,7 @@
 에뮬레이터는 위 `pgrep` 줄의 플래그로 이미 떠 있었다. 준비 확인은 앞선 측정에서 `adb shell getprop sys.boot_completed` = `1`. `adb shell monkey` 는 쓰지 않았다.
 
 ```
-adb install -r --user 10 /Users/heodongun/Desktop/플레오스/.spike/s2/app/build/outputs/apk/debug/app-debug.apk
+adb install -r --user 10 <작업 폴더>/.spike/s2/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 [실측] `Success`.
