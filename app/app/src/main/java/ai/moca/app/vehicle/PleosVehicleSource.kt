@@ -253,16 +253,18 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         var red = 0
         var yellow = 0
         var active = 0
+        val actives = mutableListOf<ActiveWarning>()
         for (t in list) {
             if (t.state == TelltaleState.OFF) continue
             active++
+            actives += ActiveWarning(t.type.name, t.color)
             when (TelltaleColorMap.severity(t.color)) {
                 Severity.RED -> red++
                 Severity.YELLOW -> yellow++
                 Severity.NONE -> Unit
             }
         }
-        return WarningSummary(red, yellow, active, isDemo)
+        return WarningSummary(red, yellow, active, isDemo, actives)
     }
 
     companion object {

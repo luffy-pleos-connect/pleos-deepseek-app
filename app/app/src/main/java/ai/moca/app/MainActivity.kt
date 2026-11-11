@@ -26,6 +26,8 @@ class MainActivity : FragmentActivity() {
     private lateinit var prefs: Prefs
     private lateinit var ux: PleosUxRestrictions
     private var drivingLimited = false
+    private var lastUxState: PleosUxRestrictions.State = PleosUxRestrictions.State.UNRESTRICTED
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,11 +56,25 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    /**
+     * 주행 중 차단(평가기준 C-02).
+     * 탭 4개(상태관리·대전·설정)와 홈 타일 4개(점검·상태관리·보이스·대전)를 모두 끈다.
+     * 남기는 것은 홈 탭과 보이스 탭뿐이다(계획 6.4 주행 중 행).
+     */
     private fun applyUxRestrictions(state: PleosUxRestrictions.State) {
+        lastUxState = state
         drivingLimited = state.distractionOptimized
-        // 주행 중: 점검·상태관리·대전 진입은 막고 홈·보이스는 남긴다(DS-01, F-20).
-        findViewById<Button>(R.id.tabStatus).isEnabled = !drivingLimited
-        findViewById<Button>(R.id.tabBattle).isEnabled = !drivingLimited
+        val allow = !drivingLimited
+        for (id in intArrayOf(
+            R.id.tabStatus, R.id.tabBattle, R.id.tabSettings,
+        )) {
+            findViewById<Button>(id).isEnabled = allow
+        }
+        // 홈 타일 — 화면이 교체돼도 다시 적용되도록 현재 보이는 Fragment 의 View 를 쓴다.
+        val host = findViewById<android.view.View>(R.id.navHost)
+        for (id in intArrayOf(R.id.tileInspect, R.id.tileStatus, R.id.tileVoice, R.id.tileBattle)) {
+            host.findViewById<android.view.View>(id)?.isEnabled = allow
+        }
     }
 
     fun isDrivingLimited(): Boolean = drivingLimited
@@ -124,6 +140,8 @@ class MainActivity : FragmentActivity() {
         tx.replace(R.id.navHost, target, tag)
         tx.commit()
         updateDemoBadge()
+        // 주행 제한 상태를 새 화면에도 다시 적용한다.
+        mainHandler.post { applyUxRestrictions(lastUxState) }
     }
 
     private fun updateDemoBadge() {

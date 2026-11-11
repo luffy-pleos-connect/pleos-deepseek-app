@@ -36,12 +36,22 @@ interface VehicleSource {
     fun stopWatchingWarnings()
 }
 
-/** 홈 배지에 쓰는 요약. redCount > 0 이면 빨간 배지. */
+/** 켜진 경고등 하나. type 을 보존해야 카테고리 배분이 맞는다. */
+data class ActiveWarning(
+    val type: String,
+    val color: Int,
+)
+
+/**
+ * 경고등 요약. redCount > 0 이면 빨간 배지.
+ * [active] 는 켜진 경고등의 type·color 원본이다. 비어 있으면 개수만 있는 요약이다.
+ */
 data class WarningSummary(
     val redCount: Int,
     val yellowCount: Int,
     val total: Int,
     val isDemo: Boolean,
+    val active: List<ActiveWarning> = emptyList(),
 ) {
     companion object {
         fun empty(isDemo: Boolean = false) = WarningSummary(0, 0, 0, isDemo)

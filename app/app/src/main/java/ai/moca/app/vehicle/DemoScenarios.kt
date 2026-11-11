@@ -86,8 +86,14 @@ enum class DemoScenario(
     }
 
     fun warnings(): WarningSummary = when (this) {
-        D3 -> WarningSummary(redCount = 1, yellowCount = 1, total = 2, isDemo = true)
-        D2, D5 -> WarningSummary(redCount = 0, yellowCount = 1, total = 1, isDemo = true)
+        D3 -> WarningSummary(
+            redCount = 1, yellowCount = 1, total = 2, isDemo = true,
+            active = listOf(ActiveWarning("ABS", 4), ActiveWarning("TPMS", 3)),
+        )
+        D2, D5 -> WarningSummary(
+            redCount = 0, yellowCount = 1, total = 1, isDemo = true,
+            active = listOf(ActiveWarning("TPMS", 3)),
+        )
         else -> WarningSummary(0, 0, 0, isDemo = true)
     }
 
