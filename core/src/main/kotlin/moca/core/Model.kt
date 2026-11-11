@@ -104,6 +104,12 @@ data class Inspection(
     val scenarioId: String? = null,
 )
 
+/** 추이 그래프의 점 하나. 그날의 마지막 점검 점수이고, 점수가 없으면 null 이다. */
+data class TrendPoint(
+    val date: LocalDate,
+    val overall: Int?,
+)
+
 enum class Grade(val label: String) {
     D("D"),
     C("C"),

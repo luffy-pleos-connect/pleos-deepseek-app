@@ -96,10 +96,34 @@ object InspectionHistory {
     fun trendRows(text: String, profile: Profile): List<String> {
         val records = read(text, profile)
         return records.mapIndexed { index, inspection ->
-            val care = Care.evaluate(records.take(index + 1), profile, inspection.inspectedAt).score
-            val shown = Scoring.evaluate(inspection.snapshot, care).displayedOverall?.toString() ?: "—"
-            "${label(inspection.inspectedAt)} $shown"
+            "${label(inspection.inspectedAt)} ${shownOverall(records, index, profile)}"
         }
+    }
+
+    /**
+     * 추이 그래프에 쓸 점. 하루에 점 하나(그날의 마지막 점검), 오래된 날부터 마지막 [limit] 일만.
+     * 오늘보다 뒤의 날짜는 [latestLabel] 과 같은 이유로 뺀다. 점수는 [trendRows] 와 같은 방법으로 구한다.
+     */
+    fun trendPoints(text: String, profile: Profile, today: LocalDate, limit: Int = 14): List<TrendPoint> {
+        if (limit <= 0) return emptyList()
+        val records = read(text, profile)
+        val lastIndexByDay = LinkedHashMap<LocalDate, Int>()
+        records.forEachIndexed { index, inspection -> lastIndexByDay[inspection.inspectedAt] = index }
+        return lastIndexByDay.entries
+            .filter { !it.key.isAfter(today) }
+            .sortedBy { it.key }
+            .takeLast(limit)
+            .map { entry ->
+                val index = entry.value
+                val shown = shownOverall(records, index, profile)
+                TrendPoint(entry.key, shown.toIntOrNull())
+            }
+    }
+
+    private fun shownOverall(records: List<Inspection>, index: Int, profile: Profile): String {
+        val inspection = records[index]
+        val care = Care.evaluate(records.take(index + 1), profile, inspection.inspectedAt).score
+        return Scoring.evaluate(inspection.snapshot, care).displayedOverall?.toString() ?: "—"
     }
 
     fun label(date: LocalDate): String = "${date.monthValue}월 ${date.dayOfMonth}일"
