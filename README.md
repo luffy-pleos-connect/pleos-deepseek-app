@@ -10,18 +10,24 @@ Pleos Connect(현대차·기아·제네시스 차량용 인포테인먼트) 앱.
 > Vehicle SDK 연동 코드를 구현했고, Pleos 에뮬레이터에서 **배터리 SOC 실값(100) 수신**과 **경고등 리스너 콜백 수신**을 로그로 확인했습니다(`docs/evidence/G0/g0-log.txt`).
 > 다만 **경고등 색 정수(RED/YELLOW) 매핑은 에뮬레이터 Virtual Console의 DDS 브리지가 비활성이라 미확인**입니다. 그래서 경고등 관련 화면은 "연동 코드 구현, 실값 미확인" 상태이며, 데모 모드에서만 시나리오로 시연합니다. 자세한 내용은 `docs/evidence/G0/report.md` §7.
 
-## 검증 (2026-11-10)
+## 검증 (2026-11-11)
 
 | 항목 | 결과 |
 |---|---|
-| 점수 엔진 단위 테스트 | **167 / 167** (`core/run-tests.sh`, JDK 17만) |
-| 서버 테스트 | **65 / 65** (`server/node --test`) |
-| 앱 단위 테스트 | **28 / 28** (`app/gradlew :app:testDebugUnitTest`) |
-| Pleos 디자인 시스템 정적 검사 | **0 findings / 48 files** (`pleos_lint.py`) |
-| 게이트 종합 | `./check.sh` → **PASS 12 / FAIL 0 / SKIP 0** |
-| release APK | 4.17MB, DN `CN=해적단` |
+| 점수 엔진 단위 테스트 | **184 / 184** (`core/run-tests.sh`, JDK 17만) |
+| 서버 테스트 | **68 / 68** (`server/node --test`) |
+| 앱 단위 테스트 | **39 / 39** (`app/gradlew :app:testDebugUnitTest`) |
+| Pleos 디자인 시스템 정적 검사 | **0 findings / 51 files** (`pleos_lint.py`) |
+| 게이트 종합 | `./check.sh` → **PASS 11 / FAIL 0 / SKIP 1** (SKIP 은 에뮬레이터를 켜지 않아 설치 확인을 건너뛴 것) |
+| release APK | 4.17MB, DN `CN=해적단` (2026-11-10 빌드. 그 뒤 수정은 들어 있지 않다) |
 
-## 공식 4항목
+## 공모전 README 필수 항목
+
+- ① 앱 이름 및 한 줄 소개 → 아래 「1. 앱 소개」
+- ② 실행 방법 → 아래 「4. 실행 방법」
+- ③ 테스트 환경 및 필요한 설정 → 아래 「테스트 환경 및 필요한 설정」
+- ④ 개발에 사용한 Pleos Connect 에뮬레이터 버전과 화면 규격 → 아래 「테스트 환경 및 필요한 설정」
+- ⑤ APK 파일 위치 → 아래 「APK 위치」
 
 ### 1. 앱 소개
 
@@ -46,7 +52,7 @@ MOCA는 차량이 제공하는 부품 상태를 읽어 **0~100점과 등급(S+~D
 | UI | `pleos-ds` (Pleos Connect Design System, View 기반) + `Theme.PleosConnect` |
 | 서버 | Node.js 24 표준 라이브러리만. Vercel 함수 + Upstash Redis(REST) |
 | AI | Hive `deepseek-ai/deepseek-v4.1-flash-1017`, OpenAI 호환 `/chat/completions`, 도구 호출 |
-| 저장 | 기기 안 SQLite(Room), DataStore. 서버는 요약만 90일 |
+| 저장 | 기기 안 SharedPreferences(점검 기록 최근 60줄, 설정). 서버는 요약만 90일 |
 
 ### 4. 실행 방법
 
@@ -88,6 +94,19 @@ HIVE_API_KEY=... node local.mjs
 cd server && node --test
 cd core && ./run-tests.sh
 ```
+
+## 테스트 환경 및 필요한 설정
+
+- macOS, JDK 17
+- Android SDK: platform-tools, emulator, build-tools 36.0.0 (`ANDROID_HOME=$HOME/Library/Android/sdk`)
+- Node.js 24 (서버)
+- 서버 주소 설정: `.env.example` 참고 (`.env` 에 실제 값, 커밋하지 않음). 자세한 실행 방법은 위 「4. 실행 방법」.
+
+Pleos Connect 에뮬레이터 v2.1.0 (AVD `Pleos_Connect_v2.1.0`, Android API 34). 화면 규격 2560×1440, density 160.
+
+## APK 위치
+
+- `apk/해적단_MOCA_release.apk`
 
 ## 구조
 

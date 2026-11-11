@@ -152,6 +152,49 @@ object Rules {
 
     fun groupKeys(snapshot: VehicleSnapshot): Set<String> = deductions(snapshot).map { it.group }.toSet()
 
+    /**
+     * 이 스냅샷에서 확인할 수 있었던 감점 묶음.
+     * 여기에 없는 묶음이 다음 점검에서 사라진 것은 「읽지 못해서 안 보인 것」이지 해소가 아니다.
+     * 묶음 이름은 [deductions] 가 만드는 이름과 같다.
+     */
+    fun readableGroups(snapshot: VehicleSnapshot): Set<String> {
+        val groups = mutableSetOf<String>()
+
+        if (Item.TELLTALES !in snapshot.unsupported) {
+            for (telltale in Telltale.entries) {
+                if (categoryOf(telltale) == null) continue
+                if (!telltaleAvailable(snapshot, telltale)) continue
+                groups += groupOf(telltale)
+            }
+        }
+
+        if (Item.ENGINE_OIL !in snapshot.unsupported && snapshot.engineOil != FluidLevel.ERROR) {
+            groups += "ENGINE_OIL"
+        }
+        if (Item.TRANSMISSION_OIL !in snapshot.unsupported && snapshot.transmissionOil != FluidLevel.ERROR) {
+            groups += "TRANSMISSION_OIL"
+        }
+        if (Item.BRAKE_FLUID !in snapshot.unsupported && snapshot.brakeFluid != FluidLevel.ERROR) {
+            groups += "BRAKE_FLUID"
+        }
+        if (Item.TIRE !in snapshot.unsupported) {
+            groups += "TIRE_PRESSURE"
+        }
+        if (Item.ENERGY !in snapshot.unsupported &&
+            (snapshot.fuelPercent != null || snapshot.batteryPercent != null)
+        ) {
+            groups += "ENERGY"
+        }
+        if (Item.WASHER_FLUID !in snapshot.unsupported) {
+            groups += "WASHER"
+        }
+        if (Item.AIRBAG !in snapshot.unsupported) {
+            groups += "AIRBAG"
+        }
+
+        return groups
+    }
+
     private fun energyLow(snapshot: VehicleSnapshot): Boolean =
         (snapshot.fuelPercent != null && snapshot.fuelPercent < 10.0) ||
             (snapshot.batteryPercent != null && snapshot.batteryPercent < 10.0)

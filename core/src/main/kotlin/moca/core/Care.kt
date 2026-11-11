@@ -69,7 +69,9 @@ object Care {
                     if (index == 0) continue
                     val before = Rules.groupKeys(ordered[index - 1].snapshot)
                     val now = Rules.groupKeys(ordered[index].snapshot)
-                    bonus = minOf(RESOLVED_DAILY_CAP, bonus + (before - now).size * RESOLVED_BONUS)
+                    val readable = Rules.readableGroups(ordered[index].snapshot)
+                    val resolved = (before - now) intersect readable
+                    bonus = minOf(RESOLVED_DAILY_CAP, bonus + resolved.size * RESOLVED_BONUS)
                 }
                 score += bonus
                 lastInspection = day

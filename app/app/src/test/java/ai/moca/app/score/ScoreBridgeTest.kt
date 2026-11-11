@@ -92,4 +92,12 @@ class ScoreBridgeTest {
         assertEquals(75, e.displayedOverall)
         assertEquals("B", e.grade!!.label)
     }
+
+    // 2026-11-11 리뷰(docs/리뷰-20261111.md 결함 6): 연료는 읽지 않는데 기본값 62.0 이 기록에 남았다.
+    @Test
+    fun `읽지 않은 연료는 값이 없다`() {
+        val snapshot = ScoreBridge.toEngineSnapshot(d3Readings(), d3Warnings(), isDemo = false)
+        assertNull("연료는 읽지 않으므로 기본값이 들어가면 안 된다", snapshot.fuelPercent)
+        assertEquals(62.0, snapshot.batteryPercent!!, 0.0)
+    }
 }

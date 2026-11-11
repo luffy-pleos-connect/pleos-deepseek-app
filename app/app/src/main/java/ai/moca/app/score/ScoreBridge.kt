@@ -60,6 +60,8 @@ object ScoreBridge {
             brakeFluid = fluid(readings[PleosVehicleSource.KEY_BRAKE_FLUID]),
             lowTireWheels = tireWheels(readings[PleosVehicleSource.KEY_TIRE_LOW]),
             batteryPercent = readings[PleosVehicleSource.KEY_SOC]?.value,
+            // 앱은 연료를 읽지 않는다. core 의 기본값(62.0)이 실제 기록에 남지 않도록 null 로 둔다.
+            fuelPercent = null,
             washerFluidLow = (readings[PleosVehicleSource.KEY_WASHER]?.value ?: 0.0) > 0.0,
             telltales = telltalesFrom(warnings),
             unsupported = unsupported,
