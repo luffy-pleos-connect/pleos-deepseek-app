@@ -96,7 +96,10 @@ def pure(fn):
         try:
             return fn(*args, **kwargs)
         except Exception as exc:
-            return Verdict(False, f"{type(exc).__name__}: {exc}")
+            label = type(exc).__name__
+            if label == "DeviceError":
+                label = "오류"
+            return Verdict(False, f"{label}: {exc}")
 
     return wrap
 
@@ -253,7 +256,7 @@ def find_nodes(xml, resource_id, package):
     for node in elements(xml, package):
         if node.attrib.get("resource-id") == resource_id:
             found.append({
-                "text": node.attrib.get("text", ""),
+                "text": node.attrib.get("text", "") or node.attrib.get("content-desc", ""),
                 "bounds": node.attrib.get("bounds", ""),
                 "enabled": node.attrib.get("enabled", ""),
                 "checked": node.attrib.get("checked", ""),
@@ -545,14 +548,11 @@ def judge_inspect_3(screens, app):
 
 
 @pure
-def judge_inspect_5(before_xml, after_xml, app):
-    resource_id = app["places"]["홈.마지막점검"]["id"]
-    package = app["package"]
-    if not find_nodes(before_xml, resource_id, package) or not find_nodes(after_xml, resource_id, package):
-        return Verdict(False, "마지막 점검 노드가 없다")
-    before = place_text(before_xml, app, "홈.마지막점검")
-    after = place_text(after_xml, app, "홈.마지막점검")
-    return Verdict(before != after, f"전 {before} / 후 {after}")
+def judge_inspect_5(first_xml, next_day_xml, app):
+    first = place_text(first_xml, app, "홈.연속")
+    later = place_text(next_day_xml, app, "홈.연속")
+    ok = first_number(first) == 1 and first_number(later) == 2
+    return Verdict(ok, f"첫날 {first} / 다음 날 {later}")
 
 
 @pure
@@ -790,6 +790,8 @@ def judge_screen_5(xml, app):
     for node in elements(xml, app["package"]):
         if node.attrib.get("resource-id") == grade_id or not node.attrib.get("text"):
             continue
+        if node.attrib.get("clickable") == "true":
+            continue
         raw = node.attrib.get("bounds", "")
         if not raw:
             continue
@@ -891,21 +893,48 @@ class Adb:
     def text(self, value):
         self._call(["adb", "shell", "input", "text", value])
 
+    def keyevent(self, code):
+        self._call(["adb", "shell", "input", "keyevent", str(code)])
+
     def airplane(self, on):
         self._call(["adb", "shell", "cmd", "connectivity", "airplane-mode", "enable" if on else "disable"])
 
+    def current_user(self):
+        """포그라운드 사용자. 이 에뮬레이터는 10이고, 앱은 그 사용자에게만 깔려 있다."""
+        cached = getattr(self, "_user", "")
+        if cached:
+            return cached
+        result = self._call(["adb", "shell", "am", "get-current-user"])
+        user = (result.stdout or "").strip()
+        if not user.isdigit():
+            raise DeviceError("현재 사용자를 읽지 못했다")
+        self._user = user
+        return user
+
     def clear(self, package):
-        self._call(["adb", "shell", "pm", "clear", package])
+        self._call(["adb", "shell", "pm", "clear", "--user", self.current_user(), package])
 
     def force_stop(self, package):
-        self._call(["adb", "shell", "am", "force-stop", package])
+        self._call(["adb", "shell", "am", "force-stop", "--user", self.current_user(), package])
 
     def start(self, package):
-        resolved = self._call(["adb", "shell", "cmd", "package", "resolve-activity", "--brief", package])
+        user = self.current_user()
+        resolved = self._call([
+            "adb", "shell", "cmd", "package", "resolve-activity", "--user", user, "--brief", package,
+        ])
         lines = [line.strip() for line in (resolved.stdout or "").splitlines() if line.strip()]
         if not lines:
             raise DeviceError("시작할 액티비티가 없다")
-        self._call(["adb", "shell", "am", "start", "-W", "-n", lines[-1]])
+        self._call(["adb", "shell", "am", "start", "--user", user, "-W", "-n", lines[-1]])
+
+    def set_clock(self, epoch_ms):
+        self._call(["adb", "shell", "settings", "put", "global", "auto_time", "0"])
+        self._call(["adb", "shell", "cmd", "alarm", "set-time", str(int(epoch_ms))])
+
+    def restore_clock(self):
+        now_ms = int(__import__("time").time() * 1000)
+        self._call(["adb", "shell", "cmd", "alarm", "set-time", str(now_ms)])
+        self._call(["adb", "shell", "settings", "put", "global", "auto_time", "1"])
 
     def prop(self, name):
         result = self._call(["adb", "shell", "getprop", name])
@@ -919,18 +948,47 @@ class Runner:
         self.pkg = app["package"]
         self.ops = app["ops"]
         self.airplane_on = False
+        self.last_xml = ""
 
     def dump(self):
         xml = self.adb.dump()
         if not xml or "<" not in xml:
-            raise DeviceError("화면 글자를 모으지 못했다")
+            self.last_xml = ""
+            return ""
+        self.last_xml = xml
         return xml
 
-    def tap_id(self, resource_id):
-        xml = self.dump()
+    def missing_reason(self, resource_id, xml):
+        shown = any_text(xml).replace("\n", " ").strip()
+        if len(shown) > 240:
+            shown = shown[:240] + "…"
+        return f"10초 안에 화면에서 찾지 못했다 ({resource_id}). 화면에 있던 글자: {shown or '없음'}"
+
+    def wait_until(self, pred, limit_s=10.0, interval=0.5):
+        """누른 뒤 노드가 나올 때까지. 최대 10초, 0.5초 간격."""
+        elapsed = 0.0
+        last = ""
+        while True:
+            last = self.dump()
+            try:
+                if pred(last):
+                    return last
+            except Exception:
+                pass
+            if elapsed >= limit_s:
+                return last
+            self.adb.sleep(interval)
+            elapsed += interval
+
+    def node_ready(self, xml, resource_id):
         nodes = find_nodes(xml, resource_id, self.pkg)
+        return bool(nodes) and bool(nodes[0]["bounds"])
+
+    def tap_id(self, resource_id):
+        xml = self.wait_until(lambda dumped: self.node_ready(dumped, resource_id))
+        nodes = find_nodes(xml, resource_id, self.pkg) if xml else []
         if not nodes or not nodes[0]["bounds"]:
-            raise DeviceError(f"노드 없음: {resource_id}")
+            raise DeviceError(self.missing_reason(resource_id, xml))
         x, y = bounds_center(nodes[0]["bounds"])
         self.adb.tap(x, y)
 
@@ -939,102 +997,149 @@ class Runner:
             self.tap_id(resource_id)
 
     def tap_text(self, text):
-        xml = self.dump()
-        for node in elements(xml, self.pkg):
+        xml = self.wait_until(lambda dumped: self._text_bounds(dumped, text) is not None)
+        box = self._text_bounds(xml, text)
+        if box is None:
+            raise DeviceError(f"10초 안에 글자를 찾지 못했다: {text}. {self.missing_reason(text, xml)}")
+        self.adb.tap(*box)
+
+    def _text_bounds(self, xml, text):
+        if not xml:
+            return None
+        try:
+            found = elements(xml, self.pkg)
+        except Exception:
+            return None
+        for node in found:
             if node.attrib.get("text") == text and node.attrib.get("bounds"):
-                x, y = bounds_center(node.attrib["bounds"])
-                self.adb.tap(x, y)
-                return
-        raise DeviceError(f"글자 노드 없음: {text}")
+                return bounds_center(node.attrib["bounds"])
+        return None
 
     def go(self, name):
         self.tap_seq(self.ops["조작-3"][name])
 
-    def wait_until(self, pred, limit=6):
-        last = ""
-        for _ in range(limit):
-            last = self.dump()
-            try:
-                if pred(last):
-                    return last
-            except Exception:
-                continue
-        return last
+    def _switch_id(self):
+        return self.ops["조작-1"]["켜기"][-1]
+
+    def _switch_is(self, xml, on):
+        nodes = find_nodes(xml, self._switch_id(), self.pkg) if xml else []
+        return bool(nodes) and (nodes[0]["checked"] == "true") == on
+
+    def open_demo_panel(self):
+        """설정 → 데모 묶음. 스위치와 시나리오는 이 묶음을 눌러야 보인다."""
+        self.tap_seq(self.ops["조작-1"]["켜기"][:-1])
+        switch = self._switch_id()
+        xml = self.wait_until(lambda dumped: self.node_ready(dumped, switch))
+        if not self.node_ready(xml, switch):
+            raise DeviceError(self.missing_reason(switch, xml))
+        return xml
 
     def ensure_demo(self, on):
-        nav = self.ops["조작-1"]["켜기"][:-1]
-        switch = self.ops["조작-1"]["켜기"][-1]
-        self.tap_seq(nav)
-        xml = self.dump()
-        nodes = find_nodes(xml, switch, self.pkg)
-        if not nodes:
-            raise DeviceError("데모 스위치가 없다")
-        if (nodes[0]["checked"] == "true") == on:
+        xml = self.open_demo_panel()
+        if self._switch_is(xml, on):
             return
-        self.tap_id(switch)
-        self.tap_seq(nav)
-        xml = self.dump()
-        nodes = find_nodes(xml, switch, self.pkg)
-        if not nodes or (nodes[0]["checked"] == "true") != on:
-            raise DeviceError("데모 스위치가 바뀌지 않았다")
+        self.tap_id(self._switch_id())
+        # 스위치를 바꾸면 액티비티가 다시 만들어진다. 다시 뜨기를 기다린다.
+        self.adb.sleep(0.5)
+        xml = self.wait_until(lambda dumped: self._switch_is(dumped, on))
+        if self._switch_is(xml, on):
+            return
+        xml = self.open_demo_panel()
+        if not self._switch_is(xml, on):
+            want = "켜짐" if on else "꺼짐"
+            raise DeviceError(f"데모 스위치가 {want}으로 바뀌지 않았다. {self.missing_reason(self._switch_id(), xml)}")
 
     def select_scenario(self, sid):
         self.ensure_demo(True)
-        self.tap_seq(self.ops["조작-2"][sid])
+        scenario = self.ops["조작-2"][sid][-1]
+        self.tap_id(scenario)
+        # 시나리오를 고르면 액티비티가 다시 만들어진다.
+        self.adb.sleep(0.5)
+        home = self.ops["조작-3"]["홈"][0]
+        self.wait_until(lambda xml: self.node_ready(xml, scenario) or self.node_ready(xml, home))
+
+    def inspection_ready(self, xml):
+        if not xml or "점검하는 중" in all_text(xml, self.pkg):
+            return False
+        return grade_of(place_text(xml, self.app, "점검.결과")) != ""
 
     def run_inspect(self):
         self.tap_seq(self.ops["조작-3"]["홈"])
         self.tap_seq(self.ops["조작-4"].get("시작") or [])
+        return self.wait_until(self.inspection_ready)
 
-        def ready(xml):
-            text = place_text(xml, self.app, "점검.결과")
-            return bool(text) and "점검 중" not in text
+    def pass_first_run(self):
+        """첫 실행(동의하고 시작)이면 넘긴다. 그 화면에서는 아래 탭이 없다."""
+        start_id = self.ops["첫실행"][0]
+        home_id = self.app["places"]["홈.등급"]["id"]
+        tab_id = self.ops["아래탭"][0]
 
-        return self.wait_until(ready)
+        def arrived(xml):
+            return self.node_ready(xml, start_id) or self.node_ready(xml, home_id) or self.node_ready(xml, tab_id)
+
+        xml = self.wait_until(arrived)
+        if not arrived(xml):
+            raise DeviceError(self.missing_reason(start_id, xml))
+        if self.node_ready(xml, start_id) and not self.node_ready(xml, tab_id):
+            self.tap_id(start_id)
+            xml = self.wait_until(lambda dumped: self.node_ready(dumped, home_id) or self.node_ready(dumped, tab_id))
+            if not (self.node_ready(xml, home_id) or self.node_ready(xml, tab_id)):
+                raise DeviceError(self.missing_reason(home_id, xml))
+
+    def prepare(self):
+        self.bring_up()
+
+    def bring_up(self):
+        """앱을 앞으로 가져온다. 내비게이션처럼 다른 앱이 앞에 있으면 탭이 안 보인다."""
+        self.adb.start(self.pkg)
+        self.pass_first_run()
 
     def fresh(self):
         self.adb.clear(self.pkg)
         self.adb.start(self.pkg)
-        skip = self.ops["첫실행"][0]
-        home = self.app["places"]["홈.등급"]["id"]
-        xml = self.wait_until(lambda dumped: find_nodes(dumped, skip, self.pkg) or find_nodes(dumped, home, self.pkg))
-        if find_nodes(xml, skip, self.pkg) and not find_nodes(xml, home, self.pkg):
-            self.tap_id(skip)
-            self.wait_until(lambda dumped: find_nodes(dumped, home, self.pkg))
+        self.pass_first_run()
 
     def home_after(self, sid):
         self.select_scenario(sid)
         self.run_inspect()
         self.go("홈")
-        return self.wait_until(lambda xml: place_text(xml, self.app, "홈.등급") != "")
+        return self.wait_until(lambda xml: grade_of(place_text(xml, self.app, "홈.등급")) != "")
 
     def ask(self, key):
         self.go("AI 보이스")
-        before_xml = self.dump()
-        before = place_text(before_xml, self.app, "보이스.답")
+        self.wait_until(lambda xml: place_found(xml, self.app, "보이스.답"))
+        before = place_text(self.dump(), self.app, "보이스.답")
         seq = self.ops["조작-6"][key]
         if key == "질문-무관":
             self.tap_id(seq[0])
+            self.adb.sleep(0.5)
             self.adb.text(self.app["questions"][key].replace(" ", "%s"))
+            self.adb.sleep(0.5)
+            # 키보드가 보내기 단추를 가리면 탭이 닿지 않는다. 뒤로 가기는 키보드만 닫는다.
+            self.adb.keyevent(4)
+            self.adb.sleep(0.5)
             self.tap_id(seq[1])
         else:
             self.tap_seq(seq)
-        return self.wait_until(lambda xml: place_text(xml, self.app, "보이스.답") != before)
+        return self.wait_until(lambda xml: place_text(xml, self.app, "보이스.답") not in ("", before))
+
+    def _battle_done(self, xml):
+        text = place_text(xml, self.app, "대전.결과")
+        return "승리" in text or "패배" in text or "무승부" in text
 
     def finish_battle(self):
         self.go("대전하기")
         self.tap_seq(self.ops["조작-7"])
         skip_ids = self.ops.get("대전건너뛰기") or []
-        if skip_ids:
-            xml = self.dump()
-            if find_nodes(xml, skip_ids[0], self.pkg):
-                self.tap_id(skip_ids[0])
+        skip_id = skip_ids[0] if skip_ids else ""
 
-        def ready(xml):
-            text = place_text(xml, self.app, "대전.결과")
-            return "승리" in text or "패배" in text or "무승부" in text
+        def skip_or_done(xml):
+            return self._battle_done(xml) or (skip_id and self.node_ready(xml, skip_id))
 
-        return self.wait_until(ready)
+        xml = self.wait_until(skip_or_done)
+        if skip_id and self.node_ready(xml, skip_id) and not self._battle_done(xml):
+            self.tap_id(skip_id)
+        return self.wait_until(self._battle_done)
 
     def set_airplane(self, on):
         self.adb.airplane(on)
@@ -1111,21 +1216,28 @@ class Runner:
 
     def item_inspect_5(self):
         self.fresh()
-        self.go("홈")
-        before = self.dump()
-        self.run_inspect()
+
+        def counted(xml):
+            return first_number(place_text(xml, self.app, "홈.연속")) is not None
+
+        first = self.wait_until(counted)
         self.adb.force_stop(self.pkg)
-        self.adb.start(self.pkg)
-        home_id = self.app["places"]["홈.마지막점검"]["id"]
-        after = self.wait_until(lambda xml: find_nodes(xml, home_id, self.pkg))
-        verdict = judge_inspect_5(before, after, self.app)
+        self.adb.set_clock(__import__("time").time() * 1000 + 86_400_000)
+        try:
+            self.bring_up()
+            later = self.wait_until(counted)
+        finally:
+            self.adb.force_stop(self.pkg)
+            self.adb.restore_clock()
+            self.adb.clear(self.pkg)
+        verdict = judge_inspect_5(first, later, self.app)
         return _done(verdict.ok, verdict.measured)
 
     def _status_after(self, sid):
         self.select_scenario(sid)
         self.run_inspect()
         self.go("상태관리")
-        return self.dump()
+        return self.wait_until(lambda xml: place_found(xml, self.app, "상태.카드"))
 
     def item_status_1(self):
         verdict = judge_status_1(self._status_after("D3"), self.app)
@@ -1146,9 +1258,11 @@ class Runner:
         self.run_inspect()
         self.go("상태관리")
         self.tap_seq(self.ops["조작-5"]["제동·조향"])
-        brake = self.dump()
+        brake = self.wait_until(lambda xml: place_text(xml, self.app, "상태.상세") != "")
+        brake_text = place_text(brake, self.app, "상태.상세")
         self.tap_seq(self.ops["조작-5"]["타이어"])
-        verdict = judge_status_4(brake, self.dump(), self.app)
+        tire = self.wait_until(lambda xml: place_text(xml, self.app, "상태.상세") not in ("", brake_text))
+        verdict = judge_status_4(brake, tire, self.app)
         return _done(verdict.ok, verdict.measured)
 
     def item_status_5(self):
@@ -1214,7 +1328,11 @@ class Runner:
     def item_battle_4(self):
         self.fresh()
         self.go("대전하기")
-        verdict = judge_battle_4(self.dump(), self.app)
+        start_id = self.app["places"]["대전.시작"]["id"]
+        xml = self.wait_until(
+            lambda dumped: "먼저 점검해 주세요" in all_text(dumped, self.pkg) or self.node_ready(dumped, start_id)
+        )
+        verdict = judge_battle_4(xml, self.app)
         return _done(verdict.ok, verdict.measured)
 
     def item_common_1(self):
@@ -1253,13 +1371,15 @@ class Runner:
         self.select_scenario(sid)
         self.run_inspect()
         self.go("홈")
-        return self.wait_until(lambda xml: place_text(xml, self.app, "홈.등급") != "")
+        return self.wait_until(lambda xml: grade_of(place_text(xml, self.app, "홈.등급")) != "")
 
     def item_link_1(self):
         self._home_ready("D3")
         ids = self.ops["조작-9"]
         self.tap_seq(ids)
-        verdict = judge_link_1(self.dump(), self.app, len(ids))
+        keyword = self.app["ops"]["검색어"]
+        xml = self.wait_until(lambda dumped: keyword in any_text(dumped))
+        verdict = judge_link_1(xml, self.app, len(ids))
         return _done(verdict.ok, verdict.measured)
 
     def item_link_3(self):
@@ -1337,20 +1457,46 @@ def render_report(app, rows, day, board):
     return "\n".join(lines)
 
 
+def _screen_excerpt(xml):
+    shown = any_text(xml).replace("\n", " ").strip()
+    if len(shown) > 240:
+        return shown[:240] + "…"
+    return shown
+
+
 def evaluate(app, adb=None, today=None):
     device = adb or Adb()
     runner = Runner(app, device)
     rows = []
     try:
+        prelude = ""
+        try:
+            runner.prepare()
+        except DeviceError as exc:
+            prelude = str(exc)
         for item, mode in ITEMS:
             if mode == "수동":
                 rows.append((item, "", "", MANUAL[item]))
                 continue
+            if prelude:
+                rows.append((item, "실패", _screen_excerpt(runner.last_xml), prelude))
+                sys.stderr.write(f"{item} 실패\n")
+                sys.stderr.flush()
+                continue
             try:
+                runner.bring_up()
                 result, measured, note = runner.run_item(item)
                 rows.append((item, result, measured, note))
+                sys.stderr.write(f"{item} {result or '수동'}\n")
+                sys.stderr.flush()
+            except DeviceError as exc:
+                rows.append((item, "실패", _screen_excerpt(runner.last_xml), str(exc)))
+                sys.stderr.write(f"{item} 실패\n")
+                sys.stderr.flush()
             except Exception as exc:
                 rows.append((item, "실패", "", f"{type(exc).__name__}: {exc}"))
+                sys.stderr.write(f"{item} 실패\n")
+                sys.stderr.flush()
     finally:
         if runner.airplane_on:
             try:

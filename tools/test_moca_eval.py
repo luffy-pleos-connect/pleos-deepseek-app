@@ -12,11 +12,12 @@ PKG = "ai.moca.app"
 
 
 def node(resource_id, text, bounds="[0,0][10,10]", enabled="true", package=PKG, inner="",
-         clickable="false", selected="false", scrollable="false"):
+         clickable="false", selected="false", scrollable="false", checked=None):
+    extra = f' checked="{checked}"' if checked is not None else ""
     return (
         f'<node package="{package}" resource-id="{resource_id}" text="{text}" '
         f'bounds="{bounds}" enabled="{enabled}" clickable="{clickable}" '
-        f'selected="{selected}" scrollable="{scrollable}">{inner}</node>'
+        f'selected="{selected}" scrollable="{scrollable}"{extra}>{inner}</node>'
     )
 
 
@@ -311,6 +312,25 @@ class EvalTests(unittest.TestCase):
         short = node(self.app["places"]["화면.등급"]["id"], "B", bounds="[0,0][40,8]")
         self.assertFalse(mod.judge_screen_5(xml_of(short, other), self.app).ok)
 
+    def test_screen_5_ignores_buttons_and_tabs(self):
+        grade = node(self.app["places"]["화면.등급"]["id"], "B", bounds="[0,0][40,40]")
+        button = node("ai.moca.app:id/topProblemAction", "가까운 정비소 안내", bounds="[0,40][40,140]", clickable="true")
+        other = node(self.place("홈.종합"), "종합 75", bounds="[0,40][40,50]")
+        self.assertTrue(mod.judge_screen_5(xml_of(grade, button, other), self.app).ok)
+
+    def test_empty_text_falls_back_to_content_desc(self):
+        graph = (
+            f'<node package="{PKG}" resource-id="{self.place("상태.추이")}" text="" '
+            'content-desc="11월 11일 80점, 11월 12일 75점" bounds="[0,0][10,10]" />'
+        )
+        self.assertTrue(mod.judge_status_5(xml_of(graph), self.app).ok)
+
+    def test_inspect_5_needs_the_streak_to_grow_from_1_to_2(self):
+        one = xml_of(node(self.place("홈.연속"), "1일째 이어서 점검했어요"))
+        two = xml_of(node(self.place("홈.연속"), "2일째 이어서 점검했어요"))
+        self.assertTrue(mod.judge_inspect_5(one, two, self.app).ok)
+        self.assertFalse(mod.judge_inspect_5(one, one, self.app).ok)
+
     def test_screen_6_fails_when_a_node_scrolls(self):
         plain = xml_of(node(self.place("홈.등급"), "B"))
         scrolling = xml_of(node(self.place("홈.등급"), "B", scrollable="true"))
@@ -325,6 +345,180 @@ class EvalTests(unittest.TestCase):
         self.assertTrue(mod.judge_screen_7(xml_of(*parts), self.app).ok)
         parts[1] = node(self.app["places"]["화면.줄"][0][1], "100", bounds="[30,40][50,50]")
         self.assertFalse(mod.judge_screen_7(xml_of(*parts), self.app).ok)
+
+
+class ScriptAdb:
+    """dump 는 목록 순서대로, 목록이 끝나면 마지막 화면을 반복한다."""
+
+    def __init__(self, dumps):
+        self.dumps = list(dumps)
+        self.n = 0
+        self.taps = []
+        self.sleeps = []
+        self.commands = []
+
+    def dump(self):
+        xml = self.dumps[min(self.n, len(self.dumps) - 1)]
+        self.n += 1
+        return xml
+
+    def tap(self, x, y):
+        self.taps.append((x, y))
+
+    def sleep(self, seconds):
+        self.sleeps.append(seconds)
+
+    def text(self, value):
+        self.commands.append(("text", value))
+
+    def keyevent(self, code):
+        self.commands.append(("key", code))
+
+    def airplane(self, on):
+        self.commands.append(("airplane", on))
+
+    def clear(self, package):
+        self.commands.append(("clear", package))
+
+    def force_stop(self, package):
+        self.commands.append(("stop", package))
+
+    def start(self, package):
+        self.commands.append(("start", package))
+
+    def prop(self, _name):
+        return "test-board"
+
+
+class FlowTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = json.loads((ROOT / "moca.json").read_text(encoding="utf-8"))
+
+    def test_tap_waits_half_second_until_the_node_appears(self):
+        tab = self.app["ops"]["아래탭"][-1]
+        adb = ScriptAdb(["<hierarchy></hierarchy>", xml_of(node(tab, "설정"))])
+        mod.Runner(self.app, adb).tap_id(tab)
+        self.assertEqual(adb.sleeps, [0.5])
+        self.assertEqual(adb.taps, [(5, 5)])
+
+    def test_tap_gives_up_after_ten_seconds_with_a_readable_reason(self):
+        tab = self.app["ops"]["아래탭"][-1]
+        adb = ScriptAdb(["<hierarchy></hierarchy>"])
+        with self.assertRaises(mod.DeviceError) as caught:
+            mod.Runner(self.app, adb).tap_id(tab)
+        self.assertEqual(adb.sleeps, [0.5] * 20)
+        self.assertNotIn("DeviceError", str(caught.exception))
+        self.assertIn(tab, str(caught.exception))
+        self.assertIn("찾지 못했다", str(caught.exception))
+
+    def test_fresh_presses_agree_then_waits_for_home(self):
+        start = self.app["ops"]["첫실행"][0]
+        home = self.app["places"]["홈.등급"]["id"]
+        tab = self.app["ops"]["아래탭"][0]
+        self.assertEqual(start, "ai.moca.app:id/buttonStart")
+        adb = ScriptAdb([
+            xml_of(node(start, "동의하고 시작")),
+            xml_of(node(start, "동의하고 시작")),
+            xml_of(node(home, "—"), node(tab, "홈")),
+        ])
+        mod.Runner(self.app, adb).fresh()
+        self.assertEqual(adb.commands[:2], [("clear", PKG), ("start", PKG)])
+        self.assertEqual(adb.taps, [(5, 5)])
+
+    def test_ensure_demo_opens_the_group_and_waits_after_the_switch(self):
+        tab, group, switch = self.app["ops"]["조작-1"]["켜기"]
+        adb = ScriptAdb([
+            xml_of(node(tab, "설정", bounds="[0,0][10,10]")),
+            xml_of(node(group, "데모", bounds="[10,10][20,20]")),
+            xml_of(node(switch, "데모 데이터", bounds="[20,20][30,30]", checked="false")),
+            xml_of(node(switch, "데모 데이터", bounds="[20,20][30,30]", checked="false")),
+            xml_of(node(switch, "데모 데이터", bounds="[20,20][30,30]", checked="true")),
+        ])
+        mod.Runner(self.app, adb).ensure_demo(True)
+        self.assertEqual(adb.taps, [(5, 5), (15, 15), (25, 25)])
+        self.assertEqual(adb.sleeps, [0.5])
+
+    def test_run_inspect_does_not_stop_on_the_placeholder(self):
+        home = self.app["ops"]["조작-3"]["홈"][0]
+        grade = self.app["places"]["홈.등급"]["id"]
+        total = self.app["places"]["홈.종합"]["id"]
+        adb = ScriptAdb([
+            xml_of(node(home, "홈")),
+            xml_of(node(grade, "—"), node(total, "—")),
+            xml_of(node(grade, "B"), node(total, "종합 75")),
+        ])
+        xml = mod.Runner(self.app, adb).run_inspect()
+        self.assertIn("B", xml)
+        self.assertEqual(adb.sleeps, [0.5])
+
+    def test_clear_and_start_use_the_current_user(self):
+        calls = []
+
+        def run(args, **_kwargs):
+            calls.append(list(args))
+
+            class Proc:
+                stdout = ""
+                stderr = ""
+                returncode = 0
+
+            proc = Proc()
+            if args[-1] == "get-current-user":
+                proc.stdout = "10\n"
+            if "resolve-activity" in args:
+                proc.stdout = "priority=0\nai.moca.app/.MainActivity\n"
+            return proc
+
+        adb = mod.Adb(run=run, sleep=lambda _seconds: None)
+        adb.clear(PKG)
+        adb.force_stop(PKG)
+        adb.start(PKG)
+        self.assertIn(["adb", "shell", "pm", "clear", "--user", "10", PKG], calls)
+        self.assertIn(["adb", "shell", "am", "force-stop", "--user", "10", PKG], calls)
+        self.assertIn(
+            ["adb", "shell", "am", "start", "--user", "10", "-W", "-n", "ai.moca.app/.MainActivity"],
+            calls,
+        )
+
+    def test_bring_up_starts_the_package_before_looking(self):
+        tab = self.app["ops"]["아래탭"][0]
+        adb = ScriptAdb([xml_of(node(tab, "홈"))])
+        mod.Runner(self.app, adb).bring_up()
+        self.assertEqual(adb.commands, [("start", PKG)])
+        self.assertEqual(adb.taps, [])
+
+    def test_typed_question_hides_the_keyboard_before_send(self):
+        voice = self.app["ops"]["조작-3"]["AI 보이스"][0]
+        answer = self.app["places"]["보이스.답"]["id"]
+        field, send = self.app["ops"]["조작-6"]["질문-무관"]
+        screen = xml_of(
+            node(voice, "보이스", bounds="[0,0][10,10]"),
+            node(answer, "무엇이든 물어보세요", bounds="[0,20][10,30]"),
+            node(field, "", bounds="[0,40][10,50]"),
+            node(send, "보내기", bounds="[20,40][30,50]"),
+        )
+        replied = xml_of(
+            node(voice, "보이스", bounds="[0,0][10,10]"),
+            node(answer, "차 점검부터 볼게요.", bounds="[0,20][10,30]"),
+            node(field, "", bounds="[0,40][10,50]"),
+            node(send, "보내기", bounds="[20,40][30,50]"),
+        )
+        adb = ScriptAdb([screen, screen, screen, screen, replied, replied])
+        xml = mod.Runner(self.app, adb).ask("질문-무관")
+        self.assertIn("점검", xml)
+        self.assertEqual([command for command in adb.commands if command[0] == "key"], [("key", 4)])
+        self.assertEqual(adb.taps, [(5, 5), (5, 45), (25, 45)])
+        send_at = adb.taps.index((25, 45))
+        key_before_send = any(command == ("key", 4) for command in adb.commands)
+        self.assertTrue(key_before_send)
+        self.assertGreater(send_at, 0)
+
+    def test_missing_nodes_do_not_write_deviceerror_into_the_report(self):
+        text = mod.evaluate(self.app, adb=ScriptAdb(["<hierarchy></hierarchy>"]), today="2026-11-11")
+        self.assertNotIn("DeviceError", text)
+        self.assertIn("찾지 못했다", text)
+        self.assertIn("ai.moca.app:id/buttonStart", text)
 
 
 if __name__ == "__main__":

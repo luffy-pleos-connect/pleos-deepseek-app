@@ -189,7 +189,8 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         } else {
             InspectionHistory.trendPoints(app.prefs.inspectionLog(false), Profile.REAL, today)
         }
-        if (points.size < 2) {
+        // 점수를 못 낸 날만 있으면 그릴 선이 없다.
+        if (points.count { it.overall != null } < 2) {
             trendGraph.visibility = View.GONE
             trendEmpty.visibility = View.VISIBLE
             return

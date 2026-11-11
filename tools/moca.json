@@ -55,7 +55,7 @@
       "ai.moca.app:id/tabBattle",
       "ai.moca.app:id/tabSettings"
     ],
-    "첫실행": ["ai.moca.app:id/buttonSkip"],
+    "첫실행": ["ai.moca.app:id/buttonStart"],
     "대전건너뛰기": ["ai.moca.app:id/buttonSkip"]
   },
   "places": {
@@ -65,6 +65,7 @@
     "홈.관리": {"id": "ai.moca.app:id/careValue"},
     "홈.남은점수": {"id": "ai.moca.app:id/gradeHint"},
     "홈.마지막점검": {"id": "ai.moca.app:id/lastInspection"},
+    "홈.연속": {"id": "ai.moca.app:id/homeStreak"},
     "홈.순위": {"id": "ai.moca.app:id/rankText"},
     "점검.결과": {"ids": ["ai.moca.app:id/gradeValue", "ai.moca.app:id/totalValue"]},
     "점검.카테고리": {"container": "ai.moca.app:id/categoryList"},

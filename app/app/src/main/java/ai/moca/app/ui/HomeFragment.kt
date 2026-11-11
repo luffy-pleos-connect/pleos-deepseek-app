@@ -247,23 +247,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val evaluation = result.evaluation
         if (evaluation == null || evaluation.grade == null) {
             topProblemText.text = getString(R.string.c20_not_enough_data)
-            homeStreak.visibility = View.GONE
+            renderStreak(result)
             topProblemAction.visibility = View.GONE
             return
         }
         val problem = Priority.topProblem(result.engine)
         if (problem == null) {
             topProblemText.text = getString(R.string.home_all_good)
-            val streak = InspectionHistory.streakDays(
-                (requireActivity().application as MocaApp).prefs.inspectionLog(result.demo),
-                ScoreBridge.today(),
-            )
-            if (streak >= 1) {
-                homeStreak.visibility = View.VISIBLE
-                homeStreak.text = getString(R.string.home_streak, streak)
-            } else {
-                homeStreak.visibility = View.GONE
-            }
+            renderStreak(result)
             topProblemAction.visibility = View.GONE
             return
         }
@@ -284,6 +275,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 PleosToast.show(host, linkResult.message)
             }
         }
+    }
+
+    /** 급한 문제가 없을 때만 부른다. 등급을 못 내는 차도 점검 기록은 쌓이므로 같이 보여 준다. */
+    private fun renderStreak(result: InspectionResult) {
+        val streak = InspectionHistory.streakDays(
+            (requireActivity().application as MocaApp).prefs.inspectionLog(result.demo),
+            ScoreBridge.today(),
+        )
+        homeStreak.visibility = if (streak >= 1) View.VISIBLE else View.GONE
+        if (streak >= 1) homeStreak.text = getString(R.string.home_streak, streak)
     }
 
     private fun renderCategories(evaluation: Evaluation?) {

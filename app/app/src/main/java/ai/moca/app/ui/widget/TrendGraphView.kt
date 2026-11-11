@@ -6,13 +6,15 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import ai.pleos.ds.R
+import moca.core.InspectionHistory
 import moca.core.TrendPoint
 
 /**
  * 종합 점수 추이.
  * 세로 범위는 점의 최솟값과 60 중 작은 값에서 10 을 뺀 값(0 미만은 0)부터 100 까지다.
  * 범위 안의 등급 경계(90 S, 80 A, 70 B, 60 C)만 왼쪽에 적는다.
- * 마지막 점 옆에 그 값을 적는다. 움직임은 없다.
+ * 마지막 점 옆에 그 값을 적고, 아래 양 끝에 첫 날과 마지막 날을 적는다. 움직임은 없다.
+ * 그림이라 화면 낭독기가 읽을 글자가 없으므로, 날짜와 점수를 설명 글자로 함께 넣는다.
  */
 class TrendGraphView @JvmOverloads constructor(
     context: Context,
@@ -23,6 +25,11 @@ class TrendGraphView @JvmOverloads constructor(
     var points: List<TrendPoint> = emptyList()
         set(value) {
             field = value
+            contentDescription = value.joinToString(", ") { point ->
+                val score = point.overall?.let { "${it}점" }
+                    ?: context.getString(ai.moca.app.R.string.c06_unmeasurable)
+                "${InspectionHistory.label(point.date)} $score"
+            }
             invalidate()
         }
 
@@ -35,6 +42,7 @@ class TrendGraphView @JvmOverloads constructor(
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val gradeLabel = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.RIGHT }
     private val valueLabel = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.LEFT }
+    private val dateLabel = Paint(Paint.ANTI_ALIAS_FLAG)
 
     override fun onDraw(canvas: Canvas) {
         if (points.size < 2) return
@@ -49,6 +57,9 @@ class TrendGraphView @JvmOverloads constructor(
         valueLabel.textSize = resources.getDimension(R.dimen.pleos_text_body_m)
         valueLabel.color = context.getColor(R.color.pleos_text_dark_primary)
 
+        dateLabel.textSize = gradeLabel.textSize
+        dateLabel.color = gradeLabel.color
+
         val gap = 8f * density
         val padLeft = gradeLabel.measureText("S") + gap
         val padRight = valueLabel.measureText("100") + gap
@@ -56,7 +67,7 @@ class TrendGraphView @JvmOverloads constructor(
         val plotLeft = padLeft
         val plotRight = width - padRight
         val plotTop = padVert
-        val plotBottom = height - padVert
+        val plotBottom = height - padVert - dateLabel.textSize - gap
         if (plotRight <= plotLeft || plotBottom <= plotTop) return
 
         fun yOf(value: Int): Float {
@@ -95,6 +106,12 @@ class TrendGraphView @JvmOverloads constructor(
             canvas.drawCircle(x, y, 6f * density, dot)
             previous = x to y
         }
+
+        val dateBaseline = height - dateLabel.descent()
+        dateLabel.textAlign = Paint.Align.LEFT
+        canvas.drawText(InspectionHistory.label(points.first().date), plotLeft, dateBaseline, dateLabel)
+        dateLabel.textAlign = Paint.Align.RIGHT
+        canvas.drawText(InspectionHistory.label(points.last().date), plotRight, dateBaseline, dateLabel)
 
         val last = points.last().overall ?: return
         val x = xOf(points.lastIndex) + gap

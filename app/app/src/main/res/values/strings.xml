@@ -59,7 +59,7 @@
     <string name="status_title">상태관리</string>
     <string name="status_todo">할 일</string>
     <string name="status_trend">최근 추이</string>
-    <string name="status_trend_title">최근 14일 종합 점수</string>
+    <string name="status_trend_title">최근 점검 종합 점수</string>
     <string name="status_trend_empty">점검이 쌓이면 추이를 보여 드려요</string>
     <string name="status_label_values">읽은 값</string>
     <string name="status_label_deductions">감점</string>
