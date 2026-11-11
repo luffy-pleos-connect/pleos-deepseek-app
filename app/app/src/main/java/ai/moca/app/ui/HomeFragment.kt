@@ -101,7 +101,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 else -> getString(R.string.c03_first_grade)
             }
         }
-        lastInspection.text = getString(R.string.home_never_inspected)
+        val saved = (requireActivity().application as MocaApp).prefs.inspectionLog(isDemo)
+        lastInspection.text = moca.core.InspectionHistory.homeLabel(saved)
         if (isDemo) {
             lastInspection.text = "${getString(R.string.c13_badge_demo)} · ${lastInspection.text}"
         }

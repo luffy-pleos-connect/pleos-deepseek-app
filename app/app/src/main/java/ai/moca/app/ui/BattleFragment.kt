@@ -207,12 +207,8 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             BattleSide.DRAW -> getString(R.string.battle_result_draw)
         }
         val app = requireActivity().application as MocaApp
-        val suffix = if (app.prefs.demoEnabled && moca.core.Demo.fixedBattleRounds(app.prefs.demoScenarioId) != null) {
-            "  ·  데모 시나리오"
-        } else {
-            ""
-        }
-        resultText.text = "$text  (${result.myWins} : ${result.theirWins})$suffix"
+        val demoFixed = app.prefs.demoEnabled && moca.core.Demo.fixedBattleRounds(app.prefs.demoScenarioId) != null
+        resultText.text = moca.core.BattleText.line(text, result.myWins, result.theirWins, demoFixed)
         resultText.setTextColor(
             ContextCompat.getColor(
                 requireContext(),

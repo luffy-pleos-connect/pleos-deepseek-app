@@ -139,13 +139,18 @@ object ScoreBridge {
     }
 
     /**
+     * 실차 관리 점수. 앱이 저장된 점검 기록으로 바꾼다.
+     * 기록이 없으면 시즌 시작값 50.
+     */
+    var realCare: (LocalDate) -> Int = { _ -> 50 }
+
+    /**
      * 관리 점수.
-     * - 데모: 기준표 §3 의 53 (데모 기록 7회를 규칙으로 계산한 값, `Demo.CARE_TODAY`)
-     * - 실차: 점검 기록 저장이 없으므로 시즌 시작값 50
-     * 기록 저장(Room)을 붙이면 실차도 계산값으로 바꾼다.
+     * - 데모: `Demo.CARE_TODAY` (53). 기록으로 바꾸지 않는다.
+     * - 실차: [realCare]
      */
     fun careForNow(isDemo: Boolean = false): Int =
-        if (isDemo) moca.core.Demo.CARE_TODAY else 50
+        if (isDemo) moca.core.Demo.CARE_TODAY else realCare(today())
 
     fun evaluate(
         readings: Map<String, ItemReading>,

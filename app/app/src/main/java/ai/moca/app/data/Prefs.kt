@@ -84,9 +84,20 @@ class Prefs(context: Context) {
         sp.edit().remove(KEY_DEVICE_SECRET).apply()
     }
 
+    fun inspectionLog(demo: Boolean): String =
+        sp.getString(logKey(demo), "").orEmpty()
+
+    fun appendInspection(demo: Boolean, line: String) {
+        val key = logKey(demo)
+        val kept = inspectionLog(demo).lines().filter { it.isNotBlank() }.takeLast(59)
+        sp.edit().putString(key, (kept + line).joinToString("\n")).apply()
+    }
+
     fun clearAll() {
         sp.edit().clear().apply()
     }
+
+    private fun logKey(demo: Boolean): String = if (demo) KEY_LOG_DEMO else KEY_LOG_REAL
 
     private companion object {
         const val KEY_DEVICE_ID = "device_id"
@@ -98,5 +109,7 @@ class Prefs(context: Context) {
         const val KEY_DEMO = "demo_enabled"
         const val KEY_DEMO_SCENARIO = "demo_scenario"
         const val KEY_CONSENT_BATTLE = "consent_battle"
+        const val KEY_LOG_REAL = "inspection_log_real"
+        const val KEY_LOG_DEMO = "inspection_log_demo"
     }
 }

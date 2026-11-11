@@ -156,27 +156,36 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         if (areas.isEmpty()) {
             return KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = false, value = null, note = "no_wheel_area")
         }
-        var lowCount = 0
-        var readAny = false
+        val pairs = mutableListOf<Pair<Float?, Float?>>()
         for (area in areas) {
-            val value = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
-                suspendCancellableCoroutine<Float?> { cont ->
-                    vehicle.getTire().getLowTirePressure(
-                        area,
-                        { v -> if (cont.isActive) cont.resume(v) },
-                        { if (cont.isActive) cont.resume(null) },
-                    )
-                }
+            val pressure = readFloat { onOk, onFail ->
+                vehicle.getTire().getTirePressure(area, onOk, onFail)
             }
-            if (value != null) {
-                readAny = true
-                if (value > 0f) lowCount++
+            val threshold = readFloat { onOk, onFail ->
+                vehicle.getTire().getLowTirePressure(area, onOk, onFail)
             }
+            pairs += pressure to threshold
         }
-        return if (!readAny) {
+        val lowCount = moca.core.TirePressure.lowCount(pairs)
+        return if (lowCount == null) {
             KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = true, value = null, note = "timeout")
         } else {
             KEY_TIRE_LOW to ItemReading(KEY_TIRE_LOW, supported = true, value = lowCount.toDouble())
+        }
+    }
+
+    private suspend fun readFloat(
+        request: ((Float?) -> Unit, (Exception) -> Unit) -> Unit,
+    ): Float? = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
+        suspendCancellableCoroutine { cont ->
+            runCatching {
+                request(
+                    { value -> if (cont.isActive) cont.resume(value) },
+                    { if (cont.isActive) cont.resume(null) },
+                )
+            }.onFailure {
+                if (cont.isActive) cont.resume(null)
+            }
         }
     }
 

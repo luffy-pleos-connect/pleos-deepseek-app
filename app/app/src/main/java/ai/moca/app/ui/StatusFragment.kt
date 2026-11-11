@@ -77,11 +77,18 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
                 }
             }
 
-            // 추이(절단 규칙 4번: 선 그래프 대신 막대 5개로 단순화).
-            // 이번 단계는 기록 저장(Room)이 없어 현재 카테고리 점수를 막대로 보여 준다.
             trend.removeAllViews()
-            for (category in Category.entries) {
-                trend.addView(trendBar(category, eval.categories[category]))
+            val history = app.prefs.inspectionLog(snapshot.isDemo)
+            val profile = if (snapshot.isDemo) moca.core.Profile.DEMO else moca.core.Profile.REAL
+            val rows = moca.core.InspectionHistory.trendRows(history, profile)
+            if (rows.size >= 2) {
+                trend.orientation = LinearLayout.VERTICAL
+                trend.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                for (row in rows) trend.addView(trendLabel(row))
+            } else {
+                for (category in Category.entries) {
+                    trend.addView(trendBar(category, eval.categories[category]))
+                }
             }
 
             if (snapshot.isDemo) {
@@ -167,6 +174,16 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
             append("지원: ").append(if (supported) "예" else "아니요").append(" · ")
             append(reason)
             if (action.isNotEmpty()) append(" ").append(action)
+        }
+    }
+
+    private fun trendLabel(text: String): View {
+        val ctx = requireContext()
+        return TextView(ctx).apply {
+            this.text = text
+            setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Body_M)
+            setTextColor(ContextCompat.getColor(ctx, ai.pleos.ds.R.color.pleos_text_dark_secondary))
+            setPadding(0, 12, 0, 12)
         }
     }
 

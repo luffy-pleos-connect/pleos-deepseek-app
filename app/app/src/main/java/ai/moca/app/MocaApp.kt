@@ -24,6 +24,9 @@ class MocaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         prefs = Prefs(this)
+        ai.moca.app.score.ScoreBridge.realCare = { today ->
+            moca.core.InspectionHistory.careScore(prefs.inspectionLog(false), today)
+        }
         realVehicle = PleosVehicleSource(this)
         demoVehicle = DemoScenarios.source(prefs.demoScenarioId)
     }

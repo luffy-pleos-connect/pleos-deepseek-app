@@ -39,6 +39,15 @@ class InspectFragment : Fragment(R.layout.fragment_inspect) {
         viewLifecycleOwner.lifecycleScope.launch {
             val source = app.vehicle()
             val snapshot = source.read()
+            val engine = ScoreBridge.toEngineSnapshot(
+                snapshot.items,
+                source.cachedWarnings(),
+                snapshot.isDemo,
+            )
+            app.prefs.appendInspection(
+                snapshot.isDemo,
+                moca.core.InspectionHistory.line(ScoreBridge.today(), engine),
+            )
             val eval = runCatching {
                 ScoreBridge.evaluate(snapshot.items, source.cachedWarnings(), snapshot.isDemo)
             }.getOrNull()
