@@ -60,6 +60,7 @@ class BattleTest {
             DemoScenario.D4 to "주말캠퍼",
             DemoScenario.D5 to "경고등수집가",
             DemoScenario.D6 to "퇴근길질주",
+            DemoScenario.D7 to "초보운전3년차",
         )
         for ((scenario, name) in expected) {
             assertEquals(name, scenario.opponentNickname())

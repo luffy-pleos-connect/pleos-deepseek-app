@@ -1,7 +1,7 @@
 package ai.moca.app.vehicle
 
 /**
- * 데모 시나리오 D0~D6 (계획 10장 표). 실제 차량 값이 아니다.
+ * 데모 시나리오 D0~D7 (계획 10장 표). 실제 차량 값이 아니다.
  * 모든 데모 화면에는 "데모 데이터" 배지가 붙는다.
  *
  * 값의 의미는 PleosVehicleSource 의 읽기 키와 같다.
@@ -24,6 +24,7 @@ enum class DemoScenario(
     D4("D4", "배터리 9%", "A", 84),
     D5("D5", "엔진오일 부족 + TPMS 노랑 + 바퀴 1개 저압", "B", 76),
     D6("D6", "타이어 미지원", "A", 85),
+    D7("D7", "워셔액 부족", "A", 84),
     ;
 
     fun readings(): LinkedHashMap<String, ItemReading> {
@@ -81,6 +82,14 @@ enum class DemoScenario(
                 put(PleosVehicleSource.KEY_SOC, 62.0)
                 put(PleosVehicleSource.KEY_TELLTALES, 0.0)
             }
+            D7 -> {
+                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
+                put(PleosVehicleSource.KEY_TIRE_LOW, 0.0)
+                put(PleosVehicleSource.KEY_SOC, 62.0)
+                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
+                // hasLowWasherFluidWarning 이 true 이면 1.0. ScoreBridge 는 0 보다 크면 부족이다.
+                put(PleosVehicleSource.KEY_WASHER, 1.0)
+            }
         }
         return map
     }
@@ -106,6 +115,7 @@ enum class DemoScenario(
         D4 -> "주말캠퍼"
         D5 -> "경고등수집가"
         D6 -> "퇴근길질주"
+        D7 -> "초보운전3년차"
     }
 
     companion object {

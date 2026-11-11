@@ -13,7 +13,8 @@
       "D3": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD3"],
       "D4": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD4"],
       "D5": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD5"],
-      "D6": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD6"]
+      "D6": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD6"],
+      "D7": ["ai.moca.app:id/tabSettings", "ai.moca.app:id/settingsGroupDemo", "ai.moca.app:id/scenarioD7"]
     },
     "조작-3": {
       "결과가 보이는 화면": [],
@@ -47,7 +48,10 @@
     },
     "조작-9": ["ai.moca.app:id/topProblemAction"],
     "검색어": "정비소",
-    "조작-10": ["ai.moca.app:id/topProblemAction"],
+    "조작-10": {
+      "시나리오": "D7",
+      "누르기": ["ai.moca.app:id/topProblemAction"]
+    },
     "아래탭": [
       "ai.moca.app:id/tabHome",
       "ai.moca.app:id/tabStatus",

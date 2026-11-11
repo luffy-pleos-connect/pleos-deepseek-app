@@ -20,6 +20,8 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.view.View
 import android.widget.Button
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
@@ -73,12 +75,19 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         setupTts()
 
         micButton.setOnClickListener { startListening() }
-        view.findViewById<View>(R.id.sendButton).setOnClickListener {
+        val sendButton = view.findViewById<View>(R.id.sendButton)
+        sendButton.setOnClickListener {
             val q = input.text?.toString()?.trim().orEmpty()
             if (q.isNotEmpty()) {
                 input.setText("")
+                hideKeyboard()
                 ask(q)
             }
+        }
+        // 키보드의 보내기 글쇠도 보내기 단추와 같다. 키보드가 단추를 가려도 보낼 수 있다.
+        input.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) sendButton.performClick()
+            actionId == EditorInfo.IME_ACTION_SEND
         }
         view.findViewById<View>(R.id.suggestion1).setOnClickListener { ask(getString(R.string.voice_recent_1)) }
         view.findViewById<View>(R.id.suggestion2).setOnClickListener { ask(getString(R.string.voice_recent_2)) }
@@ -86,6 +95,11 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         view.findViewById<View>(R.id.suggestion4).setOnClickListener { ask(getString(R.string.voice_recent_4)) }
 
         agent = buildAgent(app)
+    }
+
+    private fun hideKeyboard() {
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+        imm?.hideSoftInputFromWindow(input.windowToken, 0)
     }
 
     private fun buildAgent(app: MocaApp): VoiceAgent {

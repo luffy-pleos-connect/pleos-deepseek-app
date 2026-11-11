@@ -143,6 +143,7 @@
                 android:layout_height="@dimen/pleos_button_height_l"
                 android:layout_marginTop="@dimen/moca_gap"
                 android:hint="@string/onboarding_nickname"
+                android:imeOptions="flagNoExtractUi|actionDone"
                 android:inputType="text"
                 android:maxLength="10" />
 

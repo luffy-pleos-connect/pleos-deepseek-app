@@ -156,6 +156,7 @@
             android:layout_marginEnd="@dimen/moca_gap"
             android:layout_weight="1"
             android:hint="@string/voice_hint_type"
+            android:imeOptions="flagNoExtractUi|actionSend"
             android:inputType="text"
             android:maxLength="100" />
 

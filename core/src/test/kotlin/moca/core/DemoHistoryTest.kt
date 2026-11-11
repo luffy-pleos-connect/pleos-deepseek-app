@@ -205,6 +205,7 @@ class DemoHistoryTest {
             "D4" to "주말캠퍼",
             "D5" to "경고등수집가",
             "D6" to "퇴근길질주",
+            "D7" to "초보운전3년차",
         )
         for ((scenario, _) in Demo.scenarios()) {
             Assert.eq(expected[scenario.id], scenario.opponent, scenario.id)
@@ -213,8 +214,28 @@ class DemoHistoryTest {
     }
 
     @Test
-    fun sevenScenariosAreD0ThroughD6() {
-        Assert.eq(listOf("D0", "D1", "D2", "D3", "D4", "D5", "D6"), Demo.scenarios().map { it.first.id })
+    fun eightScenariosAreD0ThroughD7() {
+        Assert.eq(listOf("D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7"), Demo.scenarios().map { it.first.id })
+    }
+
+    @Test
+    fun d7RankAndBattleRun() {
+        val mine = Demo.evaluateOf("D7")
+        val board = DailyRank.board("나", mine)
+        Assert.notNull(board, "D7 순위")
+        Assert.eq(Seeds.battlePool.size + 1, board!!.total)
+        val seed = Seeds.byNickname("초보운전3년차")!!
+        val result = Battle.judge(mine, seed.evaluation())
+        Assert.eq(5, result.rounds.size)
+        Assert.eq(
+            listOf(BattleSide.MINE, BattleSide.DRAW, BattleSide.DRAW, BattleSide.DRAW, BattleSide.THEIRS),
+            result.rounds.map { it.winner },
+        )
+        Assert.eq(1, result.myWins)
+        Assert.eq(1, result.theirWins)
+        Assert.eq(BattleSide.THEIRS, result.winner)
+        Assert.eq(84, mine.displayedOverall)
+        Assert.eq(85, seed.evaluation().displayedOverall)
     }
 
     // 데모 고정 진행이 계획 10장 표와 같은지 검증한다.

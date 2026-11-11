@@ -18,7 +18,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val scenarioButtons =
         listOf(R.id.scenarioD0, R.id.scenarioD1, R.id.scenarioD2, R.id.scenarioD3,
-            R.id.scenarioD4, R.id.scenarioD5, R.id.scenarioD6)
+            R.id.scenarioD4, R.id.scenarioD5, R.id.scenarioD6, R.id.scenarioD7)
 
     private var group = GROUP_PROFILE
 

@@ -399,4 +399,22 @@ class VoiceAgentTest {
         assertFalse(obj.getBoolean("ok"))
         assertEquals("FAILED", obj.getString("result"))
     }
+
+    @Test
+    fun `D7 에서 등급 경고 부품 대전 답이 예외 없이 나온다`() = runBlocking {
+        val tools = buildTools(DemoScenario.D7)
+        val grade = tools.execute("get_latest_inspection", null)
+        val warnings = tools.execute("get_active_warnings", null)
+        val part = tools.execute("get_part_status", null)
+        val battle = tools.execute("start_battle", null)
+        val gradeText = OfflineIntents.template(OfflineIntent.GRADE, grade, false)
+        val warningText = OfflineIntents.template(OfflineIntent.WARNINGS, warnings, false)
+        val partText = OfflineIntents.template(OfflineIntent.PART, part, false)
+        val battleText = OfflineIntents.template(OfflineIntent.BATTLE, battle, false)
+        assertTrue(gradeText.contains("A"))
+        assertTrue(gradeText.contains("84"))
+        assertTrue(warningText.isNotEmpty())
+        assertTrue(partText.isNotEmpty())
+        assertTrue(battleText.isNotEmpty())
+    }
 }

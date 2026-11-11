@@ -71,9 +71,10 @@ class EvalTests(unittest.TestCase):
             "D4": ("배터리 9%", 100, 100, 100, 90, 100, 98, 84, "A", "S까지 6점"),
             "D5": ("엔진오일 부족, 타이어 공기압 노란 경고등, 저압 바퀴 1개", 60, 100, 75, 100, 100, 87, 76, "B", "A까지 4점"),
             "D6": ("타이어 값을 지원하지 않음", 100, 100, None, 100, 100, 100, 85, "A", "S까지 5점"),
+            "D7": ("워셔액 부족", 100, 100, 100, 100, 90, 98, 84, "A", "S까지 6점"),
         }
         self.assertEqual(mod.CARE, 53)
-        self.assertEqual(list(mod.SCENARIOS), ["D0", "D1", "D2", "D3", "D4", "D5", "D6"])
+        self.assertEqual(list(mod.SCENARIOS), ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7"])
         for sid, row in expected.items():
             got = mod.SCENARIOS[sid]
             self.assertEqual(
@@ -84,6 +85,7 @@ class EvalTests(unittest.TestCase):
         self.assertIn("관리 점수는 모든 시나리오에서 53 이다.", text)
         self.assertIn("D3\tABS 빨간 경고등, 타이어 공기압 노란 경고등, 저압 바퀴 1개\t100\t50\t75\t100\t100\t85\t75\tB\tA까지 5점", text)
         self.assertIn("D6\t타이어 값을 지원하지 않음\t100\t100\t없음\t100\t100\t100\t85\tA\tS까지 5점", text)
+        self.assertIn("D7\t워셔액 부족\t100\t100\t100\t100\t90\t98\t84\tA\tS까지 6점", text)
         self.assertIn("켜진 경고등 수: D2 1개, D3 2개, D5 1개, 나머지 0개. 빨간 경고등은 D3 에만 있다.", text)
 
     def test_battles_match_section_3_3(self):
@@ -95,6 +97,7 @@ class EvalTests(unittest.TestCase):
             "D6": ("퇴근길질주", "B", 76, ["승", "무", "무", "무", "무"], (1, 0), "승리"),
             "D3": ("라이벌드라이버", "A", 88, ["무", "무", "패", "승", "승"], (2, 1), "승리"),
             "D5": ("경고등수집가", "C", 64, ["패", "승", "무", "무", "승"], (2, 1), "승리"),
+            "D7": ("초보운전3년차", "A", 85, ["승", "무", "무", "무", "패"], (1, 1), "패배 (종합 84 대 85)"),
         }
         for sid, row in expected.items():
             got = mod.BATTLES[sid]
@@ -107,6 +110,8 @@ class EvalTests(unittest.TestCase):
         self.assertIn("D1\t세차는사랑\tA\t83\t패 무 무 승 무\t1 : 1\t패배 (종합 80 대 83)", text)
         self.assertIn("화면에 「데모 시나리오」라는 글자가 함께 나와야 한다.", text)
         self.assertIn("달리는곰 100·100·75·100·100", text)
+        self.assertIn("D7\t초보운전3년차\tA\t85\t승 무 무 무 패\t1 : 1\t패배 (종합 84 대 85)", text)
+        self.assertIn("초보운전3년차 60·100·100·100·100", text)
 
     def _home(self, total, health, care, hint):
         return xml_of(
@@ -208,7 +213,7 @@ class EvalTests(unittest.TestCase):
         self.assertIn("보이스-3 자동", lines)
         self.assertIn("공통-2 수동", lines)
         self.assertIn("이어-1 자동", lines)
-        self.assertIn("이어-2 수동", lines)
+        self.assertIn("이어-2 자동", lines)
         self.assertIn("이어-3 자동", lines)
         self.assertIn("순위-1 자동", lines)
         self.assertIn("순위-2 자동", lines)
@@ -218,9 +223,12 @@ class EvalTests(unittest.TestCase):
 
     def test_json_scenario_buttons(self):
         self.assertEqual(self.app["package"], PKG)
-        for index in range(7):
+        for index in range(8):
             ids = self.app["ops"]["조작-2"][f"D{index}"]
             self.assertIn(f"ai.moca.app:id/scenarioD{index}", ids)
+        op10 = self.app["ops"]["조작-10"]
+        self.assertEqual("D7", op10["시나리오"])
+        self.assertIn("ai.moca.app:id/topProblemAction", op10["누르기"])
 
     def test_dump_gives_up_after_five(self):
         def run(args, **_kwargs):
@@ -251,6 +259,18 @@ class EvalTests(unittest.TestCase):
             node("nav:id/result", "강남점", package="ai.navi"),
         )
         self.assertFalse(mod.judge_link_1(xml, self.app, 3).ok)
+
+    def test_link_2_passes_when_domain_contains_a_dot(self):
+        xml = xml_of(node(self.app["places"]["QR.도메인"]["id"], "www.mobis-as.com"))
+        self.assertTrue(mod.judge_link_2(xml, self.app).ok)
+
+    def test_link_2_fails_when_domain_has_no_dot(self):
+        xml = xml_of(node(self.app["places"]["QR.도메인"]["id"], "localhost"))
+        self.assertFalse(mod.judge_link_2(xml, self.app).ok)
+
+    def test_link_2_fails_when_domain_node_is_absent(self):
+        xml = xml_of(node(self.place("홈.등급"), "A"))
+        self.assertFalse(mod.judge_link_2(xml, self.app).ok)
 
     def test_link_3_passes_when_action_node_is_absent(self):
         xml = xml_of(node(self.place("홈.등급"), "A"))

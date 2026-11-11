@@ -86,6 +86,12 @@ object Demo {
                 "퇴근길질주", 85.9, Grade.A, 85,
                 base, today,
             ),
+            scenario(
+                "D7", "워셔액 부족",
+                normalVehicle().copy(washerFluidLow = true),
+                "초보운전3년차", 84.5, Grade.A, 84,
+                base, today,
+            ),
         )
     }
 
