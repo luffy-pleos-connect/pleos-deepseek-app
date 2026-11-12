@@ -14,9 +14,9 @@
 
 | 항목 | 결과 |
 |---|---|
-| 점수 엔진 단위 테스트 | **237 / 237** (`core/run-tests.sh`, JDK 17만) |
+| 점수 엔진 단위 테스트 | **238 / 238** (`core/run-tests.sh`, JDK 17만) |
 | 서버 테스트 | **68 / 68** (`server` 에서 `node --test`) |
-| 앱 단위 테스트 | **71 / 71** (`app/gradlew :app:testDebugUnitTest`) |
+| 앱 단위 테스트 | **86 / 86** (`app/gradlew :app:testDebugUnitTest`) |
 | 평가 도구 단위 테스트 | **48 / 48** (`python3 -m unittest tools/test_moca_eval.py`) |
 | Pleos 디자인 시스템 정적 검사 | **0 findings / 80 files** (`pleos_lint.py`) |
 | 게이트 종합 | `./check.sh` → **PASS 12 / FAIL 0 / SKIP 0** |

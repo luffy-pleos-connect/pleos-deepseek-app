@@ -100,6 +100,8 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private fun hideKeyboard() {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(input.windowToken, 0)
+        // 초점이 남아 있으면 창이 다시 앞으로 올 때 키보드가 또 뜬다.
+        input.clearFocus()
     }
 
     private fun buildAgent(app: MocaApp): VoiceAgent {
