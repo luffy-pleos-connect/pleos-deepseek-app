@@ -38,7 +38,8 @@ node --test *.test.mjs         # core + store (62 케이스)
 - 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`.
 - 저장소 환경 변수가 없으면 모든 요청에 500 `{"error":"not_configured"}` 로 답한다.
 - 앱의 release 빌드에는 배포한 주소에 `/api` 를 붙여 넣는다: `./gradlew :app:assembleRelease -Pmoca.serverBaseUrl=https://<프로젝트>.vercel.app/api`
-- 2026-11-12 현재 배포하지 않았다. 진입부는 `node --test vercel-entry.test.mjs` 로만 확인했고, Vercel 위에서 돌려 보지는 않았다.
+- 2026-11-12 에 `https://moca-server.vercel.app` 로 올렸다(프로젝트 `moca-server`, 리전 `iad1`, Node 24). 올린 파일은 `api/*.mjs` 3개와 `core.mjs` · `http-util.mjs` · `validate.mjs` · `store-redis.mjs` · `vercel-entry.mjs` · `seeds.json` 이고, 배포된 파일의 SHA-1 이 저장소 파일과 같은 것을 확인했다.
+- 같은 날 확인한 응답: `GET /api/opponent`, `GET·POST /api/chat` 모두 500 `{"error":"not_configured"}`. 함수는 불리지만 `HIVE_API_KEY` 와 Upstash 값 2개를 아직 넣지 않았다(`HIVE_API_URL` 만 넣었다). 값을 넣고 다시 배포하기 전에는 앱에서 쓸 수 없다.
 
 ## API
 
