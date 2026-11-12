@@ -50,7 +50,8 @@
     "검색어": "정비소",
     "조작-10": {
       "시나리오": "D7",
-      "누르기": ["ai.moca.app:id/topProblemAction"]
+      "누르기": ["ai.moca.app:id/topProblemAction"],
+      "닫기": ["ai.moca.app:id/qrClose"]
     },
     "아래탭": [
       "ai.moca.app:id/tabHome",

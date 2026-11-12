@@ -1,2 +1,2 @@
 
-0 finding(s) in 51 file(s). UX restriction check present: True
+0 finding(s) in 80 file(s). UX restriction check present: True

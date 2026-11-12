@@ -1399,6 +1399,9 @@ class Runner:
         self.tap_seq(ids)
         xml = self.wait_until(lambda dumped: "." in place_text(dumped, self.app, "QR.도메인"))
         verdict = judge_link_2(xml, self.app)
+        # QR 창을 닫지 않으면 다음 항목이 탭을 찾지 못한다.
+        if place_text(xml, self.app, "QR.도메인"):
+            self.tap_seq(spec.get("닫기") or [])
         return _done(verdict.ok, verdict.measured)
 
     def item_link_3(self):

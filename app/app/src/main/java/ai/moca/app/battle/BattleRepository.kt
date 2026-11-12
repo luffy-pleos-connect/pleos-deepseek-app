@@ -114,8 +114,14 @@ class BattleRepository(
     }
 }
 
-/** 상대의 카테고리 점수로 평가를 만든다. 대전 판정은 :core Battle 이 한다. */
-fun opponentEvaluation(opponent: Opponent): moca.core.Evaluation =
-    moca.core.Scoring.evaluate(opponent.categories, care = 50, redCap = false)
+/**
+ * 상대의 카테고리 점수로 평가를 만든다. 대전 판정은 :core Battle 이 한다.
+ * 라운드가 동점이면 종합으로 가르는데, 그 종합은 화면에 보이는 상대 종합([Opponent.total])이어야 한다.
+ * 상대의 관리 점수는 받지 않으므로, 종합을 받지 못했을 때(0 이하)만 관리 50 으로 계산한 값을 쓴다.
+ */
+fun opponentEvaluation(opponent: Opponent): moca.core.Evaluation {
+    val computed = moca.core.Scoring.evaluate(opponent.categories, care = 50, redCap = false)
+    return if (opponent.total > 0) computed.copy(overall = opponent.total) else computed
+}
 
 fun gradeOf(label: String): Grade? = Grade.entries.firstOrNull { it.label == label }

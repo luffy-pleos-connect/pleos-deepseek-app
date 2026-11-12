@@ -165,6 +165,17 @@ class BattleTest {
     }
 
     @Test
+    fun `라운드가 동점이면 화면에 보이는 상대 종합으로 가른다`() {
+        // 데모 D7(종합 84.5) 대 초보운전3년차(종합 85.4): 1 대 1 이고 상대 종합이 높아 진다.
+        val seed = Seeds.byNickname("초보운전3년차")!!
+        val theirs = opponentEvaluation(Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories))
+        val result = Battle.judge(moca.core.Demo.evaluateOf("D7"), theirs)
+        assertEquals(1, result.myWins)
+        assertEquals(1, result.theirWins)
+        assertEquals(BattleSide.THEIRS, result.winner)
+    }
+
+    @Test
     fun `데모 전용 라이벌은 대전 풀에 없다`() {
         assertTrue(Seeds.battlePool.none { it.nickname == "라이벌드라이버" })
     }
