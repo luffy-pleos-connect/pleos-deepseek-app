@@ -191,12 +191,18 @@ async function handleOpponent(url, store, env) {
 }
 
 // 모델 하나를 한 번 부른다. 대기 시간·끊긴 문장 처리는 모델과 상관없이 같으므로 여기 한 곳에 둔다.
-async function callHiveOnce(env, payload, fetchImpl, model, timeoutMs) {
+// outerSignal 을 주면 바깥(겹쳐 부르기)에서 이 요청만 끊을 수 있다.
+async function callHiveOnce(env, payload, fetchImpl, model, timeoutMs, outerSignal) {
   const apiKey = env.HIVE_API_KEY;
   if (typeof apiKey !== 'string' || apiKey.length === 0) return { status: 502 };
   const url = env.HIVE_API_URL || HIVE_URL;
   if (!url) return { status: 502 };
   const controller = new AbortController();
+  const relayAbort = () => controller.abort();
+  if (outerSignal) {
+    if (outerSignal.aborted) controller.abort();
+    else outerSignal.addEventListener('abort', relayAbort, { once: true });
+  }
   let timer;
   // abort 로 끊긴 fetch 가 TIMEOUT 보다 먼저 거절되면 502 로 새지 않도록 시간 초과를 따로 기억한다.
   let timedOut = false;
@@ -263,11 +269,66 @@ async function callHiveOnce(env, payload, fetchImpl, model, timeoutMs) {
     return { status: error === TIMEOUT || timedOut ? 504 : 502 };
   } finally {
     clearTimeout(timer);
+    if (outerSignal) outerSignal.removeEventListener('abort', relayAbort);
   }
 }
 
 // 첫 모델이 느리면 두 번째 모델로 한 번 더 부른다. 두 번을 합쳐도 HIVE_TIMEOUT_MS 를 넘지 않는다.
 const FIRST_TIMEOUT_MS_DEFAULT = 4000;
+
+// HIVE_HEDGE_MS: 첫 모델을 기다리는 시간. 넘기면 첫 요청을 끊지 않은 채 두 번째 모델을 겹쳐 부르고,
+// 먼저 성공한 답을 쓴다. 첫 모델이 그 전에 오류를 내면 기다리지 않고 바로 두 번째를 부른다.
+function callHiveHedged(env, payload, fetchImpl, firstModel, fallbackModel, hedgeMs, totalMs) {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + totalMs;
+    const timers = [];
+    const controllers = [];
+    let done = false;
+    let startedSecond = false;
+    let failures = 0;
+    let lastStatus = 502;
+
+    const abortAll = () => {
+      for (const controller of controllers) controller.abort();
+    };
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      for (const timer of timers) clearTimeout(timer);
+      abortAll();
+      resolve(result);
+    };
+    const startSecond = () => {
+      if (startedSecond || done) return;
+      startedSecond = true;
+      run(fallbackModel);
+    };
+    const run = (model) => {
+      const controller = new AbortController();
+      controllers.push(controller);
+      const remaining = Math.max(1, deadline - Date.now());
+      callHiveOnce(env, payload, fetchImpl, model, remaining, controller.signal).then((result) => {
+        if (done) return;
+        if (result.status === 200) {
+          finish(result);
+          return;
+        }
+        failures += 1;
+        lastStatus = result.status;
+        if (!startedSecond) {
+          startSecond();
+        } else if (failures >= 2) {
+          finish({ status: lastStatus === 504 ? 504 : 502 });
+        }
+        // 한쪽이 오류여도 다른 쪽이 아직 진행 중이면 계속 기다린다.
+      });
+    };
+
+    timers.push(setTimeout(() => finish({ status: 504 }), totalMs));
+    timers.push(setTimeout(startSecond, Math.min(hedgeMs, totalMs)));
+    run(firstModel);
+  });
+}
 
 async function callHive(env, payload, fetchImpl) {
   if (typeof env.HIVE_API_KEY !== 'string' || env.HIVE_API_KEY.length === 0) return { status: 502 };
@@ -278,6 +339,11 @@ async function callHive(env, payload, fetchImpl) {
   // 두 번째 모델이 없거나 같은 모델이면 예전처럼 한 번만 부른다.
   if (fallbackModel === '' || fallbackModel === firstModel) {
     return callHiveOnce(env, payload, fetchImpl, firstModel, totalMs);
+  }
+  const hedgeRaw = env.HIVE_HEDGE_MS;
+  const hedgeMs = hedgeRaw === undefined || hedgeRaw === null || hedgeRaw === '' ? null : Number(hedgeRaw);
+  if (hedgeMs !== null && Number.isFinite(hedgeMs) && hedgeMs >= 0) {
+    return callHiveHedged(env, payload, fetchImpl, firstModel, fallbackModel, hedgeMs, totalMs);
   }
   const firstMs = Number(env.HIVE_FIRST_TIMEOUT_MS ?? FIRST_TIMEOUT_MS_DEFAULT) || FIRST_TIMEOUT_MS_DEFAULT;
   const deadline = Date.now() + totalMs;
