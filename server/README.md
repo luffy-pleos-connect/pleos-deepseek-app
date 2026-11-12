@@ -21,7 +21,7 @@ Node.js 24 표준 라이브러리만 쓴다. 외부 npm 패키지 0개, `package
 ```bash
 node local.mjs                 # 127.0.0.1:8787, SQLite(moca.sqlite)
 node --test core.test.mjs      # AT-07 (35 케이스)
-node --test *.test.mjs         # core + store + v10 + admin (106 케이스)
+node --test *.test.mjs         # core + store + v10 + admin (110 케이스)
 ```
 
 환경 변수: `PORT`, `HOST`, `MOCA_DB`, `HIVE_API_KEY`, `HIVE_API_URL`, `HIVE_MODEL`, `DAILY_CHAT_LIMIT`(기본 500),
@@ -68,7 +68,9 @@ node --test *.test.mjs         # core + store + v10 + admin (106 케이스)
 - `/rank`: `total` 0~100(없거나 벗어나면 400 `total`). `rank = 1 + (나보다 높은 시드 수) + (나보다 높은 실제 요약 수)`, `of = 1 + 12 + real`. `real` 은 데모가 아닌 살아 있는 요약 수이고 `deviceId` 를 주면 그 기기는 뺀다. 점수는 저장하지 않는다. `deviceId` 가 있으면 `opponent` 한도(60회/시간)를 쓴다.
 - 데모 요약(`isDemo: true`)은 검증만 하고 저장하지 않는다(200 `{ok:true}`). 실제 요약을 덮어쓰지 않고 순위에도 들어가지 않는다.
 - `/admin`: 비밀번호(`ADMIN_TOKEN`)를 한 번 넣으면 쓰는 **한 파일짜리 HTML** 대시보드다. 바깥 스크립트·글꼴·그림을 쓰지 않고(모두 페이지 안에 있다), CSP 는 `default-src 'none'`, `connect-src 'self'` 다. GET 만 받고 나머지는 405. 페이지 자체에는 토큰도 자료도 없다 — 브라우저가 같은 폴더의 `/stats` 를 `fetch('stats?days=…&scope=…')` 로 부른다(로컬 `/admin` → `/stats`, Vercel `/api/admin` → `/api/stats`).
-- `/admin` 화면: 범위(실제/데모)·기간(오늘/7일/30일), 요약 카드 6개(기기·점검·문제 발견·안내 누름·상품 누름·이어 준 건), 날짜별 막대(안내 누름 + 상품 누름), 단계별 막대(첫 단계 대비 비율), 문제 종류별 표, 음성(질문 수·서버 답 비율·평균 답 시간), 대전(수·승·무·패), 최근 기록 200줄. 30초마다 다시 읽고(`document.hidden` 이면 건너뛴다) `HH:MM:SS 에 읽음` 을 적는다. 받은 값은 모두 `textContent` 로 넣는다. 401 이면 비밀번호 칸으로 돌아가고, 그 밖의 실패는 상태 코드를 보이며 이전 값을 지우지 않는다. 토큰은 `sessionStorage` 에만 두고, `#token=` 으로 주면 `history.replaceState` 로 주소에서 지운다.
+- `/admin` 화면: 범위(실제/데모)·기간(오늘/7일/30일), 요약 카드 6개(기기·점검·문제 발견·안내 누름·상품 누름·이어 준 건), 날짜별 막대(안내 누름 + 상품 누름), 단계별 막대(첫 단계 대비 비율), 문제 종류별 표, 음성(질문 수·서버 답 비율·평균 답 시간), 대전(수·승·무·패), 「앱에서 한 행동」의 표 세 개, 최근 기록 200줄. 30초마다 다시 읽고(`document.hidden` 이면 건너뛴다) `HH:MM:SS 에 읽음` 을 적는다. 받은 값은 모두 `textContent` 로 넣는다. 401 이면 비밀번호 칸으로 돌아가고, 그 밖의 실패는 상태 코드를 보이며 이전 값을 지우지 않는다. 토큰은 `sessionStorage` 에만 두고, `#token=` 으로 주면 `history.replaceState` 로 주소에서 지운다.
+- `/admin` 의 「앱에서 한 행동」: 넓은 화면(900px 이상)에서 나란히, 좁은 화면에서 한 줄씩 놓이는 표 세 개다. ① 행동별 — `|` 가 없는 이름(단, `voice_ms_*` 는 뺀다)의 횟수, ② 화면별 — `screen_view|X` 의 화면별 횟수, ③ 질문 종류별 — `voice_ask|X` 에서 `online`·`offline` 을 뺀 질문 종류별 횟수. 모두 많은 순, 같으면 이름순이고 줄이 없으면 「아직 기록이 없어요」다. 행동·화면 이름 밑에는 한국어 뜻을 작게 붙이고(`admin-page.mjs` 의 `ACTION_KO`·`SCREEN_KO`), 최근 기록의 이름 칸에도 같은 뜻을 붙인다.
+- `/admin` 의 색: `:root` 에 `color-scheme: light dark` 를 두어 밝은 화면에서도 브라우저 기본 색(스크롤 막대·입력 칸)이 어둡게 뒤집히지 않는다. 밝은 화면 대비는 본문 글자 17.96:1, 흐린 글자 6.08:1(카드 위 5.62:1), 강조색 5.82:1 로 모두 4.5:1 을 넘는다. 어두운 화면은 15.96:1 / 7.36:1 / 7.86:1 이다.
 - `/admin` 의 값 변환은 `admin-view.mjs` 의 `summarize(stats)` 가 한다(순수 함수, 바깥 변수 없음). `admin-page.mjs` 가 그 소스를 `summarize.toString()` 으로 페이지 `<script>` 에 그대로 싣는다.
 
 ## 저장소
@@ -89,5 +91,5 @@ Redis 저장소는 `HINCRBY`·`EXPIRE`·`SADD`·`LPUSH`·`LTRIM`·`HGETALL`·`SC
 ## 파일
 
 `core.mjs` · `http-util.mjs` · `validate.mjs` · `seeds.json` · `store-{sqlite,redis,memory}.mjs` · `local.mjs` ·
-`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs` · `v10.test.mjs` · `admin.test.mjs` ·
+`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs` · `v10.test.mjs` · `admin.test.mjs` · `admin2.test.mjs` ·
 `admin-view.mjs` (대시보드 값 변환) · `admin-page.mjs` (대시보드 HTML)

@@ -72,6 +72,34 @@ export function summarize(stats) {
     return kindMap[kind];
   });
 
+  var byCountThenName = function (nameKey) {
+    return function (a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return a[nameKey] < b[nameKey] ? -1 : a[nameKey] > b[nameKey] ? 1 : 0;
+    };
+  };
+  var actions = [];
+  var screens = [];
+  var intents = [];
+  Object.keys(totals).forEach(function (key) {
+    var value = count(key);
+    var cut = key.indexOf('|');
+    if (cut < 0) {
+      if (key.indexOf('voice_ms_') === 0) return;
+      if (key.length === 0) return;
+      actions.push({ name: key, count: value });
+      return;
+    }
+    var name = key.slice(0, cut);
+    var kind = key.slice(cut + 1);
+    if (kind.length === 0) return;
+    if (name === 'screen_view') { screens.push({ screen: kind, count: value }); return; }
+    if (name === 'voice_ask' && kind !== 'online' && kind !== 'offline') intents.push({ intent: kind, count: value });
+  });
+  actions.sort(byCountThenName('name'));
+  screens.sort(byCountThenName('screen'));
+  intents.sort(byCountThenName('intent'));
+
   var asks = count('voice_ask');
   var online = count('voice_ask|online');
   var offline = count('voice_ask|offline');
@@ -97,6 +125,9 @@ export function summarize(stats) {
     daily: daily,
     funnel: funnel,
     kinds: kinds,
+    actions: actions,
+    screens: screens,
+    intents: intents,
     voice: voice,
     battle: battle,
     recent: Array.isArray(source.recent) ? source.recent : [],

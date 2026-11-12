@@ -3,6 +3,7 @@ import { summarize } from './admin-view.mjs';
 
 const CSS = `
 :root {
+  color-scheme: light dark;
   --bg: #ffffff;
   --fg: #14171c;
   --muted: #5b636e;
@@ -140,9 +141,17 @@ h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 24px 0 8px;
 .kinds th:not(:first-child), .kinds td:not(:first-child) { width: 16.5%; }
 .recent th:nth-child(1), .recent td:nth-child(1) { width: 20%; }
 .recent th:nth-child(2), .recent td:nth-child(2) { width: 16%; }
-.recent th:nth-child(3), .recent td:nth-child(3) { width: 24%; }
-.recent th:nth-child(4), .recent td:nth-child(4) { width: 40%; }
+.recent th:nth-child(3), .recent td:nth-child(3) { width: 34%; }
+.recent th:nth-child(4), .recent td:nth-child(4) { width: 30%; }
+.tbl .sub { display: block; color: var(--muted); font-size: 10px; }
+.trio { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.trio section { min-width: 0; }
+.trio h3 { font-size: 12px; font-weight: 600; margin: 0 0 4px; color: var(--fg); }
+@media (min-width: 900px) {
+  .trio { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+}
 .tbl td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+.tbl span.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
 .tbl td.props { color: var(--muted); }
 .wrap { max-height: 340px; overflow-y: auto; }
 .empty { color: var(--muted); font-size: 12px; margin: 4px 0; }
@@ -326,6 +335,80 @@ function drawKinds(kinds) {
   box.appendChild(table);
 }
 
+var ACTION_KO = {
+  app_open: '앱 열기',
+  screen_view: '화면 이동',
+  inspection_done: '점검 완료',
+  problem_found: '문제 발견',
+  problem_resolved: '문제 해소',
+  fix_tap: '안내 누름',
+  navi_opened: '내비 열림',
+  route_started: '길안내 시작',
+  destination_arrived: '도착',
+  product_tap: '상품 누름',
+  voice_ask: '음성 질문',
+  battle_done: '대전',
+  notification_shown: '알림 표시',
+  notification_tap: '알림 누름',
+  demo_on: '데모 켬',
+  demo_off: '데모 끔',
+  consent_changed: '동의 변경',
+  data_deleted: '데이터 삭제',
+};
+var SCREEN_KO = {
+  home: '홈',
+  status: '상세',
+  voice: '차에게 묻기',
+  battle: '순위·대전',
+  settings: '설정',
+};
+function koOf(map, key) {
+  if (Object.prototype.hasOwnProperty.call(map, key)) return map[key];
+  return '';
+}
+function withKo(text, ko) {
+  var cell = el('td');
+  cell.appendChild(el('span', 'mono', text));
+  if (ko) cell.appendChild(el('span', 'sub', ko));
+  return cell;
+}
+
+function drawTriTable(box, rows, keyName, koMap, columnName) {
+  box.replaceChildren();
+  if (rows.length === 0) {
+    box.appendChild(el('p', 'empty', '아직 기록이 없어요'));
+    return;
+  }
+  var table = el('table', 'tbl');
+  var head = el('thead');
+  var headRow = el('tr');
+  headRow.appendChild(el('th', null, columnName));
+  headRow.appendChild(el('th', 'n', '횟수'));
+  head.appendChild(headRow);
+  table.appendChild(head);
+  var body = el('tbody');
+  rows.forEach(function (row) {
+    var tr = el('tr');
+    tr.appendChild(withKo(String(row[keyName] || ''), koOf(koMap, String(row[keyName] || ''))));
+    tr.appendChild(el('td', 'n', intText(row.count)));
+    body.appendChild(tr);
+  });
+  table.appendChild(body);
+  box.appendChild(table);
+}
+
+function drawActions(actions) {
+  drawTriTable(byId('actionTable'), actions, 'name', ACTION_KO, '행동');
+}
+
+function drawScreens(screens) {
+  drawTriTable(byId('screenTable'), screens, 'screen', SCREEN_KO, '화면');
+}
+
+function drawIntents(intents) {
+  drawTriTable(byId('intentTable'), intents, 'intent', {}, '질문 종류');
+}
+
 function statRow(name, value) {
   var box = el('div', 'stat');
   box.appendChild(el('span', 'stat-name', name));
@@ -379,7 +462,7 @@ function drawRecent(recent) {
     var tr = el('tr');
     tr.appendChild(el('td', 'mono', hhmmss(when)));
     tr.appendChild(el('td', 'mono', String(safe.d || '').slice(0, 6)));
-    tr.appendChild(el('td', null, String(safe.n || '')));
+    tr.appendChild(withKo(String(safe.n || ''), koOf(ACTION_KO, String(safe.n || ''))));
     tr.appendChild(el('td', 'props', propsText(safe.p)));
     body.appendChild(tr);
   });
@@ -395,6 +478,9 @@ function draw() {
   drawKinds(view.kinds);
   drawVoice(view.voice);
   drawBattle(view.battle);
+  drawActions(view.actions);
+  drawScreens(view.screens);
+  drawIntents(view.intents);
   drawRecent(view.recent);
   byId('demoBand').hidden = view.scope !== 'demo';
   byId('updatedAt').textContent = hhmmss(new Date()) + ' 에 읽음';
@@ -571,6 +657,22 @@ const BODY = `
   <h2>음성·대전</h2>
   <div id="voiceStats" class="stats"></div>
   <div id="battleStats" class="stats" style="margin-top: 8px"></div>
+
+  <h2>앱에서 한 행동</h2>
+  <div class="trio">
+    <section>
+      <h3>행동별</h3>
+      <div id="actionTable"></div>
+    </section>
+    <section>
+      <h3>화면별</h3>
+      <div id="screenTable"></div>
+    </section>
+    <section>
+      <h3>질문 종류별</h3>
+      <div id="intentTable"></div>
+    </section>
+  </div>
 
   <h2>최근 기록</h2>
   <div id="recentTable" class="wrap"></div>
