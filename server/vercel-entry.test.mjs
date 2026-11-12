@@ -41,6 +41,23 @@ test('저장소 환경 변수가 없으면 500 not_configured 로 답하고 죽�
   assert.deepEqual(await res.json(), { error: 'not_configured' });
 });
 
+test('Vercel 의 Upstash 연동이 넣는 이름(KV_REST_API_*)도 받는다', async () => {
+  const original = globalThis.fetch;
+  const called = [];
+  globalThis.fetch = async (url) => {
+    called.push(String(url));
+    return new Response('[]', { status: 500 });
+  };
+  try {
+    const fetch = createFetch({ env: { KV_REST_API_URL: 'https://kv.example.invalid', KV_REST_API_TOKEN: 't' } });
+    const res = await fetch(new Request('https://example.invalid/api/opponent?deviceId=device-aaaa-0001'));
+    assert.deepEqual(await res.json(), { error: 'internal' });
+    assert.deepEqual(called, ['https://kv.example.invalid/pipeline']);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
 test('api 의 세 파일은 fetch 를 내보낸다', async () => {
   for (const name of ['chat', 'opponent', 'snapshots']) {
     const mod = await import(`./api/${name}.mjs`);
