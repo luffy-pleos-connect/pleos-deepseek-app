@@ -19,18 +19,8 @@
             style="@style/Pleos.Text.Label.M"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/moca_gap_small"
             android:text="@string/voice_badge_offline"
             android:textColor="@color/pleos_text_dark_tertiary"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/voiceDemoBadge"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/voice_badge_demo"
-            android:textColor="@color/pleos_text_dark_secondary"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -43,13 +33,21 @@
         android:orientation="vertical"
         android:padding="@dimen/moca_card_padding">
 
-        <TextView
-            android:id="@+id/answerText"
-            style="@style/Pleos.Text.Body.L"
+        <!-- 답이 길어도 질문 단추 네 개가 밀리지 않도록 글자 높이를 세 줄로 묶고 안에서 스크롤한다. -->
+        <ai.moca.app.ui.widget.MaxHeightScrollView
+            android:id="@+id/answerScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/voice_ask_anything"
-            android:textColor="@color/pleos_text_dark_primary" />
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/answerText"
+                style="@style/Pleos.Text.Body.L"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/voice_ask_anything"
+                android:textColor="@color/pleos_text_dark_primary" />
+        </ai.moca.app.ui.widget.MaxHeightScrollView>
 
         <TextView
             android:id="@+id/toolChips"
@@ -69,6 +67,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!-- 마이크 칸. 남는 자리를 이 칸이 차지한다(아래 단추들은 언제나 제자리에 있다). -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -79,8 +78,8 @@
         <ImageButton
             android:id="@+id/micButton"
             style="@style/Widget.Pleos.IconButton.Circle.L"
-            android:layout_width="160dp"
-            android:layout_height="160dp"
+            android:layout_width="@dimen/moca_mic_size"
+            android:layout_height="@dimen/moca_mic_size"
             android:contentDescription="@string/c09_ask_by_voice"
             android:src="@drawable/ic_mic" />
 
@@ -92,54 +91,55 @@
             android:layout_marginTop="@dimen/moca_gap"
             android:gravity="center"
             android:text="@string/voice_state_idle" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
-            android:orientation="horizontal">
+    <!-- 질문 단추와 입력 칸은 답 길이와 상관없이 늘 보여야 하므로 늘어나는 칸 밖에 둔다. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap"
+        android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/suggestion1"
-                style="@style/Widget.Pleos.Button.Primary.M"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/pleos_button_height_m"
-                android:layout_marginEnd="@dimen/moca_gap"
-                android:layout_weight="1"
-                android:text="@string/voice_recent_1" />
+        <Button
+            android:id="@+id/suggestion1"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_marginEnd="@dimen/moca_gap"
+            android:layout_weight="1"
+            android:text="@string/voice_recent_1" />
 
-            <Button
-                android:id="@+id/suggestion2"
-                style="@style/Widget.Pleos.Button.Primary.M"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/pleos_button_height_m"
-                android:layout_weight="1"
-                android:text="@string/voice_recent_2" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/suggestion2"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_weight="1"
+            android:text="@string/voice_recent_2" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
-            android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap"
+        android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/suggestion3"
-                style="@style/Widget.Pleos.Button.Primary.M"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/pleos_button_height_m"
-                android:layout_marginEnd="@dimen/moca_gap"
-                android:layout_weight="1"
-                android:text="@string/voice_recent_3" />
+        <Button
+            android:id="@+id/suggestion3"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_marginEnd="@dimen/moca_gap"
+            android:layout_weight="1"
+            android:text="@string/voice_recent_3" />
 
-            <Button
-                android:id="@+id/suggestion4"
-                style="@style/Widget.Pleos.Button.Primary.M"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/pleos_button_height_m"
-                android:layout_weight="1"
-                android:text="@string/voice_recent_4" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/suggestion4"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/pleos_button_height_m"
+            android:layout_weight="1"
+            android:text="@string/voice_recent_4" />
     </LinearLayout>
 
     <LinearLayout

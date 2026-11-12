@@ -47,7 +47,6 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private lateinit var answerText: TextView
     private lateinit var chipText: TextView
     private lateinit var offlineBadge: TextView
-    private lateinit var demoBadge: TextView
     private lateinit var micButton: ImageButton
     private lateinit var fixButton: Button
     private lateinit var input: EditText
@@ -64,13 +63,10 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         answerText = view.findViewById(R.id.answerText)
         chipText = view.findViewById(R.id.toolChips)
         offlineBadge = view.findViewById(R.id.voiceOfflineBadge)
-        demoBadge = view.findViewById(R.id.voiceDemoBadge)
         micButton = view.findViewById(R.id.micButton)
         fixButton = view.findViewById(R.id.voiceFixAction)
         input = view.findViewById<EditText>(R.id.questionInput)
 
-        val app = requireActivity().application as MocaApp
-        demoBadge.visibility = if (app.prefs.demoEnabled) View.VISIBLE else View.GONE
         stateText.text = getString(R.string.voice_state_idle)
         setupTts()
 
@@ -94,7 +90,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         view.findViewById<View>(R.id.suggestion3).setOnClickListener { ask(getString(R.string.voice_recent_3)) }
         view.findViewById<View>(R.id.suggestion4).setOnClickListener { ask(getString(R.string.voice_recent_4)) }
 
-        agent = buildAgent(app)
+        agent = buildAgent(requireActivity().application as MocaApp)
     }
 
     private fun hideKeyboard() {

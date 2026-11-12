@@ -61,7 +61,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         demo.isChecked = prefs.demoEnabled
         scenarioGroup.visibility = if (prefs.demoEnabled) View.VISIBLE else View.GONE
         demo.setOnCheckedChangeListener { _, checked ->
-            prefs.demoEnabled = checked
+            if (checked) DemoMode.turnOn(prefs) else prefs.demoEnabled = false
             group = GROUP_DEMO
             nickname.text = nicknameText(prefs)
             requireActivity().recreate()

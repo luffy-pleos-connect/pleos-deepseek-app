@@ -4,4 +4,11 @@ package moca.core
 object BattleText {
     fun line(winnerLabel: String, myWins: Int, theirWins: Int): String =
         "$winnerLabel  ($myWins : $theirWins)"
+
+    fun reason(myWins: Int, theirWins: Int, myTotal: Int, theirTotal: Int): String =
+        if (myWins == theirWins) {
+            "라운드 $myWins : $theirWins 동점 · 종합 $myTotal 대 $theirTotal"
+        } else {
+            "라운드 $myWins : $theirWins"
+        }
 }

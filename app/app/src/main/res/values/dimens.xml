@@ -14,4 +14,8 @@
     <dimen name="moca_score_ring_port">280dp</dimen>
     <dimen name="moca_score_ring_stroke">24dp</dimen>
     <dimen name="moca_status_dot">20dp</dimen>
+    <!-- Body.L 세 줄(45sp×3) 높이. 차에게 묻기 답 카드가 이 높이에서 멈추고 안에서 스크롤한다. -->
+    <dimen name="moca_answer_max_height">135dp</dimen>
+    <!-- 차에게 묻기 마이크 크기. -->
+    <dimen name="moca_mic_size">160dp</dimen>
 </resources>

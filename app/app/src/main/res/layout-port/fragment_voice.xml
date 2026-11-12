@@ -20,16 +20,6 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/voiceDemoBadge"
-                style="@style/Pleos.Text.Label.M"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/moca_gap_small"
-                android:text="@string/voice_badge_demo"
-                android:textColor="@color/pleos_text_dark_secondary"
-                android:visibility="gone" />
-
-            <TextView
                 android:id="@+id/voiceOfflineBadge"
                 style="@style/Pleos.Text.Label.M"
                 android:layout_width="wrap_content"
@@ -48,13 +38,21 @@
             android:orientation="vertical"
             android:padding="@dimen/moca_card_padding">
 
-            <TextView
-                android:id="@+id/answerText"
-                style="@style/Pleos.Text.Body.L"
+            <!-- 답이 길어도 질문 단추 네 개가 밀리지 않도록 글자 높이를 세 줄로 묶고 안에서 스크롤한다. -->
+            <ai.moca.app.ui.widget.MaxHeightScrollView
+                android:id="@+id/answerScroll"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/voice_ask_anything"
-                android:textColor="@color/pleos_text_dark_primary" />
+                android:scrollbars="vertical">
+
+                <TextView
+                    android:id="@+id/answerText"
+                    style="@style/Pleos.Text.Body.L"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/voice_ask_anything"
+                    android:textColor="@color/pleos_text_dark_primary" />
+            </ai.moca.app.ui.widget.MaxHeightScrollView>
 
             <TextView
                 android:id="@+id/toolChips"
@@ -77,8 +75,8 @@
         <ImageButton
             android:id="@+id/micButton"
             style="@style/Widget.Pleos.IconButton.Circle.L"
-            android:layout_width="160dp"
-            android:layout_height="160dp"
+            android:layout_width="@dimen/moca_mic_size"
+            android:layout_height="@dimen/moca_mic_size"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/moca_gap"
             android:contentDescription="@string/c09_ask_by_voice"

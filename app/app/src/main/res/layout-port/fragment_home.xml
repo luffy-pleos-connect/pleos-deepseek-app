@@ -160,6 +160,25 @@
                 android:textColor="@color/pleos_text_dark_secondary"
                 android:visibility="gone" />
 
+            <!-- 등급을 낼 수 없을 때: 읽은 항목 수와 데모로 보기 -->
+            <TextView
+                android:id="@+id/homeReadable"
+                style="@style/Pleos.Text.Body.L"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:textColor="@color/pleos_text_dark_secondary"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/homeDemoAction"
+                style="@style/Widget.Pleos.Button.Secondary.L"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:text="@string/home_demo_action"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/topProblemAction"
                 style="@style/Widget.Pleos.Button.Secondary.L"

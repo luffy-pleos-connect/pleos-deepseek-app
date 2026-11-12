@@ -6,14 +6,13 @@ import ai.moca.app.R
 import ai.moca.app.inspect.InspectionResult
 import ai.moca.app.inspect.Inspector
 import ai.moca.app.inspect.InspectPolicy
-import ai.moca.app.link.FixLinks
 import ai.moca.app.score.ScoreBridge
 import ai.moca.app.ui.widget.ScoreRingView
 import ai.moca.app.vehicle.WarningSummary
-import ai.pleos.ds.PleosToast
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -44,6 +43,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private lateinit var gradeUpBanner: TextView
     private lateinit var topProblemText: TextView
     private lateinit var homeStreak: TextView
+    private lateinit var homeReadable: TextView
+    private lateinit var homeDemoAction: Button
     private lateinit var topProblemAction: View
     private lateinit var rows: List<CatRow>
     private var drivingLimited = false
@@ -64,7 +65,10 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         gradeUpBanner = view.findViewById(R.id.gradeUpBanner)
         topProblemText = view.findViewById(R.id.topProblemText)
         homeStreak = view.findViewById(R.id.homeStreak)
+        homeReadable = view.findViewById(R.id.homeReadable)
+        homeDemoAction = view.findViewById(R.id.homeDemoAction)
         topProblemAction = view.findViewById(R.id.topProblemAction)
+        homeDemoAction.setOnClickListener { enableDemoAndInspect() }
         rows = listOf(
             catRow(view, Category.POWER, R.id.catPower, R.id.catPowerDot, R.id.catPowerStatus, R.id.catPowerScore),
             catRow(view, Category.BRAKE_STEERING, R.id.catBrake, R.id.catBrakeDot, R.id.catBrakeStatus, R.id.catBrakeScore),
@@ -129,6 +133,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         topProblemText.text = getString(R.string.c20_not_enough_data)
         topProblemAction.visibility = View.GONE
         homeStreak.visibility = View.GONE
+        homeReadable.visibility = View.GONE
+        homeDemoAction.visibility = View.GONE
         gradeUpBanner.visibility = View.GONE
         scoreRing.hold(0)
     }
@@ -242,10 +248,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         topProblemText.setTextColor(requireContext().getColor(ai.pleos.ds.R.color.pleos_text_dark_primary))
         if (evaluation == null || evaluation.grade == null) {
             topProblemText.text = getString(R.string.c20_not_enough_data)
+            renderReadable(evaluation)
             renderStreak(result)
             topProblemAction.visibility = View.GONE
             return
         }
+        homeReadable.visibility = View.GONE
+        homeDemoAction.visibility = View.GONE
         val problem = Priority.topProblem(result.engine)
         if (problem == null) {
             topProblemText.text = getString(R.string.home_all_good)
@@ -266,15 +275,49 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 if (danger) ai.pleos.ds.R.color.pleos_informative_negative else ai.pleos.ds.R.color.pleos_text_dark_primary,
             ),
         )
-        val action = Priority.actionFor(problem, result.engine)
-        val button = topProblemAction as TextView
-        button.visibility = View.VISIBLE
-        button.text = action.label
-        button.setOnClickListener {
-            val host = activity as? MainActivity ?: return@setOnClickListener
-            FixLinks.start(host, action, host.isDrivingLimited()) { linkResult ->
-                PleosToast.show(host, linkResult.message)
+        TopProblemAction.of(result)?.let { target ->
+            val host = activity as? MainActivity
+            if (host != null) TopProblemAction.bind(host, topProblemAction as Button, target)
+        } ?: run { topProblemAction.visibility = View.GONE }
+    }
+
+    /**
+     * 등급을 낼 수 없을 때, 왜 그런지와 무엇을 할 수 있는지 보여 준다.
+     * 데모를 켜면 같은 화면에서 시나리오로 앱을 볼 수 있다.
+     */
+    private fun renderReadable(evaluation: Evaluation?) {
+        val app = requireActivity().application as MocaApp
+        if (app.prefs.demoEnabled || evaluation == null) {
+            homeReadable.visibility = View.GONE
+            homeDemoAction.visibility = View.GONE
+            return
+        }
+        val readable = evaluation.categories.values.count { it != null }
+        homeReadable.text = getString(R.string.home_readable, readable)
+        homeReadable.visibility = View.VISIBLE
+        homeDemoAction.visibility = View.VISIBLE
+    }
+
+    /** 설정의 데모 스위치를 켰을 때와 같은 일을 한다: 데모 켜기 → 다시 점검 → 홈 그리기. */
+    private fun enableDemoAndInspect() {
+        val app = requireActivity().application as MocaApp
+        val host = activity as? MainActivity ?: return
+        if (host.isDrivingLimited()) return
+        DemoMode.turnOn(app.prefs, DemoMode.HOME_SCENARIO)
+        app.latestInspection = null
+        app.lastInspectKey = null
+        homeDemoAction.isEnabled = false
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                Inspector(app).run(force = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (isAdded) showInspectFailed()
+                return@launch
             }
+            // 화면 전체를 다시 만든다. 설정에서 데모를 켤 때와 같은 길이다(머리말 배지도 함께 바뀐다).
+            if (isAdded) host.recreate()
         }
     }
 

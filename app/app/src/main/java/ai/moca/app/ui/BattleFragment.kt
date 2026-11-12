@@ -1,5 +1,6 @@
 package ai.moca.app.ui
 
+import ai.moca.app.MainActivity
 import ai.moca.app.MocaApp
 import ai.moca.app.R
 import ai.moca.app.battle.BattleRepository
@@ -41,6 +42,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private lateinit var opponentScore: TextView
     private lateinit var recordText: TextView
     private lateinit var resultText: TextView
+    private lateinit var reasonText: TextView
+    private lateinit var hintText: TextView
+    private lateinit var fixButton: Button
     private lateinit var roundContainer: LinearLayout
     private lateinit var startButton: Button
     private lateinit var skipButton: Button
@@ -61,6 +65,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         opponentScore = view.findViewById(R.id.opponentScore)
         recordText = view.findViewById(R.id.battleRecord)
         resultText = view.findViewById(R.id.battleResult)
+        reasonText = view.findViewById(R.id.battleReason)
+        hintText = view.findViewById(R.id.battleHint)
+        fixButton = view.findViewById(R.id.battleFixAction)
         roundContainer = view.findViewById(R.id.roundContainer)
         startButton = view.findViewById(R.id.buttonStartBattle)
         skipButton = view.findViewById(R.id.buttonSkip)
@@ -106,11 +113,20 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
 
         val grade = eval?.grade
         if (eval == null || grade == null) {
+            opponent = null
             myGrade.text = getString(R.string.battle_no_record)
+            opponentName.text = getString(R.string.battle_no_grade_opponent)
+            opponentScore.text = ""
+            practiceBadge.visibility = View.GONE
+            reasonText.visibility = View.GONE
+            hintText.visibility = View.GONE
+            roundContainer.visibility = View.VISIBLE
+            fixButton.visibility = View.GONE
             startButton.isEnabled = false
             return
         }
         myGrade.text = "${grade.label} · ${eval.displayedOverall ?: "—"}"
+        showHint()
 
         val repo = BattleRepository(app.prefs, ApiClient(app.prefs))
         val (w, d, l) = repo.record()
@@ -208,6 +224,10 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         running = true
         skipRequested = false
         resultText.text = ""
+        reasonText.visibility = View.GONE
+        hintText.visibility = View.GONE
+        roundContainer.visibility = View.VISIBLE
+        fixButton.visibility = View.GONE
         roundContainer.removeAllViews()
         startButton.isEnabled = false
 
@@ -287,6 +307,14 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         return cell
     }
 
+    /** 등급은 있는데 아직 겨뤄 본 적이 없을 때 라운드 자리 대신 안내를 둔다. */
+    private fun showHint() {
+        val hasResult = resultText.text.isNotEmpty() || roundContainer.childCount > 0
+        val show = myEvaluation?.grade != null && !hasResult
+        hintText.visibility = if (show) View.VISIBLE else View.GONE
+        roundContainer.visibility = if (show) View.GONE else View.VISIBLE
+    }
+
     private fun showResult(result: BattleResult) {
         val text = when (result.winner) {
             BattleSide.MINE -> getString(R.string.battle_result_win)
@@ -304,6 +332,32 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
                 },
             ),
         )
+        showReason(result)
+        showHint()
+    }
+
+    /** 왜 그렇게 됐는지 한 줄. 라운드가 같으면 종합 점수로 가른 이유까지 적는다. */
+    private fun showReason(result: BattleResult) {
+        val mine = myEvaluation?.displayedOverall
+        val theirs = opponent?.let { it.total.toInt() }
+        if (mine == null || theirs == null) {
+            reasonText.visibility = View.GONE
+            return
+        }
+        reasonText.text = moca.core.BattleText.reason(result.myWins, result.theirWins, mine, theirs)
+        reasonText.visibility = View.VISIBLE
+        showFixAction(result)
+    }
+
+    /** 졌고 홈에 보여 줄 해결 단추가 있으면 같은 단추를 여기에도 둔다. */
+    private fun showFixAction(result: BattleResult) {
+        val host = activity as? MainActivity
+        val target = TopProblemAction.of(requireActivity().application as MocaApp)
+        if (result.winner != BattleSide.THEIRS || host == null || target == null) {
+            fixButton.visibility = View.GONE
+            return
+        }
+        TopProblemAction.bind(host, fixButton, target)
     }
 
     companion object {
