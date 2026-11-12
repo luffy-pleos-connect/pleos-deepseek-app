@@ -32,9 +32,8 @@
             <LinearLayout
                 android:id="@+id/onboardFeature1"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/moca_gap"
-                android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -57,8 +56,8 @@
             <LinearLayout
                 android:id="@+id/onboardFeature2"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -80,8 +79,8 @@
             <LinearLayout
                 android:id="@+id/onboardFeature3"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -108,60 +107,103 @@
             android:layout_height="match_parent"
             android:layout_marginStart="@dimen/moca_gap"
             android:layout_weight="1"
-            android:gravity="center_vertical"
             android:orientation="vertical"
             android:padding="@dimen/moca_card_padding">
 
-            <CheckBox
-                android:id="@+id/consent1"
-                style="@style/Widget.Pleos.CheckBox"
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/onboarding_consent_1" />
+                android:layout_height="match_parent"
+                android:scrollbars="none">
 
-            <CheckBox
-                android:id="@+id/consent2"
-                style="@style/Widget.Pleos.CheckBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap_small"
-                android:text="@string/onboarding_consent_2" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-            <CheckBox
-                android:id="@+id/consent3"
-                style="@style/Widget.Pleos.CheckBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap_small"
-                android:text="@string/onboarding_consent_3" />
+                    <CheckBox
+                        android:id="@+id/consent1"
+                        style="@style/Widget.Pleos.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/onboarding_consent_1" />
 
-            <EditText
-                android:id="@+id/nicknameInput"
-                style="@style/Widget.Pleos.TextField"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/pleos_button_height_l"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:hint="@string/onboarding_nickname"
-                android:imeOptions="flagNoExtractUi|actionDone"
-                android:inputType="text"
-                android:maxLength="10" />
+                    <CheckBox
+                        android:id="@+id/consent2"
+                        style="@style/Widget.Pleos.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/onboarding_consent_2" />
 
-            <Button
-                android:id="@+id/buttonStart"
-                style="@style/Widget.Pleos.Button.Secondary.M"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/pleos_button_height_m"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:text="@string/onboarding_agree" />
+                    <TextView
+                        android:id="@+id/consent2Hint"
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/moca_gap"
+                        android:text="@string/onboarding_consent_2_hint"
+                        android:textColor="@color/pleos_text_dark_secondary" />
 
-            <Button
-                android:id="@+id/buttonSkip"
-                style="@style/Widget.Pleos.Button.Primary.S"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/pleos_button_height_s"
-                android:layout_marginTop="@dimen/moca_gap_small"
-                android:text="@string/onboarding_skip" />
+                    <CheckBox
+                        android:id="@+id/consent3"
+                        style="@style/Widget.Pleos.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/onboarding_consent_3" />
+
+                    <TextView
+                        android:id="@+id/consent3Hint"
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/moca_gap"
+                        android:text="@string/onboarding_consent_3_hint"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+
+                    <CheckBox
+                        android:id="@+id/consent4"
+                        style="@style/Widget.Pleos.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/onboarding_consent_4" />
+
+                    <TextView
+                        android:id="@+id/consent4Hint"
+                        style="@style/Pleos.Text.Label.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/moca_gap"
+                        android:text="@string/onboarding_consent_4_hint"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+
+                    <EditText
+                        android:id="@+id/nicknameInput"
+                        style="@style/Widget.Pleos.TextField"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/pleos_button_height_l"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:hint="@string/onboarding_nickname"
+                        android:imeOptions="flagNoExtractUi|actionDone"
+                        android:inputType="text"
+                        android:maxLength="10" />
+
+                    <Button
+                        android:id="@+id/buttonStart"
+                        style="@style/Widget.Pleos.Button.Secondary.M"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/pleos_button_height_m"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/onboarding_agree" />
+
+                    <Button
+                        android:id="@+id/buttonSkip"
+                        style="@style/Widget.Pleos.Button.Primary.S"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/pleos_button_height_s"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:text="@string/onboarding_skip" />
+                </LinearLayout>
+            </ScrollView>
         </LinearLayout>
     </LinearLayout>
 

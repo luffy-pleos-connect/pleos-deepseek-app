@@ -84,30 +84,14 @@
         android:orientation="vertical"
         android:padding="@dimen/moca_card_padding">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/battleDemoBadge"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/battleDemoBadge"
-                style="@style/Pleos.Text.Label.M"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/moca_gap_small"
-                android:text="@string/voice_badge_demo"
-                android:textColor="@color/pleos_text_dark_secondary"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/battlePracticeBadge"
-                style="@style/Pleos.Text.Label.M"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/battle_practice"
-                android:textColor="@color/pleos_text_dark_tertiary"
-                android:visibility="gone" />
-        </LinearLayout>
+            android:text="@string/voice_badge_demo"
+            android:textColor="@color/pleos_text_dark_secondary"
+            android:visibility="gone" />
 
         <TextView
             style="@style/Pleos.Text.Label.M"
@@ -140,6 +124,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap_small"
             android:text="@string/battle_searching" />
+
+        <TextView
+            android:id="@+id/opponentKind"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/pleos_text_dark_tertiary"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/opponentScore"
@@ -211,6 +203,16 @@
             android:layout_height="@dimen/pleos_button_height_l"
             android:layout_marginTop="@dimen/moca_gap"
             android:text="@string/battle_start" />
+
+        <!-- 진 뒤 해결 단추가 보일 때 「다시」는 옅은 단추로 이 자리에 온다. 채워진 단추는 하나만 둔다. -->
+        <Button
+            android:id="@+id/buttonAgain"
+            style="@style/Widget.Pleos.Button.Primary.L"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pleos_button_height_l"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/battle_again"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/buttonSkip"

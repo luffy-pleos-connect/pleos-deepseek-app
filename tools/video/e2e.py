@@ -44,6 +44,17 @@ def note(step, ok, seen):
     caption(("✓ " if ok else "✗ ") + step)
 def tap_xy(b):
     adb("shell", "input", "tap", str((b[0] + b[2]) // 2), str((b[1] + b[3]) // 2)); time.sleep(1.0)
+def tap_battle_start(say="대전 시작"):
+    """진 뒤에는 해결 단추가 보이고 「다시」가 옅은 단추로 그 자리에 온다. 둘 중 보이는 것을 누른다."""
+    end = time.time() + 20
+    while time.time() < end:
+        for key in ("buttonAgain", "buttonStartBattle"):
+            n = find(key)
+            if n and n[2]:
+                caption("누름: " + say)
+                tap_xy(n[2]); return True
+        time.sleep(0.5)
+    note(say, False, "대전 시작 단추를 찾지 못함"); return False
 def tap(key, say=None, sec=15):
     n = wait(key, sec)
     if not n:
@@ -171,8 +182,10 @@ try:
     tap("tabBattle", "순위·대전")
     expect_all("순위: 13명 중 9위, 연습 순위라고 밝힌다", [("rankSummary", "9위"), ("rankPracticeBadge", "연습 순위")])
     shot("12-순위"); time.sleep(1.5)
-    tap("buttonStartBattle", "대전 시작")
+    expect("상대가 연습 상대인지 실제 사용자인지 밝힌다", "opponentKind", "연습 상대")
+    tap_battle_start("대전 시작")
     expect_all("문제가 있는 차는 진다: 라운드 2 : 2, 종합 75 대 88 로 패배", [("battleResult", "패배"), ("battleResult", "2 : 2"), ("battleRecord", "0승 0무 1패")], 40)
+    expect("진 뒤에도 채워진 단추는 해결 단추 하나이고 「다시」는 옅은 단추로 보인다", "buttonAgain", "다시")
     shot("13-대전-결과"); time.sleep(3)
 
     scene("데모 D0: 고치고 나면 등급이 오른다")
@@ -180,7 +193,7 @@ try:
     expect_all("등급이 오른 순간을 알린다. 문제가 없으면 「오늘도 이상 없어요」", [("gradeUpBanner", "B → A"), ("gradeValue", "A"), ("topProblemText", "이상 없어요"), ("rankText", "5위")])
     gone("문제가 없으면 해결 단추가 없다", "topProblemAction")
     shot("14-홈-D0-등급이-오른-순간"); time.sleep(3)
-    tap("tabBattle", "순위·대전"); tap("buttonStartBattle", "대전 시작")
+    tap("tabBattle", "순위·대전"); tap_battle_start("대전 시작")
     expect_all("고친 차는 이긴다: 1 : 0 승리", [("battleResult", "승리"), ("battleRecord", "1승 0무 1패")], 40)
     shot("14b-대전-D0-승리"); time.sleep(3)
 

@@ -83,6 +83,26 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         consent.isChecked = prefs.consentData
         consent.setOnCheckedChangeListener { _, checked -> prefs.consentData = checked }
 
+        val consentCloud = view.findViewById<Switch>(R.id.switchConsentCloud)
+        consentCloud.isChecked = prefs.consentCloud
+        consentCloud.setOnCheckedChangeListener { _, checked -> prefs.consentCloud = checked }
+
+        val consentBattle = view.findViewById<Switch>(R.id.switchConsentBattle)
+        consentBattle.isChecked = prefs.consentBattle
+        consentBattle.setOnCheckedChangeListener { _, checked ->
+            prefs.applyBattleConsent(checked)
+            if (!checked) {
+                // 끄면 서버에 올린 대전용 요약을 지운다. 기기 ID·비밀값은 지우기 전에 읽어 둔다.
+                val deviceId = prefs.deviceId
+                val deviceSecret = prefs.deviceSecret
+                netScope.launch { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
+            }
+        }
+
+        val consentUsage = view.findViewById<Switch>(R.id.switchConsentUsage)
+        consentUsage.isChecked = prefs.consentUsage
+        consentUsage.setOnCheckedChangeListener { _, checked -> prefs.consentUsage = checked }
+
         view.findViewById<View>(R.id.buttonDeleteData).setOnClickListener {
             val activity = requireActivity() as MainActivity
             PleosPopup.Builder(activity)

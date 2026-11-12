@@ -1132,9 +1132,24 @@ class Runner:
         text = place_text(xml, self.app, "대전.결과")
         return "승리" in text or "패배" in text or "무승부" in text
 
+    def _start_ready(self, xml):
+        """대전을 시작하는 단추. 진 뒤 해결 단추가 보이면 「다시」가 옅은 단추로 대신 보인다."""
+        for name in ("대전.시작", "대전.다시"):
+            resource_id = self.app["places"][name]["id"]
+            if self.node_ready(xml, resource_id):
+                return resource_id
+        return None
+
+    def tap_start(self):
+        xml = self.wait_until(lambda dumped: self._start_ready(dumped))
+        resource_id = self._start_ready(xml)
+        if not resource_id:
+            raise DeviceError(self.missing_reason(self.app["places"]["대전.시작"]["id"], xml))
+        self.tap_id(resource_id)
+
     def finish_battle(self):
         self.go("대전하기")
-        self.tap_seq(self.ops["조작-7"])
+        self.tap_start()
         skip_ids = self.ops.get("대전건너뛰기") or []
         skip_id = skip_ids[0] if skip_ids else ""
 

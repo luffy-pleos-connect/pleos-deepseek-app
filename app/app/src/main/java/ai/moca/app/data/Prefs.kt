@@ -63,6 +63,11 @@ class Prefs(context: Context) {
         consentBattle = value
     }
 
+    /** 앱 사용 기록(누른 단추·화면)을 서버로 보내는 데 동의했는지. 기본은 꺼짐이다. */
+    var consentUsage: Boolean
+        get() = sp.getBoolean(KEY_CONSENT_USAGE, false)
+        set(value) = sp.edit().putBoolean(KEY_CONSENT_USAGE, value).apply()
+
     /** 프로필별 전적(승·무·패). key 는 "battle_real"·"battle_demo". */
     fun battleRecord(key: String): Triple<Int, Int, Int> = Triple(
         sp.getInt("${key}_w", 0),
@@ -133,6 +138,7 @@ class Prefs(context: Context) {
         const val KEY_DEMO = "demo_enabled"
         const val KEY_DEMO_SCENARIO = "demo_scenario"
         const val KEY_CONSENT_BATTLE = "consent_battle"
+        const val KEY_CONSENT_USAGE = "consent_usage"
         const val KEY_LOG_REAL = "inspection_log_real"
         const val KEY_LOG_DEMO = "inspection_log_demo"
     }

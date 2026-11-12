@@ -34,11 +34,13 @@ import moca.core.RankRow
 /**
  * 순위·대전. 왼쪽은 오늘의 연습 순위, 오른쪽은 부품 대전.
  * 판정은 :core `Battle` 이 한다. 이 화면은 표시와 진행만 맡는다.
+ * 화면에 채워진 단추는 하나만 둔다. 진 뒤 해결 단추가 보이면 「다시」는 옅은 단추로 바뀐다.
  */
 class BattleFragment : Fragment(R.layout.fragment_battle) {
 
     private lateinit var myGrade: TextView
     private lateinit var opponentName: TextView
+    private lateinit var opponentKind: TextView
     private lateinit var opponentScore: TextView
     private lateinit var recordText: TextView
     private lateinit var resultText: TextView
@@ -47,9 +49,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private lateinit var fixButton: Button
     private lateinit var roundContainer: LinearLayout
     private lateinit var startButton: Button
+    private lateinit var againButton: Button
     private lateinit var skipButton: Button
     private lateinit var demoBadge: TextView
-    private lateinit var practiceBadge: TextView
     private lateinit var rankSummary: TextView
     private lateinit var rankList: LinearLayout
     private lateinit var rankEmpty: TextView
@@ -62,6 +64,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         super.onViewCreated(view, savedInstanceState)
         myGrade = view.findViewById(R.id.myGrade)
         opponentName = view.findViewById(R.id.opponentName)
+        opponentKind = view.findViewById(R.id.opponentKind)
         opponentScore = view.findViewById(R.id.opponentScore)
         recordText = view.findViewById(R.id.battleRecord)
         resultText = view.findViewById(R.id.battleResult)
@@ -70,9 +73,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         fixButton = view.findViewById(R.id.battleFixAction)
         roundContainer = view.findViewById(R.id.roundContainer)
         startButton = view.findViewById(R.id.buttonStartBattle)
+        againButton = view.findViewById(R.id.buttonAgain)
         skipButton = view.findViewById(R.id.buttonSkip)
         demoBadge = view.findViewById(R.id.battleDemoBadge)
-        practiceBadge = view.findViewById(R.id.battlePracticeBadge)
         rankSummary = view.findViewById(R.id.rankSummary)
         rankList = view.findViewById(R.id.rankList)
         rankEmpty = view.findViewById(R.id.rankEmpty)
@@ -80,6 +83,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         val app = requireActivity().application as MocaApp
         demoBadge.visibility = if (app.prefs.demoEnabled) View.VISIBLE else View.GONE
         startButton.setOnClickListener { startBattle() }
+        againButton.setOnClickListener { startBattle() }
         skipButton.setOnClickListener { skipRequested = true }
 
         viewLifecycleOwner.lifecycleScope.launch { loadLobby() }
@@ -116,12 +120,14 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             opponent = null
             myGrade.text = getString(R.string.battle_no_record)
             opponentName.text = getString(R.string.battle_no_grade_opponent)
+            opponentKind.visibility = View.GONE
             opponentScore.text = ""
-            practiceBadge.visibility = View.GONE
             reasonText.visibility = View.GONE
             hintText.visibility = View.GONE
             roundContainer.visibility = View.VISIBLE
             fixButton.visibility = View.GONE
+            againButton.visibility = View.GONE
+            startButton.visibility = View.VISIBLE
             startButton.isEnabled = false
             return
         }
@@ -137,11 +143,17 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
                 opponent = found.opponent
                 opponentName.text = found.opponent.nickname
                 opponentScore.text = "${found.opponent.grade} · ${found.opponent.total.toInt()}"
-                practiceBadge.visibility = if (found.isPractice) View.VISIBLE else View.GONE
+                opponentKind.text = if (found.isSeed || found.isPractice) {
+                    getString(R.string.battle_practice)
+                } else {
+                    getString(R.string.battle_real_user)
+                }
+                opponentKind.visibility = View.VISIBLE
                 startButton.isEnabled = true
             }
             is OpponentResult.Unavailable -> {
                 opponentName.text = getString(R.string.battle_searching)
+                opponentKind.visibility = View.GONE
                 startButton.isEnabled = false
             }
         }
@@ -228,6 +240,8 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         hintText.visibility = View.GONE
         roundContainer.visibility = View.VISIBLE
         fixButton.visibility = View.GONE
+        againButton.visibility = View.GONE
+        startButton.visibility = View.VISIBLE
         roundContainer.removeAllViews()
         startButton.isEnabled = false
 
@@ -349,15 +363,22 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         showFixAction(result)
     }
 
-    /** 졌고 홈에 보여 줄 해결 단추가 있으면 같은 단추를 여기에도 둔다. */
+    /**
+     * 졌고 홈에 보여 줄 해결 단추가 있으면 같은 단추를 여기에도 둔다.
+     * 채워진 단추는 하나만 두므로, 해결 단추가 보일 때는 「다시」를 옅은 단추로 바꾼다.
+     */
     private fun showFixAction(result: BattleResult) {
         val host = activity as? MainActivity
         val target = TopProblemAction.of(requireActivity().application as MocaApp)
         if (result.winner != BattleSide.THEIRS || host == null || target == null) {
             fixButton.visibility = View.GONE
+            againButton.visibility = View.GONE
+            startButton.visibility = View.VISIBLE
             return
         }
         TopProblemAction.bind(host, fixButton, target)
+        startButton.visibility = View.GONE
+        againButton.visibility = View.VISIBLE
     }
 
     companion object {

@@ -102,6 +102,8 @@
     "대전.해결": {"id": "ai.moca.app:id/battleFixAction"},
     "대전.전적": {"id": "ai.moca.app:id/battleRecord"},
     "대전.시작": {"id": "ai.moca.app:id/buttonStartBattle"},
+    "대전.다시": {"id": "ai.moca.app:id/buttonAgain"},
+    "대전.상대종류": {"id": "ai.moca.app:id/opponentKind"},
     "순위.내줄": {"container": "ai.moca.app:id/rankList"},
     "순위.표기": {"id": "ai.moca.app:id/rankPracticeBadge"},
     "해결.단추": {"id": "ai.moca.app:id/topProblemAction"},

@@ -108,6 +108,7 @@
     <string name="battle_draw">무승부</string>
     <string name="battle_lose">패배</string>
     <string name="battle_again">다시</string>
+    <string name="battle_real_user">실제 사용자</string>
     <string name="battle_round_score">%1$s : %2$s</string>
     <string name="battle_no_grade_opponent">등급이 나오면 상대를 찾아 드려요</string>
     <string name="battle_hint">대전을 시작하면 다섯 항목을 차례로 겨뤄요</string>
@@ -125,7 +126,6 @@
     <string name="settings_group_demo">데모</string>
     <string name="settings_group_data">데이터</string>
     <string name="settings_nickname">닉네임</string>
-    <string name="settings_consent">데이터 동의</string>
     <string name="settings_demo">데모 모드</string>
     <string name="settings_demo_help">차 없이 시나리오로 앱을 살펴봐요. 화면 위에 \'데모 데이터\'가 보여요</string>
     <string name="settings_scenario_d0">D0 · 정상, 연료 62%</string>
@@ -150,6 +150,10 @@
     <string name="onboarding_consent_1">차량 상태로 점수를 계산해요</string>
     <string name="onboarding_consent_2">음성 질문과 점수 요약을 서버를 거쳐 AI에 보내요</string>
     <string name="onboarding_consent_3">대전 상대에게 닉네임·등급·점수가 보여요</string>
+    <string name="onboarding_consent_4">앱 사용 기록을 서버에 보내요</string>
+    <string name="onboarding_consent_2_hint">끄면 기기 안의 답으로만 답해요</string>
+    <string name="onboarding_consent_3_hint">끄면 연습 상대와만 겨뤄요</string>
+    <string name="onboarding_consent_4_hint">누른 단추와 화면만 보내요. 질문 글자와 위치는 보내지 않아요</string>
     <string name="onboarding_agree">동의하고 시작</string>
     <string name="onboarding_nickname">닉네임</string>
     <string name="onboarding_skip">건너뛰기</string>

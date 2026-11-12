@@ -364,7 +364,55 @@
                     style="@style/Widget.Pleos.Switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_consent" />
+                    android:text="@string/onboarding_consent_1" />
+
+                <Switch
+                    android:id="@+id/switchConsentCloud"
+                    style="@style/Widget.Pleos.Switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/moca_gap_small"
+                    android:text="@string/onboarding_consent_2" />
+
+                <TextView
+                    style="@style/Pleos.Text.Label.S"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/moca_gap"
+                    android:text="@string/onboarding_consent_2_hint"
+                    android:textColor="@color/pleos_text_dark_secondary" />
+
+                <Switch
+                    android:id="@+id/switchConsentBattle"
+                    style="@style/Widget.Pleos.Switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/moca_gap_small"
+                    android:text="@string/onboarding_consent_3" />
+
+                <TextView
+                    style="@style/Pleos.Text.Label.S"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/moca_gap"
+                    android:text="@string/onboarding_consent_3_hint"
+                    android:textColor="@color/pleos_text_dark_secondary" />
+
+                <Switch
+                    android:id="@+id/switchConsentUsage"
+                    style="@style/Widget.Pleos.Switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/moca_gap_small"
+                    android:text="@string/onboarding_consent_4" />
+
+                <TextView
+                    style="@style/Pleos.Text.Label.S"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/moca_gap"
+                    android:text="@string/onboarding_consent_4_hint"
+                    android:textColor="@color/pleos_text_dark_secondary" />
 
                 <Button
                     android:id="@+id/buttonDeleteData"
