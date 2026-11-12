@@ -68,32 +68,34 @@ class BattleTest {
     }
 
     @Test
-    fun `D3 는 라이벌드라이버와 0대0 0대0 0대1 1대1 2대1 로 역전승한다`() {
-        val mine = Scoring.evaluate(
-            mapOf(Category.POWER to 100, Category.BRAKE_STEERING to 100, Category.TIRE to 80, Category.ELECTRIC to 100, Category.SAFETY to 100),
-            care = 53,
-            redCap = true,
-        )
-        val rival = ScoreBridgeForTest.rivalEvaluation()
+    fun `D3 는 라이벌드라이버와 무 패 패 승 승 라운드 2대2 종합에서 진다`() {
+        val mine = moca.core.Demo.evaluateOf(DemoScenario.D3.id)
+        val rival = Seeds.byNickname("라이벌드라이버")!!.evaluation()
         val result = Battle.judge(mine, rival)
-        assertEquals(BattleSide.MINE, result.winner)
-        assertEquals(listOf(0, 0, 0, 1, 2), progressiveWins(result.rounds.map { it.winner }))
-        assertEquals("0:0 → 0:0 → 0:1 → 1:1 → 2:1", progressiveWins(result.rounds.map { it.winner }).joinToString(" → ") {
-            // 누적 표기: 내 승 : 상대 승
-            it.toString()
-        }.let { "0:0 → 0:0 → 0:1 → 1:1 → 2:1" })
+        assertEquals(BattleSide.THEIRS, result.winner)
+        assertEquals(
+            listOf(BattleSide.DRAW, BattleSide.THEIRS, BattleSide.THEIRS, BattleSide.MINE, BattleSide.MINE),
+            result.rounds.map { it.winner },
+        )
+        assertEquals(2, result.myWins)
+        assertEquals(2, result.theirWins)
+        assertTrue(result.tieBreakUsed)
+        assertEquals(75.4, result.myOverall!!, 0.05)
+        assertEquals(88.2, result.theirOverall!!, 0.05)
     }
 
     @Test
-    fun `D5 는 0대1 1대1 1대1 1대1 2대1 로 역전승한다`() {
-        val mine = Scoring.evaluate(
-            mapOf(Category.POWER to 60, Category.BRAKE_STEERING to 100, Category.TIRE to 80, Category.ELECTRIC to 100, Category.SAFETY to 100),
-            care = 53,
-            redCap = false,
-        )
-        val collector = ScoreBridgeForTest.collectorEvaluation()
+    fun `D5 는 경고등수집가와 패 승 무 무 승 라운드 2대1 로 이긴다`() {
+        val mine = moca.core.Demo.evaluateOf(DemoScenario.D5.id)
+        val collector = Seeds.byNickname("경고등수집가")!!.evaluation()
         val result = Battle.judge(mine, collector)
         assertEquals(BattleSide.MINE, result.winner)
+        assertEquals(
+            listOf(BattleSide.THEIRS, BattleSide.MINE, BattleSide.DRAW, BattleSide.DRAW, BattleSide.MINE),
+            result.rounds.map { it.winner },
+        )
+        assertEquals(2, result.myWins)
+        assertEquals(1, result.theirWins)
     }
 
     @Test
@@ -184,42 +186,4 @@ class BattleTest {
     fun `전적 키가 프로필별로 분리된다`() {
         assertTrue(BattleRepository.KEY_REAL != BattleRepository.KEY_DEMO)
     }
-
-    private fun progressiveWins(winners: List<BattleSide>): List<Int> {
-        var mine = 0
-        var theirs = 0
-        val out = mutableListOf<Int>()
-        for (w in winners) {
-            when (w) {
-                BattleSide.MINE -> mine++
-                BattleSide.THEIRS -> theirs++
-                BattleSide.DRAW -> Unit
-            }
-            out += mine
-        }
-        return out
-    }
-}
-
-/** 테스트 전용: 계획 10장의 라이벌·경고등수집가 카테고리 값. */
-object ScoreBridgeForTest {
-    fun rivalEvaluation(): moca.core.Evaluation =
-        moca.core.Scoring.evaluate(
-            mapOf(
-                Category.POWER to 100, Category.BRAKE_STEERING to 100,
-                Category.TIRE to 100, Category.ELECTRIC to 90, Category.SAFETY to 90,
-            ),
-            care = 70,
-            redCap = false,
-        )
-
-    fun collectorEvaluation(): moca.core.Evaluation =
-        moca.core.Scoring.evaluate(
-            mapOf(
-                Category.POWER to 75, Category.BRAKE_STEERING to 75,
-                Category.TIRE to 75, Category.ELECTRIC to 100, Category.SAFETY to 90,
-            ),
-            care = 20,
-            redCap = false,
-        )
 }

@@ -211,13 +211,8 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         roundContainer.removeAllViews()
         startButton.isEnabled = false
 
-        val raw = Battle.judge(mine, opponentEvaluation(theirs))
+        val result = Battle.judge(mine, opponentEvaluation(theirs))
         val app = requireActivity().application as MocaApp
-        val result = if (app.prefs.demoEnabled) {
-            moca.core.Demo.applyFixedRounds(raw, app.prefs.demoScenarioId)
-        } else {
-            raw
-        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             skipButton.visibility = View.VISIBLE
@@ -298,9 +293,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             BattleSide.THEIRS -> getString(R.string.battle_result_lose)
             BattleSide.DRAW -> getString(R.string.battle_result_draw)
         }
-        val app = requireActivity().application as MocaApp
-        val demoFixed = app.prefs.demoEnabled && moca.core.Demo.fixedBattleRounds(app.prefs.demoScenarioId) != null
-        resultText.text = moca.core.BattleText.line(text, result.myWins, result.theirWins, demoFixed)
+        resultText.text = moca.core.BattleText.line(text, result.myWins, result.theirWins)
         resultText.setTextColor(
             ContextCompat.getColor(
                 requireContext(),

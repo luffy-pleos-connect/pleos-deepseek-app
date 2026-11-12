@@ -95,7 +95,7 @@ class EvalTests(unittest.TestCase):
             "D2": ("출근길요정", "S", 91, ["무", "무", "패", "무", "무"], (0, 1), "패배"),
             "D4": ("주말캠퍼", "S", 92, ["무", "무", "무", "패", "무"], (0, 1), "패배"),
             "D6": ("퇴근길질주", "B", 76, ["승", "무", "무", "무", "무"], (1, 0), "승리"),
-            "D3": ("라이벌드라이버", "A", 88, ["무", "무", "패", "승", "승"], (2, 1), "승리"),
+            "D3": ("라이벌드라이버", "A", 88, ["무", "패", "패", "승", "승"], (2, 2), "패배 (종합 75 대 88)"),
             "D5": ("경고등수집가", "C", 64, ["패", "승", "무", "무", "승"], (2, 1), "승리"),
             "D7": ("초보운전3년차", "A", 85, ["승", "무", "무", "무", "패"], (1, 1), "패배 (종합 84 대 85)"),
         }
@@ -106,9 +106,9 @@ class EvalTests(unittest.TestCase):
                 row,
             )
         text = mod.answer_text()
-        self.assertIn("D3\t라이벌드라이버\tA\t88\t무 무 패 승 승\t2 : 1\t승리", text)
+        self.assertIn("D3\t라이벌드라이버\tA\t88\t무 패 패 승 승\t2 : 2\t패배 (종합 75 대 88)", text)
         self.assertIn("D1\t세차는사랑\tA\t83\t패 무 무 승 무\t1 : 1\t패배 (종합 80 대 83)", text)
-        self.assertIn("화면에 「데모 시나리오」라는 글자가 함께 나와야 한다.", text)
+        self.assertNotIn("화면에 「데모 시나리오」라는 글자가 함께 나와야 한다.", text)
         self.assertIn("달리는곰 100·100·75·100·100", text)
         self.assertIn("D7\t초보운전3년차\tA\t85\t승 무 무 무 패\t1 : 1\t패배 (종합 84 대 85)", text)
         self.assertIn("초보운전3년차 60·100·100·100·100", text)
@@ -163,8 +163,6 @@ class EvalTests(unittest.TestCase):
         for sid in mod.BATTLE_ORDER:
             row = mod.BATTLES[sid]
             result = f"{row['결과']} ({row['점수'][0]} : {row['점수'][1]})"
-            if row["데모"]:
-                result += " 데모 시나리오"
             screens[sid] = self._battle(row["라운드"], result)
         return screens
 

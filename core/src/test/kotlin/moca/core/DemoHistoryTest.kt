@@ -238,37 +238,38 @@ class DemoHistoryTest {
         Assert.eq(85, seed.evaluation().displayedOverall)
     }
 
-    // 데모 고정 진행이 계획 10장 표와 같은지 검증한다.
+    // 데모 대전도 Battle.judge 계산 그대로다(D3·D5 에도 덮어쓰기가 없다).
     @Test
-    fun demoFixedRoundsMatchPlanTable() {
+    fun demoD3RoundsComeFromRealScores() {
+        val mine = Scoring.evaluate(Demo.snapshotOf("D3"), Demo.careOf("D3", Demo.ANCHOR).score)
+        val rival = Seeds.byNickname("라이벌드라이버")!!.evaluation()
+        val result = Battle.judge(mine, rival)
+        // 동력 100/100 무, 제동·조향 50/100 패, 타이어 75/100 패, 전기 100/90 승, 안전 100/90 승
         Assert.eq(
-            listOf(BattleSide.DRAW, BattleSide.DRAW, BattleSide.THEIRS, BattleSide.MINE, BattleSide.MINE),
-            Demo.fixedBattleRounds("D3"),
+            listOf(BattleSide.DRAW, BattleSide.THEIRS, BattleSide.THEIRS, BattleSide.MINE, BattleSide.MINE),
+            result.rounds.map { it.winner },
         )
-        Assert.eq(
-            listOf(BattleSide.THEIRS, BattleSide.MINE, BattleSide.DRAW, BattleSide.DRAW, BattleSide.MINE),
-            Demo.fixedBattleRounds("D5"),
-        )
-        Assert.eq(null, Demo.fixedBattleRounds("D0"))
+        Assert.eq(2, result.myWins)
+        Assert.eq(2, result.theirWins)
+        Assert.isTrue(result.tieBreakUsed, "2 : 2 는 종합으로 가른다")
+        Assert.near(75.4, result.myOverall!!)
+        Assert.near(88.2, result.theirOverall!!)
+        Assert.eq(BattleSide.THEIRS, result.winner)
     }
 
     @Test
-    fun demoD3FixedRoundsEndInComebackWin() {
-        val mine = Scoring.evaluate(Demo.snapshotOf("D3"), Demo.careOf("D3", Demo.ANCHOR).score)
-        val rival = Seeds.byNickname("라이벌드라이버")!!.evaluation()
-        val raw = Battle.judge(mine, rival)
-        val fixed = Demo.applyFixedRounds(raw, "D3")
-        Assert.eq(2, fixed.myWins)
-        Assert.eq(1, fixed.theirWins)
-        Assert.eq(BattleSide.MINE, fixed.winner)
-        // 누적 진행이 계획 표와 같아야 한다.
-        var m = 0
-        var t = 0
-        val progression = fixed.rounds.map { r ->
-            if (r.winner == BattleSide.MINE) m++
-            if (r.winner == BattleSide.THEIRS) t++
-            "$m:$t"
-        }
-        Assert.eq(listOf("0:0", "0:0", "0:1", "1:1", "2:1"), progression)
+    fun demoD5RoundsComeFromRealScores() {
+        val mine = Scoring.evaluate(Demo.snapshotOf("D5"), Demo.careOf("D5", Demo.ANCHOR).score)
+        val collector = Seeds.byNickname("경고등수집가")!!.evaluation()
+        val result = Battle.judge(mine, collector)
+        // 동력 60/75 패, 제동·조향 100/75 승, 타이어 75/75 무, 전기 100/100 무, 안전 100/90 승
+        Assert.eq(
+            listOf(BattleSide.THEIRS, BattleSide.MINE, BattleSide.DRAW, BattleSide.DRAW, BattleSide.MINE),
+            result.rounds.map { it.winner },
+        )
+        Assert.eq(2, result.myWins)
+        Assert.eq(1, result.theirWins)
+        Assert.isFalse(result.tieBreakUsed)
+        Assert.eq(BattleSide.MINE, result.winner)
     }
 }

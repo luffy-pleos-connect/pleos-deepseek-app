@@ -39,12 +39,8 @@ class BattleRepository(
         if (prefs.demoEnabled) {
             val scenario = DemoScenario.byId(prefs.demoScenarioId)
             val seed = Seeds.byNickname(scenario.opponentNickname())
-            val opponent = if (seed != null) {
-                Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories)
-            } else {
-                // 데모 전용(라이벌드라이버)은 시드 풀에 없으므로 계획 표 값으로 만든다.
-                Opponent("라이벌드라이버", "A", 88.2, rivalCategories())
-            }
+                ?: return OpponentResult.Unavailable("no_seed")
+            val opponent = Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories)
             return OpponentResult.Found(opponent, isSeed = true, isPractice = false)
         }
 
@@ -72,14 +68,6 @@ class BattleRepository(
             isPractice = true,
         )
     }
-
-    private fun rivalCategories(): Map<Category, Int?> = mapOf(
-        Category.POWER to 100,
-        Category.BRAKE_STEERING to 100,
-        Category.TIRE to 100,
-        Category.ELECTRIC to 90,
-        Category.SAFETY to 90,
-    )
 
     private fun parseCategories(json: org.json.JSONObject?): Map<Category, Int?> {
         if (json == null) return emptyMap()
