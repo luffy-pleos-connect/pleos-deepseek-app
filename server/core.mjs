@@ -44,6 +44,7 @@ const EVENT_NAMES = new Set([
 const MAX_EVENTS = 50;
 const MAX_PROP_KEYS = 8;
 const MAX_VOICE_MS = 120000;
+const RANK_ANON_PER_HOUR = 2000;
 const PROP_KEY_RE = /^[a-z][A-Za-z0-9]{0,19}$/;
 const PROP_TEXT_RE = /^[A-Za-z0-9_.:-]{0,40}$/;
 
@@ -64,7 +65,8 @@ function propsProblem(props) {
 
 function tokenEquals(provided, expected) {
   if (typeof provided !== 'string' || typeof expected !== 'string') return false;
-  return hashEquals(provided, expected);
+  // 글자 수가 같아도 바이트 수가 다르면 timingSafeEqual 이 던진다. 해시끼리 비교한다.
+  return hashEquals(sha256(provided), sha256(expected));
 }
 
 // 한도에 닿아 끊긴 답은 마지막으로 끝난 문장까지만 남긴다. 끝난 문장이 없으면 그대로 둔다.
@@ -339,7 +341,7 @@ async function handleEventsPost(req, store, env) {
       bump(props && props.online === true ? 'voice_ask|online' : 'voice_ask|offline');
       const ms = props ? props.ms : undefined;
       if (typeof ms === 'number' && Number.isFinite(ms) && ms >= 0 && ms <= MAX_VOICE_MS) {
-        bump('voice_ms_sum', ms);
+        bump('voice_ms_sum', Math.round(ms)); // Redis HINCRBY 는 정수만 받는다
         bump('voice_ms_n');
       }
     }
@@ -430,6 +432,10 @@ async function handleRank(url, store, env) {
   if (deviceId !== null) {
     const limited = await enforce(store, 'opponent', deviceId, env);
     if (limited) return limited;
+  } else {
+    // 기기 값 없이도 부를 수 있다. 저장소를 읽는 호출이므로 전체 횟수를 묶어 둔다.
+    const hit = normalizeHit(await store.hit('rank:anon', RANK_ANON_PER_HOUR, HOUR));
+    if (!hit.allowed) return json(429, { error: 'rate_limited' });
   }
   const seeds = Array.isArray(env.seedPool) ? env.seedPool : SEED_POOL;
   const real = (await store.realTotals(deviceId)).filter((value) => Number.isFinite(value));
