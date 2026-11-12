@@ -1,6 +1,9 @@
 package ai.moca.app.ui
 
 import ai.moca.app.MocaApp
+import ai.moca.app.net.ApiClient
+import ai.moca.app.net.netScope
+import kotlinx.coroutines.launch
 import ai.moca.app.MainActivity
 import ai.moca.app.R
 import ai.moca.app.data.Prefs
@@ -86,6 +89,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 .title(getString(R.string.settings_delete_title))
                 .description(getString(R.string.settings_delete_body))
                 .confirm(getString(R.string.settings_delete_confirm)) {
+                    // 서버에 올린 요약도 지운다. 기기 ID·비밀값은 로컬을 지우기 전에 읽어 둔다.
+                    val deviceId = prefs.deviceId
+                    val deviceSecret = prefs.deviceSecret
+                    netScope.launch { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
                     prefs.clearAll()
                     app.latestInspection = null
                     app.lastInspectKey = null

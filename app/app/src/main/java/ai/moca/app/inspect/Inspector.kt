@@ -1,6 +1,10 @@
 package ai.moca.app.inspect
 
 import ai.moca.app.MocaApp
+import ai.moca.app.net.ApiClient
+import ai.moca.app.net.SnapshotPayload
+import ai.moca.app.net.netScope
+import kotlinx.coroutines.launch
 import ai.moca.app.score.ScoreBridge
 import ai.moca.app.vehicle.ItemReading
 import ai.moca.app.vehicle.WarningSummary
@@ -73,6 +77,11 @@ class Inspector(private val app: MocaApp) {
         )
         app.latestInspection = result
         app.lastInspectKey = key
+        // 대전 공개에 동의했으면 요약을 서버에 올린다. 기다리지 않고, 실패해도 점검 결과는 그대로다.
+        if (app.prefs.consentBattle) {
+            SnapshotPayload.build(app.prefs.deviceId, app.prefs.nickname, evaluation, snapshot.isDemo, System.currentTimeMillis())
+                ?.let { body -> netScope.launch { ApiClient(app.prefs).uploadSnapshot(body) } }
+        }
         result
     }
 

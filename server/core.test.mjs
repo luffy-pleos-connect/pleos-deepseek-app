@@ -228,7 +228,7 @@ test('POST /chat 정상 → 200 {message}, Hive 요청 파라미터 고정', asy
   assert.equal(captured[0].url, HIVE_URL);
   assert.equal(captured[0].body.model, 'deepseek-ai/deepseek-v4.1-flash-1017');
   assert.equal(captured[0].body.temperature, 0.3);
-  assert.equal(captured[0].body.max_tokens, 300);
+  assert.equal(captured[0].body.max_tokens, 1000);
   assert.equal(captured[0].body.messages.length, 1);
   assert.equal(captured[0].init.headers.authorization, 'Bearer hive-key-should-not-leak');
 });
@@ -390,6 +390,21 @@ test('POST /chat 추론형 응답은 reasoning_content 로 대체한다', async 
   const body = JSON.parse(await res.text());
   assert.equal(body.message.reasoning_content, '지금은 괜찮아요');
   assert.equal(body.message.tool_calls, null);
+});
+
+test('POST /chat 토큰 한도에 닿아 끊긴 답은 끝난 문장까지만 보낸다', async () => {
+  const reply = (completionTokens) => async () => new Response(
+    JSON.stringify({
+      choices: [{ finish_reason: 'stop', message: { content: '정차 후 점검을 받으세요. ABS는 임의로 주행' } }],
+      usage: { completion_tokens: completionTokens },
+    }),
+    { status: 200 },
+  );
+  const env = { HIVE_API_KEY: 'k', HIVE_API_URL: HIVE_URL, HIVE_TIMEOUT_MS: '2000' };
+  const cut = await postChat(harness({ env, fetch: reply(1000) }), { messages: [{ role: 'user', content: '경고등 뭐야' }] });
+  assert.equal(JSON.parse(await cut.text()).message.content, '정차 후 점검을 받으세요.');
+  const whole = await postChat(harness({ env, fetch: reply(120) }), { messages: [{ role: 'user', content: '경고등 뭐야' }] });
+  assert.equal(JSON.parse(await whole.text()).message.content, '정차 후 점검을 받으세요. ABS는 임의로 주행');
 });
 
 test('POST /chat content·reasoning·tool_calls 가 모두 비면 502', async () => {

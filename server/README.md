@@ -35,11 +35,12 @@ node --test *.test.mjs         # core + store (62 케이스)
 
 - `api/chat.mjs`, `api/opponent.mjs`, `api/snapshots.mjs` 가 함수가 된다. 셋 다 `vercel-entry.mjs` 의 `createFetch()` 를 `export default { fetch }` 로 내보낸다(Vercel 문서의 fetch Web Standard 형식).
 - 주소는 `/api/chat`, `/api/opponent`, `/api/snapshots` 다. 진입부가 `/api` 를 떼고 `core.mjs` 로 넘긴다.
-- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`.
+- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`. Vercel Marketplace 의 Upstash 연동은 저장소 값을 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이름으로 넣는다. 진입부는 두 이름을 다 받는다.
 - 저장소 환경 변수가 없으면 모든 요청에 500 `{"error":"not_configured"}` 로 답한다.
 - 앱의 release 빌드에는 배포한 주소에 `/api` 를 붙여 넣는다: `./gradlew :app:assembleRelease -Pmoca.serverBaseUrl=https://<프로젝트>.vercel.app/api`
 - 2026-11-12 에 `https://moca-server.vercel.app` 로 올렸다(프로젝트 `moca-server`, 리전 `iad1`, Node 24). 올린 파일은 `api/*.mjs` 3개와 `core.mjs` · `http-util.mjs` · `validate.mjs` · `store-redis.mjs` · `vercel-entry.mjs` · `seeds.json` 이고, 배포된 파일의 SHA-1 이 저장소 파일과 같은 것을 확인했다.
-- 같은 날 확인한 응답: `GET /api/opponent`, `GET·POST /api/chat` 모두 500 `{"error":"not_configured"}`. 함수는 불리지만 `HIVE_API_KEY` 와 Upstash 값 2개를 아직 넣지 않았다(`HIVE_API_URL` 만 넣었다). 값을 넣고 다시 배포하기 전에는 앱에서 쓸 수 없다.
+- 저장소는 Vercel Marketplace 의 Upstash for Redis 무료 요금제(`moca-redis`, 리전 `iad1`)다. `HIVE_API_URL`, `HIVE_API_KEY` 도 넣었다.
+- 올린 서버를 직접 불러 확인한 결과와 앱에서 확인한 결과는 `docs/evidence/V9/서버-연결-확인.md` 에 있다.
 
 ## API
 
@@ -56,7 +57,7 @@ node --test *.test.mjs         # core + store (62 케이스)
 - 스냅샷 TTL 90일(마지막 갱신 기준). 만료된 스냅샷은 조회·상대 풀에서 빠진다.
 - `/opponent` 는 자기 자신과 `isDemo` 스냅샷을 제외하고, 남는 후보 + 시드 12명에서 균등 랜덤으로 고른다. 응답에 `deviceId` 가 없다.
 - `/chat` 은 `https://api-cdn.thehive.ai/api/v3/chat/completions`, 모델 `deepseek-ai/deepseek-v4.1-flash-1017`,
-  `temperature 0.3`, `max_tokens 300`, 20초 타임아웃(504). 키가 없으면 호출하지 않고 502.
+  `temperature 0.3`, `max_tokens 1000`(추론 토큰 포함. 한도에 닿아 끊긴 답은 끝난 문장까지만 보낸다), 20초 타임아웃(504). 키가 없으면 호출하지 않고 502.
 
 ## 저장소
 

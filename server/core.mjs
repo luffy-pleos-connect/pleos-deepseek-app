@@ -10,6 +10,8 @@ export const SNAPSHOT_TTL_DAYS = 90;
 export const HIVE_URL = '';
 export const HIVE_MODEL = 'deepseek-ai/deepseek-v4.1-flash-1017';
 export { MAX_BODY_BYTES };
+// 추론형 모델은 추론에 쓴 토큰도 이 한도에 들어간다. 300 이면 답이 문장 중간에서 끊겼다(2026-11-12 실측 3회 중 2회).
+export const MAX_TOKENS = 1000;
 
 const HOUR = 3600;
 const DAY = 86400;
@@ -31,6 +33,12 @@ function hashEquals(a, b) {
 }
 
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+// 한도에 닿아 끊긴 답은 마지막으로 끝난 문장까지만 남긴다. 끝난 문장이 없으면 그대로 둔다.
+function dropUnfinishedSentence(text) {
+  const end = Math.max(text.lastIndexOf('.'), text.lastIndexOf('!'), text.lastIndexOf('?'));
+  return end > 0 ? text.slice(0, end + 1) : text;
+}
 
 const cardOf = (snapshot) => ({
   nickname: snapshot.nickname,
@@ -161,7 +169,7 @@ async function callHive(env, payload, fetchImpl) {
     model,
     messages: payload.messages,
     temperature: 0.3,
-    max_tokens: 300,
+    max_tokens: MAX_TOKENS,
   };
   if (payload.tools) body.tools = payload.tools;
   try {
@@ -191,7 +199,10 @@ async function callHive(env, payload, fetchImpl) {
     const toolCalls = Array.isArray(message.tool_calls) && message.tool_calls.length > 0
       ? message.tool_calls
       : null;
-    const content = typeof message.content === 'string' ? message.content : '';
+    // Hive 는 한도에 닿아 끊겨도 finish_reason 을 stop 으로 준다. 쓴 토큰 수로 판단한다.
+    const cut = Number(parsed?.usage?.completion_tokens) >= MAX_TOKENS;
+    const whole = typeof message.content === 'string' ? message.content : '';
+    const content = cut ? dropUnfinishedSentence(whole) : whole;
     const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : '';
     if (!toolCalls && content.length === 0 && reasoning.length === 0) return { status: 502 };
 

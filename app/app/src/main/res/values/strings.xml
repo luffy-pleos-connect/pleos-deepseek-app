@@ -134,7 +134,7 @@
     <string name="settings_scenario_d7">D7 · 워셔액 부족</string>
     <string name="settings_delete_data">내 데이터 삭제</string>
     <string name="settings_delete_title">내 데이터를 지울까요?</string>
-    <string name="settings_delete_body">점검 기록, 전적, 닉네임, 동의가 모두 지워져요</string>
+    <string name="settings_delete_body">점검 기록, 전적, 닉네임, 동의가 모두 지워져요. 서버에 올린 대전용 요약도 지워요</string>
     <string name="settings_delete_confirm">지우기</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
     <string name="settings_about">앱 정보</string>

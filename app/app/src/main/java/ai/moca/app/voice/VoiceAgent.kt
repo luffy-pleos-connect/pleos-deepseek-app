@@ -74,10 +74,7 @@ class VoiceAgent(
             // 모델이 도구를 또 부르려 하면 일반 경로로 되돌린다.
             return ask(question, drivingMode)
         }
-        val text = message.optString("content").ifBlank {
-            message.optString("reasoning_content").ifBlank { "다시 한번 물어봐 주세요." }
-        }
-        return Answer(text, listOf(toolName), usedOffline = false, fillerSpoken = false)
+        return online(message, question, drivingMode, listOf(toolName), fillerSpoken = false)
     }
 
     suspend fun ask(question: String, drivingMode: Boolean): Answer {
@@ -108,11 +105,7 @@ class VoiceAgent(
 
             val toolCalls = message.optJSONArray("tool_calls")
             if (toolCalls == null || toolCalls.length() == 0) {
-                // Hive(추론형)는 content 가 비고 reasoning_content 에 답을 넣기도 한다.
-                val text = message.optString("content").ifBlank {
-                    message.optString("reasoning_content").ifBlank { "다시 한번 물어봐 주세요." }
-                }
-                return Answer(text, calledTools, usedOffline = false, fillerSpoken = fillerSpoken)
+                return online(message, question, drivingMode, calledTools, fillerSpoken)
             }
 
             if (!fillerSpoken) {
@@ -152,6 +145,30 @@ class VoiceAgent(
             toolCalls = calledTools,
             fillerSpoken = fillerSpoken,
         )
+    }
+
+    /**
+     * 모델의 답을 내보내기 전에, 모델에게 부탁만 해 둔 규칙을 코드로 지킨다.
+     * - content 가 비면 기기 안의 답을 쓴다. reasoning_content 는 모델의 추론문(영어)이라 보여 주지 않는다.
+     * - 차의 값을 읽은 답이고 빨간 경고등이 켜져 있으면 첫 문장은 항상 정차 안내다
+     *   (서버를 붙여 물었을 때 모델이 이 문장을 빼먹었다, 2026-11-12 실측).
+     */
+    private suspend fun online(
+        message: JSONObject,
+        question: String,
+        drivingMode: Boolean,
+        toolCalls: List<String>,
+        fillerSpoken: Boolean,
+    ): Answer {
+        val content = message.optString("content").trim()
+        if (content.isEmpty()) {
+            val fallback = offline(question, drivingMode)
+            return fallback.copy(toolCalls = toolCalls + fallback.toolCalls, fillerSpoken = fillerSpoken)
+        }
+        val red = toolCalls.isNotEmpty() &&
+            runCatching { JSONObject(tools.execute("get_active_warnings", null)).optInt("red") > 0 }.getOrDefault(false)
+        val text = if (red && !content.substringBefore('.').contains("정차")) "${Tools.STOP_SAFELY}. $content" else content
+        return Answer(text, toolCalls, usedOffline = false, fillerSpoken = fillerSpoken)
     }
 
     private suspend fun offline(question: String, drivingMode: Boolean): Answer {

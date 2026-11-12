@@ -115,7 +115,8 @@ class VoiceAgentTest {
             ),
         )
         val answer = agent(client).ask("내 차 등급 몇이야?", drivingMode = false)
-        assertEquals("지금 등급은 B예요.", answer.text)
+        // 기본 시나리오 D3 는 빨간 경고등이 있어 정차 안내가 앞에 붙는다.
+        assertEquals("${Tools.STOP_SAFELY}. 지금 등급은 B예요.", answer.text)
         assertEquals(listOf("get_latest_inspection"), answer.toolCalls)
         assertFalse(answer.usedOffline)
         assertEquals(2, client.bodies.size)
@@ -162,7 +163,8 @@ class VoiceAgentTest {
             ),
         )
         val answer = agent(client).ask("이상한 도구 불러 줘", drivingMode = false)
-        assertEquals("확인했어요.", answer.text)
+        // 기본 시나리오 D3 는 빨간 경고등이 있어 정차 안내가 앞에 붙는다.
+        assertEquals("${Tools.STOP_SAFELY}. 확인했어요.", answer.text)
         val msgs = client.bodies[1].getJSONArray("messages")
         val toolMsg = msgs.getJSONObject(msgs.length() - 1)
         assertTrue(toolMsg.getString("content").contains("unknown_tool"))
@@ -320,15 +322,34 @@ class VoiceAgentTest {
 
     // ── 21. 추론형 응답 폴백
     @Test
-    fun `content 가 비면 reasoning_content 를 답으로 쓴다`() = runBlocking {
+    fun `content 가 비면 추론문을 보여 주지 않고 기기 안의 답을 쓴다`() = runBlocking {
         val msg = JSONObject().apply {
             put("role", "assistant")
             put("content", "")
-            put("reasoning_content", "지금은 괜찮아요")
+            put("reasoning_content", "We need answer Korean one sentence.")
         }
-        val answer = agent(ScriptedClient(listOf(ChatResult.Ok(msg)))).ask("상태 알려줘", drivingMode = false)
-        assertEquals("지금은 괜찮아요", answer.text)
+        val answer = agent(ScriptedClient(listOf(ChatResult.Ok(msg)))).ask("내 차 등급 몇이야?", drivingMode = false)
+        assertFalse(answer.text.contains("We need"))
+        assertTrue(answer.text, answer.text.contains("B"))
+        assertTrue(answer.usedOffline)
+    }
+
+    @Test
+    fun `빨간 경고등이 있는데 모델이 정차 안내를 빼먹으면 첫 문장에 붙인다`() = runBlocking {
+        val client = ScriptedClient(listOf(ChatResult.Ok(textMessage("엔진오일 상태는 정상이에요."))))
+        val answer = agent(client).askFast("엔진오일 괜찮아?", drivingMode = false)
+        assertEquals("${Tools.STOP_SAFELY}. 엔진오일 상태는 정상이에요.", answer.text)
         assertFalse(answer.usedOffline)
+    }
+
+    @Test
+    fun `모델이 이미 정차를 안내했거나 빨간 경고등이 없으면 답을 그대로 둔다`() = runBlocking {
+        val said = "안전한 곳에 정차한 뒤 점검을 받으세요. ABS 경고등이 켜져 있어요."
+        val red = agent(ScriptedClient(listOf(ChatResult.Ok(textMessage(said))))).askFast("경고등 뭐야?", drivingMode = false)
+        assertEquals(said, red.text)
+        val clean = agent(ScriptedClient(listOf(ChatResult.Ok(textMessage("엔진오일 상태는 정상이에요.")))), tools = buildTools(DemoScenario.D0))
+            .askFast("엔진오일 괜찮아?", drivingMode = false)
+        assertEquals("엔진오일 상태는 정상이에요.", clean.text)
     }
 
     // ── 22. 빠른 경로: 도구를 먼저 실행하고 1회만 부른다
@@ -337,7 +358,8 @@ class VoiceAgentTest {
         val client = ScriptedClient(listOf(ChatResult.Ok(textMessage("경고 2개예요."))))
         val answer = agent(client).askFast("경고등 뭐야?", drivingMode = false)
         assertEquals(1, client.bodies.size)
-        assertEquals("경고 2개예요.", answer.text)
+        // 기본 시나리오 D3 는 빨간 경고등이 있어 정차 안내가 앞에 붙는다.
+        assertEquals("${Tools.STOP_SAFELY}. 경고 2개예요.", answer.text)
         assertFalse(answer.usedOffline)
         val msgs = client.bodies[0].getJSONArray("messages")
         val combined = (0 until msgs.length()).joinToString("|") { msgs.getJSONObject(it).optString("content") }
