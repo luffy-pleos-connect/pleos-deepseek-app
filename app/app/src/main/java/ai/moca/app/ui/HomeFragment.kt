@@ -159,7 +159,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             totalValue.text = getString(R.string.home_total_value, placeholder)
             healthValue.text = getString(R.string.home_health_value, placeholder)
             careValue.text = getString(R.string.home_care_value, placeholder)
-            scoreRing.hasRed = evaluation?.hasRed == true
             return
         }
         gradeValue.text = evaluation.grade.label
@@ -181,7 +180,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 getString(R.string.c04_next_grade, evaluation.nextGrade.label, evaluation.pointsToNext)
             else -> getString(R.string.c03_first_grade)
         }
-        scoreRing.hasRed = evaluation.hasRed
     }
 
     /**
@@ -229,22 +227,19 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         rankText.isClickable = false
     }
 
+    /** 켜진 경고등 수는 「가장 먼저 할 일」 칸에 작게 적는다. 없으면 줄을 숨긴다. */
     private fun renderWarnings(summary: WarningSummary) {
-        warningSummary.text = if (summary.total == 0) {
-            getString(R.string.home_warning_none)
-        } else {
-            getString(R.string.home_warning_count, summary.total)
+        if (summary.total == 0) {
+            warningSummary.visibility = View.GONE
+            return
         }
-        val colorRes = when {
-            summary.redCount > 0 -> ai.pleos.ds.R.color.pleos_regulation_red
-            summary.yellowCount > 0 -> ai.pleos.ds.R.color.pleos_regulation_yellow
-            else -> ai.pleos.ds.R.color.pleos_text_dark_primary
-        }
-        warningSummary.setTextColor(requireContext().getColor(colorRes))
+        warningSummary.visibility = View.VISIBLE
+        warningSummary.text = getString(R.string.home_warning_count, summary.total)
     }
 
     private fun renderTop(result: InspectionResult) {
         val evaluation = result.evaluation
+        topProblemText.setTextColor(requireContext().getColor(ai.pleos.ds.R.color.pleos_text_dark_primary))
         if (evaluation == null || evaluation.grade == null) {
             topProblemText.text = getString(R.string.c20_not_enough_data)
             renderStreak(result)
@@ -264,6 +259,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             problem.label,
             problem.category.label,
             problem.points,
+        )
+        val danger = CategoryStatus.of(evaluation.categories[problem.category]) == CategoryStatus.DANGER
+        topProblemText.setTextColor(
+            requireContext().getColor(
+                if (danger) ai.pleos.ds.R.color.pleos_informative_negative else ai.pleos.ds.R.color.pleos_text_dark_primary,
+            ),
         )
         val action = Priority.actionFor(problem, result.engine)
         val button = topProblemAction as TextView
@@ -300,6 +301,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 CategoryStatus.UNMEASURED -> ai.pleos.ds.R.color.pleos_text_dark_tertiary
             }
             row.dot.backgroundTintList = ColorStateList.valueOf(requireContext().getColor(colorRes))
+            // 위험한 줄은 점뿐 아니라 낱말과 점수도 빨강으로 적는다.
+            val textColor = requireContext().getColor(
+                if (status == CategoryStatus.DANGER) colorRes else ai.pleos.ds.R.color.pleos_text_dark_primary,
+            )
+            row.status.setTextColor(textColor)
+            row.score.setTextColor(textColor)
         }
     }
 

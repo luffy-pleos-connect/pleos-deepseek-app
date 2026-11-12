@@ -26,13 +26,6 @@ class ScoreRingView @JvmOverloads constructor(
             invalidate()
         }
 
-    /** 빨간 경고가 하나라도 있으면 호의 색이 부정 색이다. */
-    var hasRed: Boolean = false
-        set(value) {
-            field = value
-            invalidate()
-        }
-
     private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val arc = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val bounds = RectF()
@@ -75,9 +68,8 @@ class ScoreRingView @JvmOverloads constructor(
         track.strokeWidth = stroke
         arc.strokeWidth = stroke
         track.color = context.getColor(R.color.pleos_text_dark_quaternary)
-        arc.color = context.getColor(
-            if (hasRed) R.color.pleos_informative_negative else R.color.pleos_informative_positive,
-        )
+        // 고리는 점수만 나타낸다. 위험은 「가장 먼저 할 일」과 카테고리 줄이 빨강으로 알린다.
+        arc.color = context.getColor(R.color.pleos_informative_positive)
         val inset = stroke / 2f
         bounds.set(inset, inset, width - inset, height - inset)
         canvas.drawOval(bounds, track)

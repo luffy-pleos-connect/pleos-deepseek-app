@@ -89,6 +89,7 @@
                 android:textColor="@color/pleos_text_dark_secondary"
                 android:visibility="gone" />
 
+            <!-- 덜 급한 값(건강, 관리, 마지막 점검일)은 작은 글자로 한 줄에 모은다. -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -97,37 +98,30 @@
 
                 <TextView
                     android:id="@+id/healthValue"
-                    style="@style/Pleos.Text.Body.S"
+                    style="@style/Pleos.Text.Label.M"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/home_grade_placeholder" />
+                    android:text="@string/home_grade_placeholder"
+                    android:textColor="@color/pleos_text_dark_tertiary" />
 
                 <TextView
                     android:id="@+id/careValue"
-                    style="@style/Pleos.Text.Body.S"
+                    style="@style/Pleos.Text.Label.M"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/moca_gap"
-                    android:text="@string/home_grade_placeholder" />
+                    android:text="@string/home_grade_placeholder"
+                    android:textColor="@color/pleos_text_dark_tertiary" />
+
+                <TextView
+                    android:id="@+id/lastInspection"
+                    style="@style/Pleos.Text.Label.M"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/moca_gap"
+                    android:text="@string/home_never_inspected"
+                    android:textColor="@color/pleos_text_dark_tertiary" />
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/warningSummary"
-                style="@style/Pleos.Text.Title.M"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:text="@string/home_warning_none"
-                android:textColor="@color/pleos_text_dark_primary" />
-
-            <TextView
-                android:id="@+id/lastInspection"
-                style="@style/Pleos.Text.Label.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap_small"
-                android:text="@string/home_never_inspected"
-                android:textColor="@color/pleos_text_dark_tertiary" />
         </LinearLayout>
 
         <LinearLayout
@@ -159,6 +153,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/moca_gap_small"
                     android:text="@string/home_grade_placeholder" />
+
+                <!-- 켜진 경고등 수. 문제와 같은 칸에 둔다. 없으면 숨긴다. -->
+                <TextView
+                    android:id="@+id/warningSummary"
+                    style="@style/Pleos.Text.Label.M"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/moca_gap_small"
+                    android:textColor="@color/pleos_text_dark_secondary"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/homeStreak"
