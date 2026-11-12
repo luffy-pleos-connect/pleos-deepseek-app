@@ -4,6 +4,7 @@ import {
   MAX_BODY_BYTES, empty, headerOf, json, readJson,
 } from './http-util.mjs';
 import { validateChat, validateDeviceId, validateSecret, validateSnapshot } from './validate.mjs';
+import { adminPage } from './admin-page.mjs';
 
 export const SNAPSHOT_TTL_DAYS = 90;
 // 기본 업스트림 URL 은 환경변수로만 받는다(비밀값·도메인 하드코딩 금지).
@@ -416,6 +417,23 @@ async function handleStats(url, req, store, env) {
   });
 }
 
+function html(body) {
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    },
+  });
+}
+
+// 페이지 자체에는 자료가 없다. 비밀번호를 넣으면 브라우저가 같은 폴더의 stats 를 부른다.
+function handleAdmin() {
+  return html(adminPage());
+}
+
 async function handleRank(url, store, env) {
   const rawTotal = url.searchParams.get('total');
   if (rawTotal === null || !/^[0-9]+(\.[0-9]+)?$/.test(rawTotal)) {
@@ -491,8 +509,9 @@ export async function handle(request, store, env = {}) {
     else if (method === 'POST' && path === '/events') response = await handleEventsPost(req, store, env);
     else if (method === 'GET' && path === '/stats') response = await handleStats(url, req, store, env);
     else if (method === 'GET' && path === '/rank') response = await handleRank(url, store, env);
+    else if (method === 'GET' && path === '/admin') response = handleAdmin();
     else if (method === 'POST' && path === '/chat') response = await handleChat(req, store, env);
-    else if (['/snapshots', '/opponent', '/chat', '/events', '/stats', '/rank'].includes(path)) {
+    else if (['/snapshots', '/opponent', '/chat', '/events', '/stats', '/rank', '/admin'].includes(path)) {
       response = json(405, { error: 'method_not_allowed' });
     } else response = json(404, { error: 'not_found' });
   } catch {
