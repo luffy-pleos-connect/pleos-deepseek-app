@@ -13,7 +13,7 @@ Node.js 24 표준 라이브러리만 쓴다. 외부 npm 패키지 0개, `package
 - `handleStandard(Request, store, env) → Response` — 표준 `Request` 전용. 스트림 본문을 64KB까지만 읽고
   넘으면 즉시 413을 돌려준다. 표준 `Request` 의 `body` 를 한 번만 읽어야 하는 환경에서 쓴다.
 
-`env` 는 `{HIVE_API_URL, HIVE_API_KEY, HIVE_MODEL, DAILY_CHAT_LIMIT, HIVE_TIMEOUT_MS, SNAPSHOT_TTL_DAYS, ADMIN_TOKEN, log, quiet, random, now, fetch}`.
+`env` 는 `{HIVE_API_URL, HIVE_API_KEY, HIVE_MODEL, HIVE_FALLBACK_MODEL, HIVE_FIRST_TIMEOUT_MS, DAILY_CHAT_LIMIT, HIVE_TIMEOUT_MS, SNAPSHOT_TTL_DAYS, ADMIN_TOKEN, log, quiet, random, now, fetch}`.
 테스트는 `log`·`random`·`now`·`fetch` 를 주입해 시각과 업스트림을 고정한다.
 
 ## 실행
@@ -21,10 +21,11 @@ Node.js 24 표준 라이브러리만 쓴다. 외부 npm 패키지 0개, `package
 ```bash
 node local.mjs                 # 127.0.0.1:8787, SQLite(moca.sqlite)
 node --test core.test.mjs      # AT-07 (35 케이스)
-node --test *.test.mjs         # core + store + v10 + admin (110 케이스)
+node --test *.test.mjs         # core + store + v10 + admin + fallback (115 케이스)
 ```
 
-환경 변수: `PORT`, `HOST`, `MOCA_DB`, `HIVE_API_KEY`, `HIVE_API_URL`, `HIVE_MODEL`, `DAILY_CHAT_LIMIT`(기본 500),
+환경 변수: `PORT`, `HOST`, `MOCA_DB`, `HIVE_API_KEY`, `HIVE_API_URL`, `HIVE_MODEL`, `HIVE_FALLBACK_MODEL`,
+`HIVE_FIRST_TIMEOUT_MS`(기본 4000), `DAILY_CHAT_LIMIT`(기본 500),
 `HIVE_TIMEOUT_MS`(기본 20000), `ADMIN_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
 
 `HIVE_API_KEY` 는 요청 헤더로만 쓰고 로그·응답·저장소에 남기지 않는다. 로그는 `[moca] <상태> <지연>ms <메서드> <경로>` 형식뿐이다.
@@ -35,7 +36,7 @@ node --test *.test.mjs         # core + store + v10 + admin (110 케이스)
 
 - `api/chat.mjs`, `api/opponent.mjs`, `api/snapshots.mjs`, `api/events.mjs`, `api/stats.mjs`, `api/rank.mjs`, `api/admin.mjs` 가 함수가 된다. 모두 `vercel-entry.mjs` 의 `createFetch()` 를 `export default { fetch }` 로 내보낸다(Vercel 문서의 fetch Web Standard 형식).
 - 주소는 `/api/chat`, `/api/opponent`, `/api/snapshots`, `/api/events`, `/api/stats`, `/api/rank`, `/api/admin` 다. 진입부가 `/api` 를 떼고 `core.mjs` 로 넘긴다.
-- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ADMIN_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`. Vercel Marketplace 의 Upstash 연동은 저장소 값을 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이름으로 넣는다. 진입부는 두 이름을 다 받는다.
+- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ADMIN_TOKEN`. 선택: `HIVE_MODEL`, `HIVE_FALLBACK_MODEL`, `HIVE_FIRST_TIMEOUT_MS`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`. Vercel Marketplace 의 Upstash 연동은 저장소 값을 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이름으로 넣는다. 진입부는 두 이름을 다 받는다.
 - 저장소 환경 변수가 없으면 모든 요청에 500 `{"error":"not_configured"}` 로 답한다.
 - 앱의 release 빌드에는 배포한 주소에 `/api` 를 붙여 넣는다: `./gradlew :app:assembleRelease -Pmoca.serverBaseUrl=https://<프로젝트>.vercel.app/api`
 - 2026-11-12 에 `https://moca-server.vercel.app` 로 올렸다(프로젝트 `moca-server`, 리전 `iad1`, Node 24). 올린 파일은 `api/*.mjs` 3개와 `core.mjs` · `http-util.mjs` · `validate.mjs` · `store-redis.mjs` · `vercel-entry.mjs` · `seeds.json` 이고, 배포된 파일의 SHA-1 이 저장소 파일과 같은 것을 확인했다.
@@ -62,6 +63,8 @@ node --test *.test.mjs         # core + store + v10 + admin (110 케이스)
 - `/opponent` 는 자기 자신과 `isDemo` 스냅샷을 제외하고, 남는 후보 + 시드 12명에서 균등 랜덤으로 고른다. 응답에 `deviceId` 가 없다.
 - `/chat` 은 `https://api-cdn.thehive.ai/api/v3/chat/completions`, 모델 `deepseek-ai/deepseek-v4.1-flash-1017`,
   `temperature 0.3`, `max_tokens 1000`(추론 토큰 포함. 한도에 닿아 끊긴 답은 끝난 문장까지만 보낸다), 20초 타임아웃(504). 키가 없으면 호출하지 않고 502.
+- `/chat` 의 두 번째 모델: `HIVE_FALLBACK_MODEL` 을 주면 첫 모델(`HIVE_MODEL`)은 `HIVE_FIRST_TIMEOUT_MS`(기본 4000ms)까지만 기다리고, 넘기면 그 요청을 abort 하고 두 번째 모델로 한 번 더 부른다. 첫 모델이 상태 코드 200 이 아니거나, 본문이 JSON 이 아니거나, 답이 비어도 두 번째 모델로 넘어간다. 두 번을 합쳐 `HIVE_TIMEOUT_MS`(기본 20000ms)를 넘으면 504, 두 번째도 오류면 502. `HIVE_FALLBACK_MODEL` 이 없거나 첫 모델과 같으면 예전처럼 한 번만 부른다. 토큰 한도·끊긴 문장 처리는 두 모델에 똑같이 적용한다.
+  - 실측 배경(2026-11-12, 올린 서버): GLM 5.3 Flash 는 중앙 2.7초였지만 30번 중 6번이 8초 대기를 넘겨 504 였다. DeepSeek V4.1 Flash 는 4~7초로 느리지만 10번 모두 성공했다. 그래서 첫 모델을 4초까지만 기다리고 느린 모델로 넘긴다.
 - `/events`: `events` 1~50개, 이름은 정해진 18개(`app_open` `screen_view` `inspection_done` `problem_found` `problem_resolved` `fix_tap` `navi_opened` `route_started` `destination_arrived` `product_tap` `voice_ask` `battle_done` `notification_shown` `notification_tap` `demo_on` `demo_off` `consent_changed` `data_deleted`)만 받는다. `at` 은 양의 epoch ms. `props` 는 선택이고 키 8개 이하, 키 `^[a-z][A-Za-z0-9]{0,19}$`, 값은 불리언·유한한 숫자·`^[A-Za-z0-9_.:-]{0,40}$` 글자(한글·공백 불가)다. 틀린 요청은 하나도 세지 않는다. 기기당 120회/시간.
 - `/events` 저장: 서버 시각의 서울 날짜(`YYYYMMDD`)·범위(`real`/`demo`)별로 이름별 셈, `props.kind` 가 있으면 `name|kind` 도 셈, `voice_ask` 는 `voice_ask|online`/`voice_ask|offline` 과 `props.ms` 가 0~120000 일 때 `voice_ms_sum`·`voice_ms_n` 을 센다. 그날 쓴 기기 키(SHA-256 앞 32자) 집합과 최근 기록 500개를 범위별로 남기고 100일 뒤 만료한다.
 - `/stats`: `ADMIN_TOKEN` 이 비면 500 `not_configured`, `Authorization: Bearer` 가 없거나 틀리면 401(비교는 `timingSafeEqual`). `days` 1~90(기본 7), `scope` `real`|`demo`(기본 `real`), 벗어나면 400. 기록이 없는 날도 `counts: {}` 로 넣고 오래된 날부터 돌려준다. `leads.guide` 는 `fix_tap` 합, `leads.product` 는 `product_tap` 합이다. `recent` 는 최신부터 200개.
@@ -91,5 +94,5 @@ Redis 저장소는 `HINCRBY`·`EXPIRE`·`SADD`·`LPUSH`·`LTRIM`·`HGETALL`·`SC
 ## 파일
 
 `core.mjs` · `http-util.mjs` · `validate.mjs` · `seeds.json` · `store-{sqlite,redis,memory}.mjs` · `local.mjs` ·
-`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs` · `v10.test.mjs` · `admin.test.mjs` · `admin2.test.mjs` ·
+`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs` · `v10.test.mjs` · `admin.test.mjs` · `admin2.test.mjs` · `fallback.test.mjs` ·
 `admin-view.mjs` (대시보드 값 변환) · `admin-page.mjs` (대시보드 HTML)

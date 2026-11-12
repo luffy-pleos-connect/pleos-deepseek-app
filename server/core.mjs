@@ -190,17 +190,19 @@ async function handleOpponent(url, store, env) {
   return json(200, publicOpponent(picked.card, picked.isSeed));
 }
 
-async function callHive(env, payload, fetchImpl) {
+// 모델 하나를 한 번 부른다. 대기 시간·끊긴 문장 처리는 모델과 상관없이 같으므로 여기 한 곳에 둔다.
+async function callHiveOnce(env, payload, fetchImpl, model, timeoutMs) {
   const apiKey = env.HIVE_API_KEY;
   if (typeof apiKey !== 'string' || apiKey.length === 0) return { status: 502 };
   const url = env.HIVE_API_URL || HIVE_URL;
-  if (!url) return json(502, { error: 'upstream_error' });
-  const model = env.HIVE_MODEL || HIVE_MODEL;
-  const timeoutMs = Number(env.HIVE_TIMEOUT_MS ?? 20000) || 20000;
+  if (!url) return { status: 502 };
   const controller = new AbortController();
   let timer;
+  // abort 로 끊긴 fetch 가 TIMEOUT 보다 먼저 거절되면 502 로 새지 않도록 시간 초과를 따로 기억한다.
+  let timedOut = false;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => {
+      timedOut = true;
       controller.abort();
       reject(TIMEOUT);
     }, timeoutMs);
@@ -257,10 +259,33 @@ async function callHive(env, payload, fetchImpl) {
       },
     };
   } catch (error) {
-    return { status: error === TIMEOUT ? 504 : 502 };
+    // abort 직후 fetch 가 먼저 거절해도 시간 초과로 센다.
+    return { status: error === TIMEOUT || timedOut ? 504 : 502 };
   } finally {
     clearTimeout(timer);
   }
+}
+
+// 첫 모델이 느리면 두 번째 모델로 한 번 더 부른다. 두 번을 합쳐도 HIVE_TIMEOUT_MS 를 넘지 않는다.
+const FIRST_TIMEOUT_MS_DEFAULT = 4000;
+
+async function callHive(env, payload, fetchImpl) {
+  if (typeof env.HIVE_API_KEY !== 'string' || env.HIVE_API_KEY.length === 0) return { status: 502 };
+  if (!(env.HIVE_API_URL || HIVE_URL)) return { status: 502 };
+  const firstModel = env.HIVE_MODEL || HIVE_MODEL;
+  const totalMs = Number(env.HIVE_TIMEOUT_MS ?? 20000) || 20000;
+  const fallbackModel = typeof env.HIVE_FALLBACK_MODEL === 'string' ? env.HIVE_FALLBACK_MODEL.trim() : '';
+  // 두 번째 모델이 없거나 같은 모델이면 예전처럼 한 번만 부른다.
+  if (fallbackModel === '' || fallbackModel === firstModel) {
+    return callHiveOnce(env, payload, fetchImpl, firstModel, totalMs);
+  }
+  const firstMs = Number(env.HIVE_FIRST_TIMEOUT_MS ?? FIRST_TIMEOUT_MS_DEFAULT) || FIRST_TIMEOUT_MS_DEFAULT;
+  const deadline = Date.now() + totalMs;
+  const first = await callHiveOnce(env, payload, fetchImpl, firstModel, Math.min(firstMs, totalMs));
+  if (first.status === 200) return first;
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) return { status: 504 };
+  return callHiveOnce(env, payload, fetchImpl, fallbackModel, remaining);
 }
 
 async function handleChat(req, store, env) {

@@ -32,6 +32,8 @@ export function createFetch({ env = process.env, store } = {}) {
       HIVE_API_URL: env.HIVE_API_URL,
       HIVE_API_KEY: env.HIVE_API_KEY,
       HIVE_MODEL: env.HIVE_MODEL,
+      HIVE_FALLBACK_MODEL: env.HIVE_FALLBACK_MODEL,
+      HIVE_FIRST_TIMEOUT_MS: env.HIVE_FIRST_TIMEOUT_MS,
       DAILY_CHAT_LIMIT: env.DAILY_CHAT_LIMIT,
       HIVE_TIMEOUT_MS: env.HIVE_TIMEOUT_MS,
       ADMIN_TOKEN: env.ADMIN_TOKEN,
