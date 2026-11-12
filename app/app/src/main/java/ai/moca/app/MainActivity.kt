@@ -144,6 +144,8 @@ class MainActivity : FragmentActivity() {
 
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
+    fun goSettings() = show(SETTINGS_TAG) { SettingsFragment() }
+
     /** 순위·대전 화면을 열고, 로비가 준비되면 대전을 시작한다. */
     fun openBattleAndStart() {
         val launch = {

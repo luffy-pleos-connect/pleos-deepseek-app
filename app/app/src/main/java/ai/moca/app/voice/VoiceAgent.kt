@@ -50,7 +50,7 @@ class VoiceAgent(
         if (!consentCloud) return offline(question, drivingMode)
         val intent = OfflineIntents.detect(question) ?: return ask(question, drivingMode)
         val toolName = OfflineIntents.toolName(intent)
-        val toolJson = tools.execute(toolName, null)
+        val toolJson = tools.execute(toolName, OfflineIntents.toolArgs(intent, question))
 
         val messages = JSONArray().apply {
             put(JSONObject().put("role", "system").put("content", systemPrompt(drivingMode)))
@@ -75,7 +75,7 @@ class VoiceAgent(
             return ask(question, drivingMode)
         }
         val text = message.optString("content").ifBlank {
-            message.optString("reasoning_content").ifBlank { "확인했어요." }
+            message.optString("reasoning_content").ifBlank { "다시 한번 물어봐 주세요." }
         }
         return Answer(text, listOf(toolName), usedOffline = false, fillerSpoken = false)
     }
@@ -110,7 +110,7 @@ class VoiceAgent(
             if (toolCalls == null || toolCalls.length() == 0) {
                 // Hive(추론형)는 content 가 비고 reasoning_content 에 답을 넣기도 한다.
                 val text = message.optString("content").ifBlank {
-                    message.optString("reasoning_content").ifBlank { "확인했어요." }
+                    message.optString("reasoning_content").ifBlank { "다시 한번 물어봐 주세요." }
                 }
                 return Answer(text, calledTools, usedOffline = false, fillerSpoken = fillerSpoken)
             }
@@ -158,9 +158,9 @@ class VoiceAgent(
         val intent = OfflineIntents.detect(question)
             ?: return Answer(OfflineIntents.NO_MATCH, emptyList(), usedOffline = true, fillerSpoken = false)
         val name = OfflineIntents.toolName(intent)
-        val json = tools.execute(name, null)
+        val json = tools.execute(name, OfflineIntents.toolArgs(intent, question))
         return Answer(
-            OfflineIntents.template(intent, json, drivingMode),
+            OfflineIntents.template(intent, json, drivingMode, question),
             listOf(name),
             usedOffline = true,
             fillerSpoken = false,

@@ -113,6 +113,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
                     "home", "inspect" -> { activity.goHome(); true }
                     "status" -> { activity.goStatus(); true }
                     "battle" -> { activity.goBattle(); true }
+                    "settings" -> { activity.goSettings(); true }
                     else -> false
                 }
             },
