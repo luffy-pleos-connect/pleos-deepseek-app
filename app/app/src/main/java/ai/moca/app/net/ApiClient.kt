@@ -23,6 +23,8 @@ class ApiClient(
 ) : ChatClient {
 
     override suspend fun chat(body: JSONObject): ChatResult = withContext(Dispatchers.IO) {
+        // 서버 주소가 없으면 어디에도 보내지 않는다. 호출한 쪽은 기기 안의 답으로 넘어간다.
+        if (baseUrl.isBlank()) return@withContext ChatResult.UpstreamError
         var conn: HttpURLConnection? = null
         try {
             android.util.Log.i("MOCA_NET", "POST " + baseUrl + "/chat")
@@ -69,6 +71,7 @@ class ApiClient(
 
     /** 대전 상대 조회. 실패하면 null. */
     suspend fun opponent(): JSONObject? = withContext(Dispatchers.IO) {
+        if (baseUrl.isBlank()) return@withContext null
         var conn: HttpURLConnection? = null
         try {
             val url = URL("$baseUrl/opponent?deviceId=${prefs.deviceId}")

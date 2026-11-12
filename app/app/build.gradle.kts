@@ -39,7 +39,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "SERVER_BASE_URL", "\"https://moca.vercel.app\"")
+            // 서버를 배포한 뒤 그 주소를 넣는다: ./gradlew -Pmoca.serverBaseUrl=https://… 또는 gradle.properties.
+            // 비어 있으면 앱은 서버를 부르지 않고 기기 안의 답과 연습 상대로 동작한다.
+            // 우리 것이 아닌 주소를 기본값으로 두지 않는다.
+            val serverBaseUrl = (project.findProperty("moca.serverBaseUrl") as String?).orEmpty()
+            buildConfigField("String", "SERVER_BASE_URL", "\"$serverBaseUrl\"")
         }
     }
 

@@ -29,6 +29,17 @@ node --test *.test.mjs         # core + store (62 케이스)
 
 `HIVE_API_KEY` 는 요청 헤더로만 쓰고 로그·응답·저장소에 남기지 않는다. 로그는 `[moca] <상태> <지연>ms <메서드> <경로>` 형식뿐이다.
 
+## Vercel 에 올리기
+
+이 폴더(`server/`)를 Vercel 프로젝트의 루트로 올린다. 프레임워크는 없다.
+
+- `api/chat.mjs`, `api/opponent.mjs`, `api/snapshots.mjs` 가 함수가 된다. 셋 다 `vercel-entry.mjs` 의 `createFetch()` 를 `export default { fetch }` 로 내보낸다(Vercel 문서의 fetch Web Standard 형식).
+- 주소는 `/api/chat`, `/api/opponent`, `/api/snapshots` 다. 진입부가 `/api` 를 떼고 `core.mjs` 로 넘긴다.
+- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`.
+- 저장소 환경 변수가 없으면 모든 요청에 500 `{"error":"not_configured"}` 로 답한다.
+- 앱의 release 빌드에는 배포한 주소에 `/api` 를 붙여 넣는다: `./gradlew :app:assembleRelease -Pmoca.serverBaseUrl=https://<프로젝트>.vercel.app/api`
+- 2026-11-12 현재 배포하지 않았다. 진입부는 `node --test vercel-entry.test.mjs` 로만 확인했고, Vercel 위에서 돌려 보지는 않았다.
+
 ## API
 
 | 메서드 | 경로 | 요청 | 응답 |
