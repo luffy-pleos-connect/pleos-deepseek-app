@@ -42,6 +42,7 @@ const EVENT_NAMES = new Set([
   'navi_opened', 'route_started', 'destination_arrived', 'product_tap', 'voice_ask', 'battle_done',
   'notification_shown', 'notification_tap', 'demo_on', 'demo_off', 'consent_changed', 'data_deleted',
 ]);
+const SPLIT_PROP = { battle_done: 'result', screen_view: 'screen', voice_ask: 'intent' };
 const MAX_EVENTS = 50;
 const MAX_PROP_KEYS = 8;
 const MAX_VOICE_MS = 120000;
@@ -337,7 +338,9 @@ async function handleEventsPost(req, store, env) {
       return json(400, { error: 'invalid_field', field: `events[${i}].props` });
     }
     bump(event.name);
-    if (props && typeof props.kind === 'string') bump(`${event.name}|${props.kind}`);
+    // 이름별로 나눠 셀 속성: 대전은 결과, 화면 이동은 화면, 음성은 의도, 그 밖은 kind.
+    const split = SPLIT_PROP[event.name] ?? 'kind';
+    if (props && typeof props[split] === 'string' && props[split].length > 0) bump(`${event.name}|${props[split]}`);
     if (event.name === 'voice_ask') {
       bump(props && props.online === true ? 'voice_ask|online' : 'voice_ask|offline');
       const ms = props ? props.ms : undefined;
