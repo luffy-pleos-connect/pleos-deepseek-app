@@ -104,8 +104,24 @@ object OfflineIntents {
             OfflineIntent.BATTLE -> "대전을 시작했어요. 결과는 순위·대전 화면에서 볼 수 있어요."
             OfflineIntent.OPEN_SCREEN -> screenSentence(obj)
         }
-        // 주행 중에는 2문장 이내로 자른다.
-        return if (drivingLimited) limitSentences(sentence, 2) else limitSentences(sentence, 4)
+        val withSafety = stopSafelyFirst(intent, obj, sentence)
+        // 주행 중에는 2문장 이내로 자른다. 정차 안내를 넣은 뒤에 자른다(안내가 잘리면 안 된다).
+        return if (drivingLimited) limitSentences(withSafety, 2) else limitSentences(withSafety, 4)
+    }
+
+    /**
+     * 서버를 거친 답과 같은 규칙: 차의 값을 읽은 답인데 빨간 경고등이 켜져 있으면 첫 문장은 정차 안내다.
+     * 이미 그 문장으로 시작하면 두 번 붙이지 않는다.
+     */
+    private fun stopSafelyFirst(intent: OfflineIntent, obj: org.json.JSONObject, sentence: String): String {
+        val readsVehicle = when (intent) {
+            OfflineIntent.GRADE, OfflineIntent.INSPECT, OfflineIntent.PART, OfflineIntent.WARNINGS -> true
+            OfflineIntent.BATTLE, OfflineIntent.OPEN_SCREEN -> false
+        }
+        if (!readsVehicle) return sentence
+        if (obj.optInt("red") <= 0) return sentence
+        if (sentence.startsWith(Tools.STOP_SAFELY)) return sentence
+        return "${Tools.STOP_SAFELY}. $sentence"
     }
 
     private fun gradeSentence(obj: org.json.JSONObject): String {

@@ -132,6 +132,8 @@ class Tools(
                 for (c in Category.entries) put(key(c), eval.categories[c] ?: JSONObject.NULL)
             })
             put("batteryPercent", s.readings[PleosVehicleSource.KEY_SOC]?.value ?: JSONObject.NULL)
+            // 기기 안의 답도 서버 답처럼 정차 안내를 앞에 붙이는지 가릴 때 쓴다.
+            put("red", s.warnings.redCount)
         }.toString()
     }
 
@@ -194,6 +196,7 @@ class Tools(
             put("problems", JSONArray().apply {
                 for (d in Rules.deductions(engine)) put(d.label)
             })
+            put("red", s.warnings.redCount)
         }.toString()
     }
 

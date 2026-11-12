@@ -40,13 +40,13 @@ class PriorityTest {
     }
 
     @Test
-    fun warningLightAndFluidAndTireGoToRepairShop() {
+    fun warningLightAndFluidGoToRepairShopAndTireGoesToTireShop() {
         val s1 = VehicleSnapshot(telltales = listOf(absRed))
         Assert.eq(FixAction.REPAIR_SHOP, Priority.actionFor(Priority.topProblem(s1)!!, s1))
         val s2 = VehicleSnapshot(engineOil = FluidLevel.LOW)
         Assert.eq(FixAction.REPAIR_SHOP, Priority.actionFor(Priority.topProblem(s2)!!, s2))
         val s3 = VehicleSnapshot(lowTireWheels = setOf(WheelArea.RR))
-        Assert.eq(FixAction.REPAIR_SHOP, Priority.actionFor(Priority.topProblem(s3)!!, s3))
+        Assert.eq(FixAction.TIRE_SHOP, Priority.actionFor(Priority.topProblem(s3)!!, s3))
     }
 
     @Test

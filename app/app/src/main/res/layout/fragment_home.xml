@@ -80,6 +80,16 @@
                 android:textColor="@color/pleos_text_dark_secondary" />
 
             <TextView
+                android:id="@+id/gradeHow"
+                style="@style/Pleos.Text.Label.M"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:gravity="center"
+                android:textColor="@color/pleos_text_dark_secondary"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/rankText"
                 style="@style/Pleos.Text.Title.S"
                 android:layout_width="match_parent"

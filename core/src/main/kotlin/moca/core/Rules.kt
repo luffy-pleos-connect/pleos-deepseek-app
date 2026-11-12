@@ -135,7 +135,7 @@ object Rules {
             )
         }
         if (Item.ENERGY !in snapshot.unsupported && energyLow(snapshot)) {
-            candidates += Deduction("ENERGY", Category.ELECTRIC, ENERGY_LOW, "연료·배터리 잔량 10% 미만")
+            candidates += Deduction("ENERGY", Category.ELECTRIC, ENERGY_LOW, energyLabel(snapshot))
         }
         if (Item.WASHER_FLUID !in snapshot.unsupported && snapshot.washerFluidLow) {
             candidates += Deduction("WASHER", Category.SAFETY, WASHER_LOW, "워셔액 부족")
@@ -198,6 +198,19 @@ object Rules {
     private fun energyLow(snapshot: VehicleSnapshot): Boolean =
         (snapshot.fuelPercent != null && snapshot.fuelPercent < 10.0) ||
             (snapshot.batteryPercent != null && snapshot.batteryPercent < 10.0)
+
+    /** energyLow 가 참일 때만 부른다. 읽은 값 가운데 10% 미만인 쪽을 적는다. */
+    private fun energyLabel(snapshot: VehicleSnapshot): String {
+        val battery = snapshot.batteryPercent
+        val fuel = snapshot.fuelPercent
+        return when {
+            battery != null && battery < 10.0 -> "배터리 ${battery.toInt()}%"
+            fuel != null && fuel < 10.0 -> "연료 ${fuel.toInt()}%"
+            battery != null -> "배터리 ${battery.toInt()}%"
+            fuel != null -> "연료 ${fuel.toInt()}%"
+            else -> "연료·배터리 잔량 10% 미만"
+        }
+    }
 
     private fun fluid(level: FluidLevel, category: Category, group: String, name: String): Deduction? =
         when (level) {

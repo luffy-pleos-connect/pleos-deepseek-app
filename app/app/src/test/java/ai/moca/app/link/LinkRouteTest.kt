@@ -23,6 +23,16 @@ class LinkRouteTest {
     }
 
     @Test
+    fun `타이어 문제는 정비소가 아니라 타이어로 검색한다`() {
+        val tire = decision(FixAction.TIRE_SHOP, true)
+        assertEquals(LinkKind.NAVI, tire.kind)
+        assertEquals("타이어", tire.keyword)
+        assertFalse(tire.blockedWhileDriving)
+        // 내비 검색이 안 되면 정비소처럼 제조사 정비 주소로 넘어간다.
+        assertEquals(LinkKind.QR, decision(FixAction.TIRE_SHOP, false).kind)
+    }
+
+    @Test
     fun `검색이 안 되면 정비소와 부품은 QR 이고 충전 주유는 주소가 없다`() {
         val repair = decision(FixAction.REPAIR_SHOP, false)
         assertEquals(LinkKind.QR, repair.kind)

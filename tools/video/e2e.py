@@ -134,7 +134,7 @@ try:
 
     scene("데모 D3: 문제를 보고 정비소 길안내까지(세 번 누름)")
     scenario("D3", "ABS 빨강 + 타이어 저압")
-    expect_all("홈: 등급 B · 종합 75, 가장 먼저 할 일은 ABS 경고등, 오늘 9위", [("gradeValue", "B"), ("totalValue", "75"), ("topProblemText", "ABS 경고등"), ("rankText", "9위"), ("topProblemAction", "가까운 정비소 안내")])
+    expect_all("홈: 등급 B · 종합 75, 가장 먼저 할 일은 ABS 경고등, 오늘 9위, 등급을 올리는 법 한 줄", [("gradeValue", "B"), ("totalValue", "75"), ("topProblemText", "ABS 경고등"), ("rankText", "9위"), ("topProblemAction", "가까운 정비소 안내"), ("gradeHow", "「ABS 경고등」부터 해결해 보세요")])
     shot("03-홈-D3"); time.sleep(1.5)
     tap("topProblemAction", "가까운 정비소 안내 (1번째)")
     time.sleep(4); nav = navi_nodes(); texts = [n[1] for n in nav if n[1]]
@@ -158,17 +158,17 @@ try:
     expect("최근 점검의 종합 점수 추이(화면 낭독용 글자로 읽음)", "trendGraph", "75점")
     shot("06-상세-제동조향"); time.sleep(1.5)
     tap("statusTire", "타이어 줄")
-    expect("타이어 상세: 저압 바퀴가 어느 쪽인지", "detailValues", "앞왼쪽"); shot("07-상세-타이어"); time.sleep(2)
+    expect_all("타이어 상세: 저압 바퀴가 어느 쪽인지, 해결 단추는 타이어점 안내", [("detailValues", "앞왼쪽"), ("detailAction", "가까운 타이어점 안내")]); shot("07-상세-타이어"); time.sleep(2)
 
     scene("차에게 묻기")
     tap("tabVoice", "차에게 묻기")
     tap("suggestion1", "내 차 등급 몇이야?")
-    expect_all("답에 등급과 점수가 있고, 답 아래에 해결 단추가 붙는다", [("answerText", "B"), ("voiceFixAction", "정비소")], 30)
+    expect_all("답에 등급과 점수가 있고, 답 아래에 해결 단추가 붙는다. 빨간 경고등이 있으니 정차 안내로 시작한다", [("answerText", "정차"), ("answerText", "B"), ("voiceFixAction", "정비소")], 30)
     shot("08-차에게-묻기-등급"); time.sleep(5)
     tap("suggestion2", "이 경고등 뭐야?")
     expect_all("빨간 경고등이면 먼저 정차를 안내하고, 어떤 경고등인지 이름과 색으로 말한다", [("answerText", "정차"), ("answerText", "ABS"), ("answerText", "타이어 공기압")], 30); shot("09-차에게-묻기-경고등"); time.sleep(6)
     tap("suggestion3", "엔진오일 괜찮아?")
-    expect_all("물어본 부품의 상태를 말한다", [("answerText", "엔진오일"), ("answerText", "정상")], 30); shot("09b-차에게-묻기-엔진오일"); time.sleep(5)
+    expect_all("물어본 부품의 상태를 말한다. 기기 안의 답도 빨간 경고등이면 정차 안내로 시작한다", [("answerText", "정차"), ("answerText", "엔진오일"), ("answerText", "정상")], 30); shot("09b-차에게-묻기-엔진오일"); time.sleep(5)
     tap("questionInput", "글로 묻기 칸"); time.sleep(1); adb("shell", "input", "text", "what%sis%sthe%sweather%stoday"); caption("차와 무관한 질문을 글로 넣는다"); time.sleep(2)
     shot("10-글로-묻기-키보드")
     adb("shell", "input", "keyevent", "66"); caption("누름: 키보드의 보내기")
@@ -190,7 +190,7 @@ try:
 
     scene("데모 D0: 고치고 나면 등급이 오른다")
     scenario("D0", "정상")
-    expect_all("등급이 오른 순간을 알린다. 문제가 없으면 「오늘도 이상 없어요」", [("gradeUpBanner", "B → A"), ("gradeValue", "A"), ("topProblemText", "이상 없어요"), ("rankText", "5위")])
+    expect_all("등급이 오른 순간을 알린다. 문제가 없으면 「오늘도 이상 없어요」, 등급을 올리는 법은 관리 점수 안내", [("gradeUpBanner", "B → A"), ("gradeValue", "A"), ("topProblemText", "이상 없어요"), ("rankText", "5위"), ("gradeHow", "관리 점수")])
     gone("문제가 없으면 해결 단추가 없다", "topProblemAction")
     shot("14-홈-D0-등급이-오른-순간"); time.sleep(3)
     tap("tabBattle", "순위·대전"); tap_battle_start("대전 시작")
@@ -199,7 +199,7 @@ try:
 
     scene("데모 D4: 배터리가 모자라면 충전소로")
     scenario("D4", "배터리 9%")
-    expect_all("가장 먼저 할 일이 잔량 부족이고, 단추가 충전소 안내로 바뀐다", [("topProblemText", "잔량"), ("topProblemAction", "가까운 충전소 안내")])
+    expect_all("가장 먼저 할 일이 잔량 부족이고, 단추가 충전소 안내로 바뀐다", [("topProblemText", "배터리 9%"), ("topProblemAction", "가까운 충전소 안내")])
     shot("15-홈-D4"); time.sleep(1.5)
     tap("topProblemAction", "가까운 충전소 안내")
     time.sleep(4); texts = [n[1] for n in navi_nodes() if n[1]]

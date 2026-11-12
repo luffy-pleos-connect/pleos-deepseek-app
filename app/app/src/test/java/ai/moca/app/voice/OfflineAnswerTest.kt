@@ -177,8 +177,41 @@ class OfflineAnswerTest {
         }
     }
 
-    // ── 대전: 실제로 시작하고, 시작했다고 말한다
+    // ── D3 처럼 빨간 경고등이 있으면 기기 안의 답도 정차 안내로 시작한다
     @Test
+    fun `D3 에서 등급 답은 정차 안내로 시작한다`() {
+        val text = ask(DemoScenario.D3, "내 차 등급 몇이야?")
+        assertTrue(text, text.startsWith(Tools.STOP_SAFELY))
+        assertTrue(text, text.contains("B"))
+    }
+
+    @Test
+    fun `D3 에서 부품 답은 정차 안내로 시작한다`() {
+        val text = ask(DemoScenario.D3, "엔진오일 괜찮아?")
+        assertTrue(text, text.startsWith(Tools.STOP_SAFELY))
+        assertTrue(text, text.contains("엔진오일"))
+    }
+
+    @Test
+    fun `D3 에서 다음 등급 답은 정차 안내로 시작한다`() {
+        val text = ask(DemoScenario.D3, "다음 등급까지 몇 점 남았어?")
+        assertTrue(text, text.startsWith(Tools.STOP_SAFELY))
+        assertTrue(text, text.contains("A"))
+    }
+
+    @Test
+    fun `D0 에서는 정차 안내를 붙이지 않는다`() {
+        val text = ask(DemoScenario.D0, "엔진오일 괜찮아?")
+        assertFalse(text, text.contains("정차"))
+    }
+
+    @Test
+    fun `경고등 답에는 정차 안내가 한 번만 붙는다`() {
+        val text = ask(DemoScenario.D3, "이 경고등 뭐야?")
+        assertEquals(1, Regex(Regex.escape(Tools.STOP_SAFELY)).findAll(text).count())
+    }
+
+    // ── 대전: 실제로 시작하고, 시작했다고 말한다    @Test
     fun `대전을 말하면 대전을 시작하고 시작했다고 답한다`() {
         started.clear()
         val text = ask(DemoScenario.D3, "대전 하자")

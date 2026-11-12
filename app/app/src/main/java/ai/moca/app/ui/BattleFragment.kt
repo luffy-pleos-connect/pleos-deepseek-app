@@ -53,6 +53,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private lateinit var skipButton: Button
     private lateinit var demoBadge: TextView
     private lateinit var rankSummary: TextView
+    private lateinit var rankPracticeBadge: TextView
+    private lateinit var rankExplain: TextView
+    private lateinit var rankListNote: TextView
     private lateinit var rankList: LinearLayout
     private lateinit var rankEmpty: TextView
 
@@ -77,6 +80,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         skipButton = view.findViewById(R.id.buttonSkip)
         demoBadge = view.findViewById(R.id.battleDemoBadge)
         rankSummary = view.findViewById(R.id.rankSummary)
+        rankPracticeBadge = view.findViewById(R.id.rankPracticeBadge)
+        rankExplain = view.findViewById(R.id.rankExplain)
+        rankListNote = view.findViewById(R.id.rankListNote)
         rankList = view.findViewById(R.id.rankList)
         rankEmpty = view.findViewById(R.id.rankEmpty)
 
@@ -162,6 +168,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
 
     private fun renderRank(app: MocaApp, evaluation: Evaluation?) {
         rankList.removeAllViews()
+        // 서버가 답하기 전에는 연습 순위 그대로다. 다시 그릴 때도 연습 값으로 되돌린다.
+        rankPracticeBadge.text = getString(R.string.rank_practice_badge)
+        rankExplain.text = getString(R.string.rank_explain)
         val board = if (evaluation?.grade == null) {
             null
         } else {
@@ -170,6 +179,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         if (board == null) {
             rankSummary.visibility = View.GONE
             rankList.visibility = View.GONE
+            rankListNote.visibility = View.GONE
             rankEmpty.visibility = View.VISIBLE
             return
         }
@@ -177,9 +187,28 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         rankSummary.visibility = View.VISIBLE
         rankList.visibility = View.VISIBLE
         rankSummary.text = getString(R.string.rank_summary, board.total, board.rank)
+        rankListNote.visibility = View.GONE
         val from = maxOf(0, board.rank - 1 - 2)
         DailyRank.window(board).forEachIndexed { index, row ->
             rankList.addView(rankRow(from + index + 1, row))
+        }
+        renderServerRank(app, evaluation)
+    }
+
+    /**
+     * 연습 순위를 먼저 보이고, 서버가 실제 사용자를 셌으면 카드의 숫자·배지·설명을 바꾼다.
+     * 아래 목록은 연습 상대만 보이므로 목록 위에 그렇다고 적는다.
+     */
+    private fun renderServerRank(app: MocaApp, evaluation: Evaluation?) {
+        val total = evaluation?.displayedOverall ?: return
+        val practice = DailyRank.board(app.prefs.nickname, evaluation)?.let { it.total - 1 } ?: 12
+        viewLifecycleOwner.lifecycleScope.launch {
+            val answer = ApiClient(app.prefs).rank(total) ?: return@launch
+            if (!isAdded || answer.real <= 0) return@launch
+            rankSummary.text = getString(R.string.rank_summary, answer.of, answer.rank)
+            rankPracticeBadge.text = getString(R.string.rank_real_badge, answer.real)
+            rankExplain.text = getString(R.string.rank_real_explain, practice, answer.real)
+            rankListNote.visibility = View.VISIBLE
         }
     }
 

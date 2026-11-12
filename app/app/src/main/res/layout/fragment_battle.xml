@@ -40,6 +40,7 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/rankExplain"
             style="@style/Pleos.Text.Body.M"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,6 +55,16 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap"
             android:textColor="@color/pleos_text_dark_primary"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/rankListNote"
+            style="@style/Pleos.Text.Label.S"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/rank_list_note"
+            android:textColor="@color/pleos_text_dark_tertiary"
             android:visibility="gone" />
 
         <LinearLayout

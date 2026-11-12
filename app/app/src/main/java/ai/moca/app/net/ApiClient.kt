@@ -98,6 +98,39 @@ class ApiClient(
         }
     }
 
+    /** 서버 순위. 서버 주소가 비었거나 답이 실패하면 null(화면은 연습 순위 그대로). */
+    data class RankAnswer(val rank: Int, val of: Int, val real: Int)
+
+    suspend fun rank(total: Int): RankAnswer? = withContext(Dispatchers.IO) {
+        if (baseUrl.isBlank()) return@withContext null
+        var conn: HttpURLConnection? = null
+        try {
+            val device = java.net.URLEncoder.encode(prefs.deviceId, "UTF-8")
+            val url = URL("$baseUrl/rank?total=$total&deviceId=$device")
+            conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = OPPONENT_TIMEOUT_MS
+                readTimeout = OPPONENT_TIMEOUT_MS
+            }
+            if (conn.responseCode != 200) {
+                android.util.Log.w("MOCA_NET", "rank ${'$'}{conn.responseCode}")
+                return@withContext null
+            }
+            val text = conn.inputStream.bufferedReader().use { it.readText() }
+            val root = runCatching { JSONObject(text) }.getOrNull() ?: return@withContext null
+            val rank = root.optInt("rank", 0)
+            val of = root.optInt("of", 0)
+            val real = root.optInt("real", 0)
+            if (rank < 1 || of < 1) return@withContext null
+            RankAnswer(rank, of, real)
+        } catch (e: Exception) {
+            android.util.Log.e("MOCA_NET", "rank failed", e)
+            null
+        } finally {
+            conn?.disconnect()
+        }
+    }
+
     /** 점검 결과 요약을 올린다. 다른 기기의 대전 상대 풀에 들어간다(데모 요약은 서버가 풀에서 뺀다). */
     suspend fun uploadSnapshot(body: JSONObject): Boolean =
         snapshots("POST", "$baseUrl/snapshots", prefs.deviceSecret, body)

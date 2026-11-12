@@ -36,7 +36,8 @@ object LinkRoute {
             return LinkDecision(LinkKind.NAVI, keyword, null, blockedWhileDriving = false)
         }
         val url = when (action) {
-            FixAction.REPAIR_SHOP -> LinkTargets.repairUrl(maker)
+            // 타이어도 정비소와 같은 길로 간다. 내비 검색이 안 되면 제조사 정비 주소로 넘어간다.
+            FixAction.REPAIR_SHOP, FixAction.TIRE_SHOP -> LinkTargets.repairUrl(maker)
             FixAction.PARTS -> LinkTargets.partsUrl()
             FixAction.CHARGE, FixAction.FUEL -> null
         }

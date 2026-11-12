@@ -2,6 +2,7 @@ package moca.core
 
 enum class FixAction(val label: String, val searchKeyword: String?) {
     REPAIR_SHOP("가까운 정비소 안내", "정비소"),
+    TIRE_SHOP("가까운 타이어점 안내", "타이어"),
     CHARGE("가까운 충전소 안내", "전기차 충전소"),
     FUEL("가까운 주유소 안내", "주유소"),
     PARTS("휴대폰으로 부품 보기", null),
@@ -23,7 +24,10 @@ object Priority {
             val battery = snapshot.batteryPercent
             if (battery != null && battery < LOW_BATTERY_PERCENT) FixAction.CHARGE else FixAction.FUEL
         }
-        else -> FixAction.REPAIR_SHOP
+        else -> when (deduction.category) {
+            Category.TIRE -> FixAction.TIRE_SHOP
+            else -> FixAction.REPAIR_SHOP
+        }
     }
 
     /**

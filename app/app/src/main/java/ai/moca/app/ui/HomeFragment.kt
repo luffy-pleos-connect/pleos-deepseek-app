@@ -6,6 +6,7 @@ import ai.moca.app.R
 import ai.moca.app.inspect.InspectionResult
 import ai.moca.app.inspect.Inspector
 import ai.moca.app.inspect.InspectPolicy
+import ai.moca.app.net.ApiClient
 import ai.moca.app.score.ScoreBridge
 import ai.moca.app.ui.widget.ScoreRingView
 import ai.moca.app.vehicle.WarningSummary
@@ -22,8 +23,10 @@ import moca.core.Category
 import moca.core.CategoryStatus
 import moca.core.DailyRank
 import moca.core.Evaluation
+import moca.core.GradeHow
 import moca.core.InspectionHistory
 import moca.core.Priority
+import moca.core.RankText
 
 /**
  * 홈: 등급·고리, 가장 먼저 할 일, 카테고리 다섯 줄.
@@ -33,6 +36,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private lateinit var gradeValue: TextView
     private lateinit var gradeHint: TextView
+    private lateinit var gradeHow: TextView
     private lateinit var rankText: TextView
     private lateinit var warningSummary: TextView
     private lateinit var totalValue: TextView
@@ -53,6 +57,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onViewCreated(view, savedInstanceState)
         gradeValue = view.findViewById(R.id.gradeValue)
         gradeHint = view.findViewById(R.id.gradeHint)
+        gradeHow = view.findViewById(R.id.gradeHow)
         rankText = view.findViewById(R.id.rankText)
         rankText.isClickable = false
         rankText.isFocusable = false
@@ -129,6 +134,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun showInspectFailed() {
         gradeHint.text = ""
+        gradeHow.visibility = View.GONE
         renderRank(null)
         topProblemText.text = getString(R.string.c20_not_enough_data)
         topProblemAction.visibility = View.GONE
@@ -142,6 +148,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private fun render(result: InspectionResult) {
         val evaluation = result.evaluation
         renderGrade(evaluation)
+        renderHow(evaluation, result)
         renderRank(evaluation)
         applyGradeMoment(result.demo, evaluation)
         renderWarnings(result.warnings)
@@ -162,6 +169,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 getString(R.string.c03_first_grade)
             }
             gradeHint.text = if (hint == notEnough) "" else hint
+            gradeHow.visibility = View.GONE
             totalValue.text = getString(R.string.home_total_value, placeholder)
             healthValue.text = getString(R.string.home_health_value, placeholder)
             careValue.text = getString(R.string.home_care_value, placeholder)
@@ -186,6 +194,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 getString(R.string.c04_next_grade, evaluation.nextGrade.label, evaluation.pointsToNext)
             else -> getString(R.string.c03_first_grade)
         }
+    }
+
+    /** 「A까지 5점」 바로 아래에 무엇을 하면 오르는지 한 줄. 보여 줄 것이 없으면 숨긴다. */
+    private fun renderHow(evaluation: Evaluation?, result: InspectionResult?) {
+        val top = result?.let { Priority.topProblem(it.engine) }
+        val line = evaluation?.let { GradeHow.line(it, top) }
+        if (line == null) {
+            gradeHow.visibility = View.GONE
+            return
+        }
+        gradeHow.text = line
+        gradeHow.visibility = View.VISIBLE
     }
 
     /**
@@ -231,6 +251,21 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         rankText.visibility = View.VISIBLE
         rankText.text = getString(R.string.home_rank_line, board.rank, board.total)
         rankText.isClickable = false
+        // 연습 순위를 먼저 보이고, 서버가 답하면 서버 값으로 바꾼다.
+        renderServerRank(evaluation)
+    }
+
+    private fun renderServerRank(evaluation: Evaluation?) {
+        val total = evaluation?.displayedOverall ?: return
+        val app = requireActivity().application as MocaApp
+        viewLifecycleOwner.lifecycleScope.launch {
+            val answer = ApiClient(app.prefs).rank(total) ?: return@launch
+            if (!isAdded) return@launch
+            // 실제 사용자를 못 셌으면 글자가 달라지지 않는다(연습 순위 그대로).
+            if (answer.real <= 0) return@launch
+            rankText.text = RankText.line(answer.rank, answer.of, answer.real)
+            rankText.visibility = View.VISIBLE
+        }
     }
 
     /** 켜진 경고등 수는 「가장 먼저 할 일」 칸에 작게 적는다. 없으면 줄을 숨긴다. */
