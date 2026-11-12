@@ -5,9 +5,14 @@ function hashEquals(a, b) {
   return timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
 }
 
+const RECENT_LIMIT = 500;
+const POOL_LIMIT = 500;
+
 export function createMemoryStore({ now = Date.now } = {}) {
   const snapshots = new Map();
   const counters = new Map();
+  const events = new Map();
+  const recent = new Map();
 
   const live = (entry) => entry !== undefined && entry.expiresAt > now();
 
@@ -76,6 +81,59 @@ export function createMemoryStore({ now = Date.now } = {}) {
       };
     },
 
+    async addEvents({ day, scope, deviceKey, counts, rows, ttlSec }) {
+      const at = now();
+      const expiresAt = at + Math.max(1, Math.floor(ttlSec)) * 1000;
+      const bucketKey = `${scope}:${day}`;
+      let bucket = events.get(bucketKey);
+      if (!bucket || bucket.expiresAt <= at) {
+        bucket = { counts: new Map(), devices: new Set(), expiresAt };
+        events.set(bucketKey, bucket);
+      }
+      for (const [name, value] of Object.entries(counts ?? {})) {
+        if (!Number.isFinite(value) || value === 0) continue;
+        bucket.counts.set(name, (bucket.counts.get(name) ?? 0) + value);
+      }
+      if (typeof deviceKey === 'string' && deviceKey.length > 0) bucket.devices.add(deviceKey);
+      if (Array.isArray(rows) && rows.length > 0) {
+        const list = recent.get(scope) ?? [];
+        for (const row of rows) list.unshift(row);
+        if (list.length > RECENT_LIMIT) list.length = RECENT_LIMIT;
+        recent.set(scope, list);
+      }
+    },
+
+    async readEvents({ days, scope, recentLimit }) {
+      const at = now();
+      const out = {};
+      for (const day of days) {
+        const bucket = events.get(`${scope}:${day}`);
+        if (!bucket || bucket.expiresAt <= at) {
+          out[day] = { counts: {}, devices: 0 };
+          continue;
+        }
+        out[day] = {
+          counts: Object.fromEntries(bucket.counts),
+          devices: bucket.devices.size,
+        };
+      }
+      const list = recent.get(scope) ?? [];
+      const limit = Number.isFinite(recentLimit) && recentLimit > 0 ? Math.floor(recentLimit) : list.length;
+      return { days: out, recent: list.slice(0, limit) };
+    },
+
+    async realTotals(excludeDeviceId) {
+      const totals = [];
+      for (const entry of snapshots.values()) {
+        if (!live(entry)) continue;
+        if (entry.isDemo) continue;
+        if (excludeDeviceId != null && entry.deviceId === excludeDeviceId) continue;
+        totals.push(entry.card.total);
+        if (totals.length >= POOL_LIMIT) break;
+      }
+      return totals;
+    },
+
     async hit(key, limit, windowSec) {
       const at = now();
       const step = Math.max(1, Math.floor(windowSec)) * 1000;
@@ -91,6 +149,8 @@ export function createMemoryStore({ now = Date.now } = {}) {
     async reset() {
       snapshots.clear();
       counters.clear();
+      events.clear();
+      recent.clear();
     },
   };
 }

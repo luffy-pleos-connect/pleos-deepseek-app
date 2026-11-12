@@ -29,6 +29,30 @@ CREATE TABLE IF NOT EXISTS rate_counters (
   count       INTEGER NOT NULL,
   expires_at  INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS event_counts (
+  scope       TEXT NOT NULL,
+  day         TEXT NOT NULL,
+  name        TEXT NOT NULL,
+  count       REAL NOT NULL,
+  expires_at  INTEGER NOT NULL,
+  PRIMARY KEY (scope, day, name)
+);
+CREATE TABLE IF NOT EXISTS event_devices (
+  scope       TEXT NOT NULL,
+  day         TEXT NOT NULL,
+  device_key  TEXT NOT NULL,
+  expires_at  INTEGER NOT NULL,
+  PRIMARY KEY (scope, day, device_key)
+);
+CREATE TABLE IF NOT EXISTS event_recent (
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  scope  TEXT NOT NULL,
+  t      INTEGER NOT NULL,
+  d      TEXT NOT NULL,
+  n      TEXT NOT NULL,
+  p      TEXT
+);
+CREATE INDEX IF NOT EXISTS event_recent_scope ON event_recent (scope, id);
 `;
 
 function toCard(row) {
@@ -85,6 +109,34 @@ export function createSqliteStore({ filename = ':memory:', now = Date.now } = {}
     RETURNING count, expires_at
   `);
   const counterSweep = db.prepare('DELETE FROM rate_counters WHERE expires_at <= ?');
+  const eventCount = db.prepare(`
+    INSERT INTO event_counts (scope, day, name, count, expires_at) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(scope, day, name) DO UPDATE SET
+      count = event_counts.count + excluded.count,
+      expires_at = excluded.expires_at
+  `);
+  const eventDevice = db.prepare(`
+    INSERT INTO event_devices (scope, day, device_key, expires_at) VALUES (?, ?, ?, ?)
+    ON CONFLICT(scope, day, device_key) DO UPDATE SET expires_at = excluded.expires_at
+  `);
+  const eventRow = db.prepare('INSERT INTO event_recent (scope, t, d, n, p) VALUES (?, ?, ?, ?, ?)');
+  const eventTrim = db.prepare(`
+    DELETE FROM event_recent WHERE scope = ? AND id NOT IN (
+      SELECT id FROM event_recent WHERE scope = ? ORDER BY id DESC LIMIT 500
+    )
+  `);
+  const eventDayRows = db.prepare(
+    'SELECT name, count FROM event_counts WHERE scope = ? AND day = ? AND expires_at > ?',
+  );
+  const eventDayDevices = db.prepare(
+    'SELECT COUNT(*) AS devices FROM event_devices WHERE scope = ? AND day = ? AND expires_at > ?',
+  );
+  const eventRecent = db.prepare(
+    'SELECT t, d, n, p FROM event_recent WHERE scope = ? ORDER BY id DESC LIMIT ?',
+  );
+  const poolTotals = db.prepare(
+    'SELECT total FROM snapshots WHERE device_id <> ? AND is_demo = 0 AND expires_at > ? ORDER BY updated_at DESC LIMIT 500',
+  );
 
   return {
     async putSnapshot(deviceId, snapshot) {
@@ -144,6 +196,52 @@ export function createSqliteStore({ filename = ':memory:', now = Date.now } = {}
       return { deviceId: row.device_id, card: toCard(row), isDemo: false };
     },
 
+    async addEvents({ day, scope, deviceKey, counts, rows, ttlSec }) {
+      const at = now();
+      const expiresAt = at + Math.max(1, Math.floor(ttlSec)) * 1000;
+      for (const [name, value] of Object.entries(counts ?? {})) {
+        if (!Number.isFinite(value) || value === 0) continue;
+        eventCount.run(scope, day, name, value, expiresAt);
+      }
+      if (typeof deviceKey === 'string' && deviceKey.length > 0) {
+        eventDevice.run(scope, day, deviceKey, expiresAt);
+      }
+      if (Array.isArray(rows) && rows.length > 0) {
+        for (const row of rows) {
+          eventRow.run(scope, Number(row.t) || at, row.d, row.n, row.p == null ? null : JSON.stringify(row.p));
+        }
+        eventTrim.run(scope, scope);
+      }
+    },
+
+    async readEvents({ days, scope, recentLimit }) {
+      const at = now();
+      const out = {};
+      for (const day of days) {
+        const counts = {};
+        for (const row of eventDayRows.all(scope, day, at)) counts[row.name] = Number(row.count);
+        const devices = Number(eventDayDevices.get(scope, day, at)?.devices ?? 0);
+        out[day] = { counts, devices };
+      }
+      const limit = Number.isFinite(recentLimit) && recentLimit > 0 ? Math.floor(recentLimit) : 200;
+      const recent = eventRecent.all(scope, limit).map((row) => {
+        let p;
+        if (row.p != null) {
+          try {
+            p = JSON.parse(row.p);
+          } catch {
+            p = undefined;
+          }
+        }
+        return { t: Number(row.t), d: row.d, n: row.n, ...(p === undefined ? {} : { p }) };
+      });
+      return { days: out, recent };
+    },
+
+    async realTotals(excludeDeviceId) {
+      return poolTotals.all(excludeDeviceId ?? '', now()).map((row) => Number(row.total));
+    },
+
     async hit(key, limit, windowSec) {
       const at = now();
       const step = Math.max(1, Math.floor(windowSec)) * 1000;
@@ -156,7 +254,7 @@ export function createSqliteStore({ filename = ':memory:', now = Date.now } = {}
     },
 
     async reset() {
-      db.exec('DELETE FROM snapshots; DELETE FROM rate_counters;');
+      db.exec('DELETE FROM snapshots; DELETE FROM rate_counters; DELETE FROM event_counts; DELETE FROM event_devices; DELETE FROM event_recent;');
     },
 
     close() {

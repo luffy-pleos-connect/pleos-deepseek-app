@@ -101,6 +101,83 @@ function runStoreContract(label, makeStore) {
     assert.equal(blocked.allowed, false);
     assert.ok(blocked.resetAt > 0);
   });
+
+  test(`${label}: addEvents → readEvents 왕복(셈·기기 수·최근 기록)`, async () => {
+    const store = makeStore();
+    await store.addEvents({
+      day: '20261112',
+      scope: 'real',
+      deviceKey: 'a1b2c3',
+      counts: { app_open: 2, 'fix_tap|repair_shop': 1, voice_ms_sum: 2500, voice_ms_n: 1 },
+      rows: [
+        { t: 1000, d: 'a1b2c3', n: 'app_open' },
+        { t: 2000, d: 'a1b2c3', n: 'fix_tap', p: { kind: 'repair_shop' } },
+      ],
+      ttlSec: 100 * 86400,
+    });
+    await store.addEvents({
+      day: '20261112',
+      scope: 'real',
+      deviceKey: 'd4e5f6',
+      counts: { app_open: 1 },
+      rows: [{ t: 3000, d: 'd4e5f6', n: 'app_open' }],
+      ttlSec: 100 * 86400,
+    });
+    const read = await store.readEvents({ days: ['20261112', '20261113'], scope: 'real', recentLimit: 200 });
+    assert.deepEqual(read.days['20261112'].counts, {
+      app_open: 3, 'fix_tap|repair_shop': 1, voice_ms_sum: 2500, voice_ms_n: 1,
+    });
+    assert.equal(read.days['20261112'].devices, 2);
+    assert.deepEqual(read.days['20261113'], { counts: {}, devices: 0 });
+    assert.equal(read.recent.length, 3);
+    assert.equal(read.recent[0].n, 'app_open');
+    assert.equal(read.recent[0].d, 'd4e5f6');
+    const tap = read.recent.find((row) => row.n === 'fix_tap');
+    assert.deepEqual(tap.p, { kind: 'repair_shop' });
+  });
+
+  test(`${label}: readEvents 는 범위(real/demo)를 섞지 않는다`, async () => {
+    const store = makeStore();
+    await store.addEvents({
+      day: '20261112', scope: 'real', deviceKey: 'aaaaaa', counts: { app_open: 1 }, rows: [], ttlSec: 86400,
+    });
+    await store.addEvents({
+      day: '20261112', scope: 'demo', deviceKey: 'bbbbbb', counts: { app_open: 5 }, rows: [], ttlSec: 86400,
+    });
+    const real = await store.readEvents({ days: ['20261112'], scope: 'real', recentLimit: 200 });
+    assert.equal(real.days['20261112'].counts.app_open, 1);
+    assert.equal(real.days['20261112'].devices, 1);
+    const demo = await store.readEvents({ days: ['20261112'], scope: 'demo', recentLimit: 200 });
+    assert.equal(demo.days['20261112'].counts.app_open, 5);
+  });
+
+  test(`${label}: 최근 기록은 범위별 500개까지만 남는다`, async () => {
+    const store = makeStore();
+    const rows = Array.from({ length: 20 }, (_, i) => ({ t: 1000 + i, d: 'a1b2c3', n: 'app_open' }));
+    for (let round = 0; round < 26; round += 1) {
+      await store.addEvents({
+        day: '20261112', scope: 'real', deviceKey: 'a1b2c3', counts: {}, rows, ttlSec: 86400,
+      });
+    }
+    const read = await store.readEvents({ days: [], scope: 'real', recentLimit: 1000 });
+    assert.equal(read.recent.length, 500);
+    assert.equal(read.recent[0].t, 1019, '최신부터 돌려준다');
+  });
+
+  test(`${label}: realTotals 는 데모·만료·자기 기기를 뺀다`, async () => {
+    const store = makeStore();
+    await store.putSnapshot('me', {
+      secretHash: SECRET_A, card: card('나', 75), isDemo: false, inspectedAt: 1000, ttlMs: TTL,
+    });
+    await store.putSnapshot('other', {
+      secretHash: SECRET_A, card: card('이웃', 80), isDemo: false, inspectedAt: 1000, ttlMs: TTL,
+    });
+    await store.putSnapshot('demo', {
+      secretHash: SECRET_A, card: card('데모', 40), isDemo: true, inspectedAt: 1000, ttlMs: TTL,
+    });
+    assert.deepEqual((await store.realTotals(null)).sort(), [75, 80]);
+    assert.deepEqual(await store.realTotals('me'), [80]);
+  });
 }
 
 runStoreContract('memory', () => createMemoryStore());
@@ -147,6 +224,9 @@ test('memory: hit 창이 지나면 다시 센다', async () => {
 function fakeUpstash() {
   const data = new Map();
   const zset = new Map();
+  const hashes = new Map();
+  const sets = new Map();
+  const lists = new Map();
   const calls = [];
   const fetchImpl = async (url, init) => {
     const commands = JSON.parse(init.body);
@@ -156,6 +236,51 @@ function fakeUpstash() {
       switch (name.toUpperCase()) {
         case 'GET':
           return data.has(args[0]) ? data.get(args[0]) : null;
+        case 'MGET':
+          return args.map((key) => (data.has(key) ? data.get(key) : null));
+        case 'HGETALL': {
+          const hash = hashes.get(args[0]);
+          return hash ? [...hash.entries()].flat() : [];
+        }
+        case 'HINCRBY': {
+          const hash = hashes.get(args[0]) ?? new Map();
+          const next = Number(hash.get(args[1]) ?? 0) + Number(args[2]);
+          hash.set(args[1], String(next));
+          hashes.set(args[0], hash);
+          return next;
+        }
+        case 'SADD': {
+          const set = sets.get(args[0]) ?? new Set();
+          const before = set.size;
+          set.add(args[1]);
+          sets.set(args[0], set);
+          return set.size === before ? 0 : 1;
+        }
+        case 'SCARD': {
+          const set = sets.get(args[0]);
+          return set ? set.size : 0;
+        }
+        case 'LPUSH': {
+          const list = lists.get(args[0]) ?? [];
+          list.unshift(args[1]);
+          lists.set(args[0], list);
+          return list.length;
+        }
+        case 'LTRIM': {
+          const list = lists.get(args[0]) ?? [];
+          const start = Number(args[1]);
+          const stop = Number(args[2]);
+          const end = stop < 0 ? list.length + stop : stop;
+          lists.set(args[0], list.slice(start, end + 1));
+          return 'OK';
+        }
+        case 'LRANGE': {
+          const list = lists.get(args[0]) ?? [];
+          const start = Number(args[1]);
+          const stop = Number(args[2]);
+          const end = stop < 0 ? list.length + stop : stop;
+          return list.slice(start, end + 1);
+        }
         case 'SET': {
           data.set(args[0], args[1]);
           return 'OK';

@@ -13,6 +13,7 @@ const env = {
   HIVE_MODEL: process.env.HIVE_MODEL,
   DAILY_CHAT_LIMIT: process.env.DAILY_CHAT_LIMIT,
   HIVE_TIMEOUT_MS: process.env.HIVE_TIMEOUT_MS,
+  ADMIN_TOKEN: process.env.ADMIN_TOKEN,
 };
 
 function headersToObject(rawHeaders) {

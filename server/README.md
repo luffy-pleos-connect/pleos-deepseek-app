@@ -13,19 +13,19 @@ Node.js 24 표준 라이브러리만 쓴다. 외부 npm 패키지 0개, `package
 - `handleStandard(Request, store, env) → Response` — 표준 `Request` 전용. 스트림 본문을 64KB까지만 읽고
   넘으면 즉시 413을 돌려준다. 표준 `Request` 의 `body` 를 한 번만 읽어야 하는 환경에서 쓴다.
 
-`env` 는 `{HIVE_API_URL, HIVE_API_KEY, HIVE_MODEL, DAILY_CHAT_LIMIT, HIVE_TIMEOUT_MS, SNAPSHOT_TTL_DAYS, log, quiet, random, now, fetch}`.
+`env` 는 `{HIVE_API_URL, HIVE_API_KEY, HIVE_MODEL, DAILY_CHAT_LIMIT, HIVE_TIMEOUT_MS, SNAPSHOT_TTL_DAYS, ADMIN_TOKEN, log, quiet, random, now, fetch}`.
 테스트는 `log`·`random`·`now`·`fetch` 를 주입해 시각과 업스트림을 고정한다.
 
 ## 실행
 
 ```bash
 node local.mjs                 # 127.0.0.1:8787, SQLite(moca.sqlite)
-node --test core.test.mjs      # AT-07 (31 케이스)
-node --test *.test.mjs         # core + store (62 케이스)
+node --test core.test.mjs      # AT-07 (35 케이스)
+node --test *.test.mjs         # core + store + v10 (96 케이스)
 ```
 
 환경 변수: `PORT`, `HOST`, `MOCA_DB`, `HIVE_API_KEY`, `HIVE_API_URL`, `HIVE_MODEL`, `DAILY_CHAT_LIMIT`(기본 500),
-`HIVE_TIMEOUT_MS`(기본 20000), `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
+`HIVE_TIMEOUT_MS`(기본 20000), `ADMIN_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`.
 
 `HIVE_API_KEY` 는 요청 헤더로만 쓰고 로그·응답·저장소에 남기지 않는다. 로그는 `[moca] <상태> <지연>ms <메서드> <경로>` 형식뿐이다.
 
@@ -33,9 +33,9 @@ node --test *.test.mjs         # core + store (62 케이스)
 
 이 폴더(`server/`)를 Vercel 프로젝트의 루트로 올린다. 프레임워크는 없다.
 
-- `api/chat.mjs`, `api/opponent.mjs`, `api/snapshots.mjs` 가 함수가 된다. 셋 다 `vercel-entry.mjs` 의 `createFetch()` 를 `export default { fetch }` 로 내보낸다(Vercel 문서의 fetch Web Standard 형식).
-- 주소는 `/api/chat`, `/api/opponent`, `/api/snapshots` 다. 진입부가 `/api` 를 떼고 `core.mjs` 로 넘긴다.
-- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`. Vercel Marketplace 의 Upstash 연동은 저장소 값을 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이름으로 넣는다. 진입부는 두 이름을 다 받는다.
+- `api/chat.mjs`, `api/opponent.mjs`, `api/snapshots.mjs`, `api/events.mjs`, `api/stats.mjs`, `api/rank.mjs` 가 함수가 된다. 모두 `vercel-entry.mjs` 의 `createFetch()` 를 `export default { fetch }` 로 내보낸다(Vercel 문서의 fetch Web Standard 형식).
+- 주소는 `/api/chat`, `/api/opponent`, `/api/snapshots`, `/api/events`, `/api/stats`, `/api/rank` 다. 진입부가 `/api` 를 떼고 `core.mjs` 로 넘긴다.
+- 환경 변수: `HIVE_API_URL`, `HIVE_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ADMIN_TOKEN`. 선택: `HIVE_MODEL`, `DAILY_CHAT_LIMIT`, `HIVE_TIMEOUT_MS`. Vercel Marketplace 의 Upstash 연동은 저장소 값을 `KV_REST_API_URL`, `KV_REST_API_TOKEN` 이름으로 넣는다. 진입부는 두 이름을 다 받는다.
 - 저장소 환경 변수가 없으면 모든 요청에 500 `{"error":"not_configured"}` 로 답한다.
 - 앱의 release 빌드에는 배포한 주소에 `/api` 를 붙여 넣는다: `./gradlew :app:assembleRelease -Pmoca.serverBaseUrl=https://<프로젝트>.vercel.app/api`
 - 2026-11-12 에 `https://moca-server.vercel.app` 로 올렸다(프로젝트 `moca-server`, 리전 `iad1`, Node 24). 올린 파일은 `api/*.mjs` 3개와 `core.mjs` · `http-util.mjs` · `validate.mjs` · `store-redis.mjs` · `vercel-entry.mjs` · `seeds.json` 이고, 배포된 파일의 SHA-1 이 저장소 파일과 같은 것을 확인했다.
@@ -50,6 +50,9 @@ node --test *.test.mjs         # core + store (62 케이스)
 | GET | `/opponent?deviceId=` | – | 200 `{nickname, grade, total, categories, isSeed}` · 400 · 404 · 429 |
 | POST | `/chat` | `{messages, tools}` (+ 선택 `X-Device-Id`) | 200 `{message}` · 400 · 413 · 429 · 502 · 504 |
 | DELETE | `/snapshots?deviceId=` | `X-Device-Secret` | 204 · 400 · 403 · 429 |
+| POST | `/events` | `{deviceId, isDemo, events:[{name, at, props?}]}` | 200 `{ok, accepted}` · 400 `{error, field}` · 413 · 429 |
+| GET | `/stats?days=7&scope=real\|demo` | `Authorization: Bearer <ADMIN_TOKEN>` | 200 `{scope, days, totals, leads, recent}` · 400 · 401 · 500 |
+| GET | `/rank?total=&deviceId=` | – | 200 `{rank, of, real}` · 400 · 429 |
 
 - 검증: 닉네임 `^[가-힣A-Za-z0-9]{2,10}$`, 등급 `S+ S A B C D`, 점수 0~100, `messages` ≤30(각 내용 ≤8000자), 본문 ≤65536 bytes.
 - 기기 증명: 첫 POST 때 `X-Device-Secret` 의 SHA-256 해시를 저장한다. 같은 `deviceId` 의 upsert·DELETE 는 같은 비밀값이 필요하고 틀리면 403.
@@ -58,17 +61,28 @@ node --test *.test.mjs         # core + store (62 케이스)
 - `/opponent` 는 자기 자신과 `isDemo` 스냅샷을 제외하고, 남는 후보 + 시드 12명에서 균등 랜덤으로 고른다. 응답에 `deviceId` 가 없다.
 - `/chat` 은 `https://api-cdn.thehive.ai/api/v3/chat/completions`, 모델 `deepseek-ai/deepseek-v4.1-flash-1017`,
   `temperature 0.3`, `max_tokens 1000`(추론 토큰 포함. 한도에 닿아 끊긴 답은 끝난 문장까지만 보낸다), 20초 타임아웃(504). 키가 없으면 호출하지 않고 502.
+- `/events`: `events` 1~50개, 이름은 정해진 18개(`app_open` `screen_view` `inspection_done` `problem_found` `problem_resolved` `fix_tap` `navi_opened` `route_started` `destination_arrived` `product_tap` `voice_ask` `battle_done` `notification_shown` `notification_tap` `demo_on` `demo_off` `consent_changed` `data_deleted`)만 받는다. `at` 은 양의 epoch ms. `props` 는 선택이고 키 8개 이하, 키 `^[a-z][A-Za-z0-9]{0,19}$`, 값은 불리언·유한한 숫자·`^[A-Za-z0-9_.:-]{0,40}$` 글자(한글·공백 불가)다. 틀린 요청은 하나도 세지 않는다. 기기당 120회/시간.
+- `/events` 저장: 서버 시각의 서울 날짜(`YYYYMMDD`)·범위(`real`/`demo`)별로 이름별 셈, `props.kind` 가 있으면 `name|kind` 도 셈, `voice_ask` 는 `voice_ask|online`/`voice_ask|offline` 과 `props.ms` 가 0~120000 일 때 `voice_ms_sum`·`voice_ms_n` 을 센다. 그날 쓴 기기 키(SHA-256 앞 32자) 집합과 최근 기록 500개를 범위별로 남기고 100일 뒤 만료한다.
+- `/stats`: `ADMIN_TOKEN` 이 비면 500 `not_configured`, `Authorization: Bearer` 가 없거나 틀리면 401(비교는 `timingSafeEqual`). `days` 1~90(기본 7), `scope` `real`|`demo`(기본 `real`), 벗어나면 400. 기록이 없는 날도 `counts: {}` 로 넣고 오래된 날부터 돌려준다. `leads.guide` 는 `fix_tap` 합, `leads.product` 는 `product_tap` 합이다. `recent` 는 최신부터 200개.
+- `/rank`: `total` 0~100(없거나 벗어나면 400 `total`). `rank = 1 + (나보다 높은 시드 수) + (나보다 높은 실제 요약 수)`, `of = 1 + 12 + real`. `real` 은 데모가 아닌 살아 있는 요약 수이고 `deviceId` 를 주면 그 기기는 뺀다. 점수는 저장하지 않는다. `deviceId` 가 있으면 `opponent` 한도(60회/시간)를 쓴다.
+- 데모 요약(`isDemo: true`)은 검증만 하고 저장하지 않는다(200 `{ok:true}`). 실제 요약을 덮어쓰지 않고 순위에도 들어가지 않는다.
 
 ## 저장소
 
 모두 같은 인터페이스를 쓴다: `putSnapshot(deviceId, {secretHash, card, isDemo, inspectedAt, ttlMs})`,
-`randomOpponent(deviceId)`, `hit(key, limit, windowSec)`, `deleteSnapshot(deviceId, secretHash)`, `getSnapshot(deviceId)`.
+`randomOpponent(deviceId)`, `hit(key, limit, windowSec)`, `deleteSnapshot(deviceId, secretHash)`, `getSnapshot(deviceId)`,
+`addEvents({day, scope, deviceKey, counts, rows, ttlSec})`, `readEvents({days, scope, recentLimit})`, `realTotals(excludeDeviceId)`.
 
 - `store-sqlite.mjs` (로컬) — `node:sqlite`, `moca.sqlite`. `close()` 제공.
 - `store-redis.mjs` (Vercel) — Upstash REST `/pipeline` 을 `fetch` 로 호출. SDK 없음.
 - `store-memory.mjs` (테스트·개발) — 만료·한도를 주입 시계(`now`)로 계산한다.
 
+`addEvents` 는 `counts`(이름→더할 수)를 날짜·범위별로 더하고, `rows`(최근 기록 객체)를 범위별 목록 앞에 넣어 500개까지만 남긴다. `deviceKey` 가 있으면 그날 쓴 기기로 센다.
+`readEvents` 는 `{days: {YYYYMMDD: {counts, devices}}, recent: [...]}` 를 돌려준다(`recent` 는 최신부터, 요청한 `recentLimit` 까지).
+`realTotals` 는 데모가 아닌 살아 있는 요약의 `total` 배열(최대 500개)을 돌려준다. 순위 계산은 `core.mjs` 가 한다.
+Redis 저장소는 `HINCRBY`·`EXPIRE`·`SADD`·`LPUSH`·`LTRIM`·`HGETALL`·`SCARD`·`LRANGE`·`MGET` 을 쓴다. `realTotals` 는 `moca:pool` 에서 500개까지만 읽으므로 그보다 많으면 순위의 `real` 이 실제보다 작아진다.
+
 ## 파일
 
 `core.mjs` · `http-util.mjs` · `validate.mjs` · `seeds.json` · `store-{sqlite,redis,memory}.mjs` · `local.mjs` ·
-`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs`
+`core.test.mjs` · `core-security.test.mjs` · `store.test.mjs` · `test-helpers.mjs` · `v10.test.mjs`

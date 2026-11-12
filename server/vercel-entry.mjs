@@ -34,6 +34,7 @@ export function createFetch({ env = process.env, store } = {}) {
       HIVE_MODEL: env.HIVE_MODEL,
       DAILY_CHAT_LIMIT: env.DAILY_CHAT_LIMIT,
       HIVE_TIMEOUT_MS: env.HIVE_TIMEOUT_MS,
+      ADMIN_TOKEN: env.ADMIN_TOKEN,
     });
   };
 }

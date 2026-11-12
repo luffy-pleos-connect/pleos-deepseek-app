@@ -2,6 +2,15 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 
 const SNAP = 'moca:snap:';
 const POOL = 'moca:pool';
+const EV_COUNT = 'moca:ev:count:';
+const EV_DEVICE = 'moca:ev:device:';
+const EV_RECENT = 'moca:ev:recent:';
+const RECENT_LIMIT = 500;
+const POOL_LIMIT = 500;
+
+const eventCountKey = (scope, day) => `${EV_COUNT}${scope}:${day}`;
+const eventDeviceKey = (scope, day) => `${EV_DEVICE}${scope}:${day}`;
+const eventRecentKey = (scope) => `${EV_RECENT}${scope}`;
 
 function hashEquals(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
@@ -140,6 +149,89 @@ export function createRedisStore({
         return { deviceId: null, card: parsed.card, isDemo: false };
       }
       return null;
+    },
+
+    async addEvents({ day, scope, deviceKey, counts, rows, ttlSec }) {
+      const ttl = Math.max(1, Math.floor(ttlSec));
+      const commands = [];
+      const countKey = eventCountKey(scope, day);
+      let counted = 0;
+      for (const [name, value] of Object.entries(counts ?? {})) {
+        if (!Number.isFinite(value) || value === 0) continue;
+        commands.push(['HINCRBY', countKey, name, String(value)]);
+        counted += 1;
+      }
+      if (counted > 0) commands.push(['EXPIRE', countKey, String(ttl)]);
+      if (typeof deviceKey === 'string' && deviceKey.length > 0) {
+        const deviceKeyName = eventDeviceKey(scope, day);
+        commands.push(['SADD', deviceKeyName, deviceKey]);
+        commands.push(['EXPIRE', deviceKeyName, String(ttl)]);
+      }
+      if (Array.isArray(rows) && rows.length > 0) {
+        const recentKey = eventRecentKey(scope);
+        for (const row of rows) {
+          commands.push(['LPUSH', recentKey, JSON.stringify({ t: row.t, d: row.d, n: row.n, p: row.p })]);
+        }
+        commands.push(['LTRIM', recentKey, '0', String(RECENT_LIMIT - 1)]);
+        commands.push(['EXPIRE', recentKey, String(ttl)]);
+      }
+      if (commands.length > 0) await pipeline(commands);
+    },
+
+    async readEvents({ days, scope, recentLimit }) {
+      const limit = Number.isFinite(recentLimit) && recentLimit > 0 ? Math.floor(recentLimit) : 200;
+      const commands = [];
+      for (const day of days) {
+        commands.push(['HGETALL', eventCountKey(scope, day)]);
+        commands.push(['SCARD', eventDeviceKey(scope, day)]);
+      }
+      commands.push(['LRANGE', eventRecentKey(scope), '0', String(Math.max(0, limit - 1))]);
+      const results = await pipeline(commands);
+      const out = {};
+      days.forEach((day, index) => {
+        const flat = results[index * 2] ?? [];
+        const counts = {};
+        for (let i = 0; i + 1 < flat.length; i += 2) counts[flat[i]] = Number(flat[i + 1]);
+        out[day] = { counts, devices: Number(results[index * 2 + 1]) || 0 };
+      });
+      const raw = results[results.length - 1] ?? [];
+      const recent = [];
+      for (const item of raw) {
+        let parsed;
+        try {
+          parsed = JSON.parse(item);
+        } catch {
+          continue;
+        }
+        if (!parsed || typeof parsed !== 'object') continue;
+        recent.push(parsed);
+      }
+      return { days: out, recent };
+    },
+
+    async realTotals(excludeDeviceId) {
+      const at = now();
+      const self = excludeDeviceId == null ? null : SNAP + keyOf(excludeDeviceId);
+      // ponytail: moca:pool 에서 500개까지만 읽는다. 그보다 많으면 순위의 real 이 실제보다 작아진다.
+      const members = await pipeline([
+        ['ZREMRANGEBYSCORE', POOL, '-inf', String(at)],
+        ['ZRANGEBYSCORE', POOL, String(at), '+inf', 'LIMIT', '0', String(POOL_LIMIT)],
+      ]);
+      const keys = (members[1] ?? []).filter((key) => key !== self);
+      if (keys.length === 0) return [];
+      const values = await command('MGET', ...keys);
+      return (values ?? [])
+        .map((raw) => {
+          if (!raw) return null;
+          try {
+            const parsed = JSON.parse(raw);
+            if (!parsed || parsed.isDemo === true) return null;
+            return Number(parsed.card?.total);
+          } catch {
+            return null;
+          }
+        })
+        .filter((total) => Number.isFinite(total));
     },
 
     async hit(key, limit, windowSec) {

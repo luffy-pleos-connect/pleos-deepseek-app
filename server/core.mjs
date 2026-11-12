@@ -15,7 +15,9 @@ export const MAX_TOKENS = 1000;
 
 const HOUR = 3600;
 const DAY = 86400;
-const RATE = { chat: [30, HOUR], snapshots: [60, HOUR], opponent: [60, HOUR] };
+const RATE = { chat: [30, HOUR], snapshots: [60, HOUR], opponent: [60, HOUR], events: [120, HOUR] };
+const EVENT_TTL_DAYS = 100;
+const STATS_RECENT = 200;
 const TIMEOUT = Symbol('hive-timeout');
 const TOO_LARGE = Symbol('too_large');
 const KST_DAY = new Intl.DateTimeFormat('en-CA', {
@@ -33,6 +35,37 @@ function hashEquals(a, b) {
 }
 
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+const EVENT_NAMES = new Set([
+  'app_open', 'screen_view', 'inspection_done', 'problem_found', 'problem_resolved', 'fix_tap',
+  'navi_opened', 'route_started', 'destination_arrived', 'product_tap', 'voice_ask', 'battle_done',
+  'notification_shown', 'notification_tap', 'demo_on', 'demo_off', 'consent_changed', 'data_deleted',
+]);
+const MAX_EVENTS = 50;
+const MAX_PROP_KEYS = 8;
+const MAX_VOICE_MS = 120000;
+const PROP_KEY_RE = /^[a-z][A-Za-z0-9]{0,19}$/;
+const PROP_TEXT_RE = /^[A-Za-z0-9_.:-]{0,40}$/;
+
+function propsProblem(props) {
+  if (!isPlainObject(props)) return true;
+  const keys = Object.keys(props);
+  if (keys.length > MAX_PROP_KEYS) return true;
+  for (const key of keys) {
+    if (!PROP_KEY_RE.test(key)) return true;
+    const value = props[key];
+    if (typeof value === 'boolean') continue;
+    if (typeof value === 'number' && Number.isFinite(value)) continue;
+    if (typeof value === 'string' && PROP_TEXT_RE.test(value)) continue;
+    return true;
+  }
+  return false;
+}
+
+function tokenEquals(provided, expected) {
+  if (typeof provided !== 'string' || typeof expected !== 'string') return false;
+  return hashEquals(provided, expected);
+}
 
 // 한도에 닿아 끊긴 답은 마지막으로 끝난 문장까지만 남긴다. 끝난 문장이 없으면 그대로 둔다.
 function dropUnfinishedSentence(text) {
@@ -115,6 +148,10 @@ async function handleSnapshotPost(req, store, env) {
     return json(400, { error: 'missing_secret', field: 'X-Device-Secret' });
   }
   const ttlDays = Number(env.SNAPSHOT_TTL_DAYS ?? SNAPSHOT_TTL_DAYS) || SNAPSHOT_TTL_DAYS;
+  if (input.isDemo === true) {
+    // 데모 요약은 저장하지 않는다(계획 v10 2.4). 검증은 그대로 하고 실제 요약을 덮어쓰지 않는다.
+    return json(200, { ok: true });
+  }
   const result = await store.putSnapshot(input.deviceId, {
     secretHash: sha256(secret),
     card: cardOf(input),
@@ -263,6 +300,148 @@ async function handleSnapshotDelete(url, req, store, env) {
   return empty(204);
 }
 
+async function handleEventsPost(req, store, env) {
+  const parsed = await readJson(req);
+  if (parsed.tooLarge) return json(413, { error: 'too_large', field: 'body' });
+  if (parsed.invalid) return json(400, { error: 'invalid_body', field: parsed.invalid });
+  const input = parsed.value;
+  if (!validateDeviceId(input.deviceId)) return json(400, { error: 'invalid_field', field: 'deviceId' });
+  const limited = await enforce(store, 'events', input.deviceId, env);
+  if (limited) return limited;
+  if (input.isDemo !== undefined && typeof input.isDemo !== 'boolean') {
+    return json(400, { error: 'invalid_field', field: 'isDemo' });
+  }
+  const events = input.events;
+  if (!Array.isArray(events) || events.length === 0 || events.length > MAX_EVENTS) {
+    return json(400, { error: 'invalid_field', field: 'events' });
+  }
+  const counts = {};
+  const bump = (name, value = 1) => {
+    counts[name] = (counts[name] ?? 0) + value;
+  };
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    if (!isPlainObject(event)) return json(400, { error: 'invalid_field', field: `events[${i}].name` });
+    if (typeof event.name !== 'string' || !EVENT_NAMES.has(event.name)) {
+      return json(400, { error: 'invalid_field', field: `events[${i}].name` });
+    }
+    const at = event.at;
+    if (typeof at !== 'number' || !Number.isFinite(at) || at <= 0) {
+      return json(400, { error: 'invalid_field', field: `events[${i}].at` });
+    }
+    const props = event.props;
+    if (props !== undefined && propsProblem(props)) {
+      return json(400, { error: 'invalid_field', field: `events[${i}].props` });
+    }
+    bump(event.name);
+    if (props && typeof props.kind === 'string') bump(`${event.name}|${props.kind}`);
+    if (event.name === 'voice_ask') {
+      bump(props && props.online === true ? 'voice_ask|online' : 'voice_ask|offline');
+      const ms = props ? props.ms : undefined;
+      if (typeof ms === 'number' && Number.isFinite(ms) && ms >= 0 && ms <= MAX_VOICE_MS) {
+        bump('voice_ms_sum', ms);
+        bump('voice_ms_n');
+      }
+    }
+  }
+  const clock = typeof env.now === 'function' ? env.now : Date.now;
+  const at = clock();
+  const day = kstDayKey(at);
+  const key = deviceKey(input.deviceId);
+  const rows = events.map((event) => {
+    const row = { t: at, d: key.slice(0, 6), n: event.name };
+    if (isPlainObject(event.props) && Object.keys(event.props).length > 0) row.p = event.props;
+    return row;
+  });
+  await store.addEvents({
+    day,
+    scope: input.isDemo === true ? 'demo' : 'real',
+    deviceKey: key,
+    counts,
+    rows,
+    ttlSec: EVENT_TTL_DAYS * DAY,
+  });
+  return json(200, { ok: true, accepted: events.length });
+}
+
+function dayKeysBack(now, days) {
+  const keys = [];
+  for (let i = days - 1; i >= 0; i -= 1) keys.push(kstDayKey(now - i * DAY * 1000));
+  return keys;
+}
+
+function positiveInt(value, fallback, min, max) {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (!/^[0-9]+$/.test(value)) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null;
+  return parsed;
+}
+
+async function handleStats(url, req, store, env) {
+  const expected = typeof env.ADMIN_TOKEN === 'string' ? env.ADMIN_TOKEN : '';
+  if (expected.length === 0) return json(500, { error: 'not_configured' });
+  const header = headerOf(req, 'authorization');
+  const match = typeof header === 'string' ? /^Bearer (.+)$/.exec(header) : null;
+  if (!match || !tokenEquals(match[1], expected)) return json(401, { error: 'unauthorized' });
+
+  const days = positiveInt(url.searchParams.get('days'), 7, 1, 90);
+  if (days === null) return json(400, { error: 'invalid_field', field: 'days' });
+  const rawScope = url.searchParams.get('scope');
+  const scope = rawScope === null || rawScope === '' ? 'real' : rawScope;
+  if (scope !== 'real' && scope !== 'demo') return json(400, { error: 'invalid_field', field: 'scope' });
+
+  const clock = typeof env.now === 'function' ? env.now : Date.now;
+  const keys = dayKeysBack(clock(), days);
+  const read = await store.readEvents({ days: keys, scope, recentLimit: STATS_RECENT });
+  const dayRows = keys.map((day) => ({
+    day,
+    devices: read.days?.[day]?.devices ?? 0,
+    counts: read.days?.[day]?.counts ?? {},
+  }));
+  const totals = {};
+  for (const row of dayRows) {
+    for (const [name, value] of Object.entries(row.counts)) totals[name] = (totals[name] ?? 0) + value;
+  }
+  const guide = totals.fix_tap ?? 0;
+  const product = totals.product_tap ?? 0;
+  return json(200, {
+    scope,
+    days: dayRows,
+    totals,
+    leads: { guide, product, total: guide + product },
+    recent: Array.isArray(read.recent) ? read.recent : [],
+  });
+}
+
+async function handleRank(url, store, env) {
+  const rawTotal = url.searchParams.get('total');
+  if (rawTotal === null || !/^[0-9]+(\.[0-9]+)?$/.test(rawTotal)) {
+    return json(400, { error: 'invalid_field', field: 'total' });
+  }
+  const total = Number(rawTotal);
+  if (!Number.isFinite(total) || total < 0 || total > 100) {
+    return json(400, { error: 'invalid_field', field: 'total' });
+  }
+  const deviceId = url.searchParams.get('deviceId');
+  if (deviceId !== null && !validateDeviceId(deviceId)) {
+    return json(400, { error: 'invalid_field', field: 'deviceId' });
+  }
+  if (deviceId !== null) {
+    const limited = await enforce(store, 'opponent', deviceId, env);
+    if (limited) return limited;
+  }
+  const seeds = Array.isArray(env.seedPool) ? env.seedPool : SEED_POOL;
+  const real = (await store.realTotals(deviceId)).filter((value) => Number.isFinite(value));
+  const higher = seeds.filter((seed) => seed.total > total).length
+    + real.filter((value) => value > total).length;
+  return json(200, {
+    rank: 1 + higher,
+    of: 1 + seeds.length + real.length,
+    real: real.length,
+  });
+}
+
 async function normalizedRequest(request) {
   if (request == null) return { method: 'GET', url: '/', headers: {}, body: null };
   const method = String(request.method ?? 'GET').toUpperCase();
@@ -303,8 +482,11 @@ export async function handle(request, store, env = {}) {
     else if (method === 'DELETE' && path === '/snapshots') {
       response = await handleSnapshotDelete(url, req, store, env);
     } else if (method === 'GET' && path === '/opponent') response = await handleOpponent(url, store, env);
+    else if (method === 'POST' && path === '/events') response = await handleEventsPost(req, store, env);
+    else if (method === 'GET' && path === '/stats') response = await handleStats(url, req, store, env);
+    else if (method === 'GET' && path === '/rank') response = await handleRank(url, store, env);
     else if (method === 'POST' && path === '/chat') response = await handleChat(req, store, env);
-    else if (['/snapshots', '/opponent', '/chat'].includes(path)) {
+    else if (['/snapshots', '/opponent', '/chat', '/events', '/stats', '/rank'].includes(path)) {
       response = json(405, { error: 'method_not_allowed' });
     } else response = json(404, { error: 'not_found' });
   } catch {
