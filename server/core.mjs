@@ -71,6 +71,12 @@ function tokenEquals(provided, expected) {
   return hashEquals(sha256(provided), sha256(expected));
 }
 
+// 답은 화면과 음성에 그대로 나간다. 모델이 넣은 마크다운 표시(**굵게**, `코드`, # 제목, - 목록)는 뺀다.
+// 2026-11-13 영상을 찍다가 화면에 「**ABS(빨강)**」이 그대로 보였다.
+function plainText(text) {
+  return text.replace(/\*+|__|`/g, '').replace(/^\s*#{1,6}\s+/gm, '').replace(/^\s*-\s+/gm, '');
+}
+
 // 한도에 닿아 끊긴 답은 마지막으로 끝난 문장까지만 남긴다. 끝난 문장이 없으면 그대로 둔다.
 function dropUnfinishedSentence(text) {
   const end = Math.max(text.lastIndexOf('.'), text.lastIndexOf('!'), text.lastIndexOf('?'));
@@ -250,7 +256,7 @@ async function callHiveOnce(env, payload, fetchImpl, model, timeoutMs, outerSign
       : null;
     // Hive 는 한도에 닿아 끊겨도 finish_reason 을 stop 으로 준다. 쓴 토큰 수로 판단한다.
     const cut = Number(parsed?.usage?.completion_tokens) >= MAX_TOKENS;
-    const whole = typeof message.content === 'string' ? message.content : '';
+    const whole = typeof message.content === 'string' ? plainText(message.content) : '';
     const content = cut ? dropUnfinishedSentence(whole) : whole;
     const reasoning = typeof message.reasoning_content === 'string' ? message.reasoning_content : '';
     if (!toolCalls && content.length === 0 && reasoning.length === 0) return { status: 502 };

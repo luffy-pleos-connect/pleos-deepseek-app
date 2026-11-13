@@ -65,3 +65,19 @@ test('대전은 결과로, 화면 이동은 화면으로, 음성은 의도로 �
   assert.equal(totals['voice_ask|online'], 1);
   assert.equal(totals['fix_tap|repair_shop'], 1);
 });
+
+test('답에 섞인 마크다운 표시는 빼고 보낸다', async () => {
+  const h = harness({
+    env: { HIVE_API_KEY: 'k', HIVE_API_URL: 'https://example.invalid/chat', HIVE_TIMEOUT_MS: '2000' },
+    fetch: async () => new Response(
+      JSON.stringify({ choices: [{ message: { content: '## 경고등\n- 현재 **ABS(빨강)** 경고등과 `타이어 공기압(노랑)` 경고등이 켜져 있어요.\n- 3-4일 안에 점검받으세요.' } }] }),
+      { status: 200 },
+    ),
+  });
+  const res = await handle(req('POST', '/chat', { body: { messages: [{ role: 'user', content: '경고등 뭐야' }] } }), h.store, h.env);
+  assert.equal(res.status, 200);
+  assert.equal(
+    JSON.parse(await res.text()).message.content,
+    '경고등\n현재 ABS(빨강) 경고등과 타이어 공기압(노랑) 경고등이 켜져 있어요.\n3-4일 안에 점검받으세요.',
+  );
+});
