@@ -82,7 +82,7 @@ def clip(n, start, end, secs, crop, lines, sub, name):
          "-filter_complex", f"[1:v]{vf},setpts=PTS/{speed:.3f}[a];[0:v][a]overlay={ox}:{oy}:shortest=1,fps=30[out]", "-map", "[out]", *ENC, "-t", str(secs), dst])
     return dst
 LEFT = (782, 906, 901, 186); RIGHT = (782, 906, 1706, 186)   # 홈의 왼쪽 카드, 오른쪽 칸
-NAVI = (860, 1210, 853, 90); ANSWER = (1420, 560, 901, 230)
+NAVI = (860, 1210, 853, 90); ANSWER = (1610, 600, 889, 195)   # 답 카드 전체 폭(오른쪽이 잘리지 않게)
 t1 = t_of(2, "가까운 정비소 안내 (1번째)") - 1.0; t2 = t_of(2, "길안내가 시작된다") + 2.5
 cuts = [
     still("03-홈-D3", LEFT, ["경고등이 켜졌다.", "얼마나 급한 걸까?"], None, 3, "s1"),

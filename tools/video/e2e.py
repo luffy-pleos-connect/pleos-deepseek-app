@@ -8,6 +8,8 @@ PKG = "ai.moca.app"
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 APK = os.environ.get("MOCA_APK") or os.path.join(ROOT, "app/app/build/outputs/apk/debug/app-debug.apk")
 OUT = sys.argv[1]; os.makedirs(OUT, exist_ok=True)
+# MOCA_ONLINE=1: 서버에 붙는 APK(release)로 찍는다. 서버 답은 문장이 매번 달라 기대값이 다르다.
+ONLINE = os.environ.get("MOCA_ONLINE") == "1"
 LOG = []; CAPS = {}; SEG = 0; REC = None; SEG_T0 = 0.0; SEG_TITLE = ""
 
 def adb(*a, timeout=60):
@@ -111,6 +113,14 @@ def scenario(sid, label):
     tap("tabHome", "홈")
 def navi_nodes():
     return [n for n in nodes(dump()) if n[3].get("package", "").startswith("ai.umos.maps")]
+def wait_navi(needle, sec=25):
+    """내비 화면에 needle 글자와 결과 줄이 보일 때까지 기다린다(에뮬레이터를 막 켠 뒤에는 내비가 늦게 뜬다)."""
+    end = time.time() + sec; nav = []
+    while time.time() < end:
+        nav = navi_nodes(); texts = [n[1] for n in nav if n[1]]
+        if needle in texts and len(texts) > 3: break
+        time.sleep(1)
+    return nav
 def set_clock(ms):
     adb("shell", "settings", "put", "global", "auto_time", "0"); adb("shell", "cmd", "alarm", "set-time", str(int(ms)))
 def restore_clock():
@@ -119,6 +129,12 @@ def restore_clock():
 # ── 준비: 새로 설치. 누르는 자리가 영상에 보이게 한다.
 adb("shell", "cmd", "uimode", "night", "no")
 adb("uninstall", PKG); print(adb("install", "--user", "10", APK, timeout=180).strip().splitlines()[-1])
+# 내비 앱을 한 번 띄워 둔다. 처음 뜰 때는 20초 넘게 걸려서 녹화 중에 빈 화면이 찍힌다.
+adb("shell", "am", "start", "--user", "10", "-n", "ai.umos.maps.android.navigation.app/.MainActivity")
+for _ in range(60):
+    if navi_nodes(): break
+    time.sleep(1)
+adb("shell", "input", "keyevent", "3"); time.sleep(1)
 adb("shell", "settings", "put", "system", "show_touches", "1"); adb("logcat", "-c")
 try:
     scene("새로 설치한 앱을 처음 연다")
@@ -137,7 +153,7 @@ try:
     expect_all("홈: 등급 B · 종합 75, 가장 먼저 할 일은 ABS 경고등, 오늘 9위, 등급을 올리는 법 한 줄", [("gradeValue", "B"), ("totalValue", "75"), ("topProblemText", "ABS 경고등"), ("rankText", "9위"), ("topProblemAction", "가까운 정비소 안내"), ("gradeHow", "「ABS 경고등」부터 해결해 보세요")])
     shot("03-홈-D3"); time.sleep(1.5)
     tap("topProblemAction", "가까운 정비소 안내 (1번째)")
-    time.sleep(4); nav = navi_nodes(); texts = [n[1] for n in nav if n[1]]
+    nav = wait_navi("정비소"); texts = [n[1] for n in nav if n[1]]
     first = None
     for i, n in enumerate(nav):
         if n[1] == "1" and i + 1 < len(nav): first = nav[i + 1]; break
@@ -171,8 +187,17 @@ try:
     expect_all("물어본 부품의 상태를 말한다. 기기 안의 답도 빨간 경고등이면 정차 안내로 시작한다", [("answerText", "정차"), ("answerText", "엔진오일"), ("answerText", "정상")], 30); shot("09b-차에게-묻기-엔진오일"); time.sleep(5)
     tap("questionInput", "글로 묻기 칸"); time.sleep(1); adb("shell", "input", "text", "what%sis%sthe%sweather%stoday"); caption("차와 무관한 질문을 글로 넣는다"); time.sleep(2)
     shot("10-글로-묻기-키보드")
+    before = (find("answerText") or ("", ""))[1]
     adb("shell", "input", "keyevent", "66"); caption("누름: 키보드의 보내기")
-    expect("차와 무관한 질문은 답하지 않고 물을 수 있는 것을 알려 준다", "answerText", "이해하지 못했어요", 30)
+    if ONLINE:
+        # 서버 답은 문장이 매번 다르다. 앞 답이 새 답으로 바뀔 때까지 기다린 뒤 읽는다.
+        after = before; end = time.time() + 30
+        while time.time() < end:
+            after = (find("answerText") or ("", ""))[1]
+            if after and after != before: break
+            time.sleep(1)
+        note("차와 무관한 질문에는 날씨를 답하지 않고 차에 관한 질문을 권한다(서버 답)", after != before and "차" in after, "answerText = 「" + after + "」")
+    else: expect("차와 무관한 질문은 답하지 않고 물을 수 있는 것을 알려 준다", "answerText", "이해하지 못했어요", 30)
     shown = "mInputShown=true" in adb("shell", "dumpsys", "input_method")
     note("보낸 뒤 키보드가 닫힌다", not shown, "키보드 " + ("남아 있음" if shown else "닫힘"))
     if shown: adb("shell", "input", "keyevent", "4"); time.sleep(1)
@@ -202,7 +227,7 @@ try:
     expect_all("가장 먼저 할 일이 잔량 부족이고, 단추가 충전소 안내로 바뀐다", [("topProblemText", "배터리 9%"), ("topProblemAction", "가까운 충전소 안내")])
     shot("15-홈-D4"); time.sleep(1.5)
     tap("topProblemAction", "가까운 충전소 안내")
-    time.sleep(4); texts = [n[1] for n in navi_nodes() if n[1]]
+    texts = [n[1] for n in wait_navi("전기차 충전소") if n[1]]
     note("내비게이션이 「전기차 충전소」 검색 결과를 연다", "전기차 충전소" in texts and len(texts) > 3, "검색어 「전기차 충전소」, 화면 글자 " + str(len(texts)) + "개")
     shot("16-충전소-검색결과"); time.sleep(3)
 
@@ -250,7 +275,7 @@ fatal = adb("logcat", "-d").count("FATAL EXCEPTION")
 with open(os.path.join(OUT, "captions.json"), "w", encoding="utf-8") as f: json.dump(CAPS, f, ensure_ascii=False, indent=1)
 with open(os.path.join(OUT, "단계-기록.md"), "w", encoding="utf-8") as f:
     f.write("# MOCA 처음부터 끝까지 눌러 본 기록\n\n")
-    f.write(f"- 찍은 날: {time.strftime('%Y-%m-%d %H:%M')}\n- 에뮬레이터: Pleos Connect v2.1.0 (`-gpu host`)\n- 앱: 새로 설치한 debug APK\n- 실행 중 앱이 죽은 횟수(logcat 의 FATAL EXCEPTION): {fatal}\n\n")
+    f.write(f"- 찍은 날: {time.strftime('%Y-%m-%d %H:%M')}\n- 에뮬레이터: Pleos Connect v2.1.0 (`-gpu host`)\n- 앱: 새로 설치한 {os.path.basename(APK)} ({'서버 연결' if ONLINE else '서버 없음'})\n- 실행 중 앱이 죽은 횟수(logcat 의 FATAL EXCEPTION): {fatal}\n\n")
     f.write("| 장면 | 확인한 것 | 판정 | 화면에서 읽은 값 |\n|---|---|---|---|\n")
     for seg, title, step, ok, seen in LOG:
         f.write(f"| {seg}. {title} | {step} | {'통과' if ok else '실패'} | {seen.replace('|', '/')} |\n")
