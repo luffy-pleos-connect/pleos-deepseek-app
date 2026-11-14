@@ -5,6 +5,8 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
+import ai.moca.app.MocaApp
+import ai.moca.app.nav.PlaceKind
 import moca.core.FixAction
 import org.json.JSONObject
 
@@ -57,20 +59,16 @@ object FixLinks {
         )
         when (decision.kind) {
             LinkKind.NAVI -> {
-                val keyword = decision.keyword
-                if (keyword == null) {
-                    onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
-                    return
+                val kind = placeKindOf(action)
+                val app = activity.application as? MocaApp
+                val naviResult = if (kind == null || app == null) {
+                    null
+                } else {
+                    app.navi.navigateTo(kind, demo = app.prefs.demoEnabled)
                 }
-                try {
-                    PleosNaviSearch.open(activity, keyword) { opened ->
-                        if (opened) {
-                            onDone(Result(Code.NAVI_OPENED, LinkRoute.MSG_NAVI_OPENED, fellBackFromNavi))
-                        } else {
-                            dispatch(activity, action, drivingLimited, fellBackFromNavi = true, onDone)
-                        }
-                    }
-                } catch (e: Exception) {
+                if (naviResult != null && naviResult.ok) {
+                    onDone(Result(Code.NAVI_OPENED, naviResult.message, fellBackFromNavi))
+                } else {
                     dispatch(activity, action, drivingLimited, fellBackFromNavi = true, onDone)
                 }
             }
@@ -90,14 +88,22 @@ object FixLinks {
         }
     }
 
+    /** 내비로 갈 [FixAction] 을 장소 종류로 옮긴다. 부품은 내비 대상이 아니다. */
+    private fun placeKindOf(action: FixAction): PlaceKind? = when (action) {
+        FixAction.REPAIR_SHOP -> PlaceKind.REPAIR_SHOP
+        FixAction.TIRE_SHOP -> PlaceKind.TIRE_SHOP
+        FixAction.CHARGE -> PlaceKind.CHARGING_STATION
+        FixAction.FUEL -> PlaceKind.GAS_STATION
+        FixAction.PARTS -> null
+    }
+
     private fun showQr(
         activity: FragmentActivity,
         title: String,
         url: String,
         fellBackFromNavi: Boolean,
         onDone: (Result) -> Unit,
-    ) {
-        activity.runOnUiThread {
+    ) {        activity.runOnUiThread {
             if (activity.isFinishing) {
                 onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
                 return@runOnUiThread

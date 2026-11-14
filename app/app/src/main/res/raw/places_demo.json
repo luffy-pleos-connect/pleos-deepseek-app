@@ -1,0 +1,6 @@
+[
+  {"kind": "REPAIR_SHOP", "name": "MOCA 데모 정비소", "latitude": 37.566535, "longitude": 126.977969, "address": "서울특별시 중구 세종대로 110"},
+  {"kind": "TIRE_SHOP", "name": "MOCA 데모 타이어점", "latitude": 37.561000, "longitude": 126.986000, "address": "서울특별시 중구 (데모 위치)"},
+  {"kind": "GAS_STATION", "name": "MOCA 데모 주유소", "latitude": 37.575000, "longitude": 126.977000, "address": "서울특별시 종로구 (데모 위치)"},
+  {"kind": "CHARGING_STATION", "name": "MOCA 데모 충전소", "latitude": 37.570000, "longitude": 126.983000, "address": "서울특별시 종로구 (데모 위치)"}
+]
