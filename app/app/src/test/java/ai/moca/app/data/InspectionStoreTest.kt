@@ -214,7 +214,7 @@ class InspectionStoreTest {
         val s = store()
         val e = evaluate(s.demoInspect("D3", today).snapshot, s.care(Profile.DEMO, today))
         assertEquals(listOf(100, 50, 75, 100, 100), Category.entries.map { e.categories[it] })
-        assertTrue(e.redCap)
+        assertTrue("감점 대상 빨간 경고등이 있다(종합이 이미 B 라 상한이 더 깎지는 않는다)", e.hasRed)
     }
 
     @Test
