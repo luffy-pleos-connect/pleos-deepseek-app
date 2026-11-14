@@ -1,5 +1,5 @@
-11-14 21:16:29.105 I/MOCA_NAVI(23643): connected=true
-11-14 21:17:16.486 I/MOCA_NAVI( 8941): connected=true
-11-14 21:18:50.785 I/MOCA_NAVI( 8941): requestRoute MOCA 데모 정비소 sent
-11-14 21:18:57.011 I/MOCA_NAVI( 8941): onRouteStarted MOCA 데모 정비소
-11-14 21:18:57.015 I/MOCA_NAVI( 8941): onRouteEnded
+11-15 01:52:52.220 I/MOCA_NAVI(32338): connected=true
+11-15 01:53:37.868 I/MOCA_NAVI(18514): connected=true
+11-15 01:55:03.213 I/MOCA_NAVI(18514): requestRoute MOCA 데모 정비소 sent
+11-15 01:55:09.754 I/MOCA_NAVI(18514): onRouteStarted MOCA 데모 정비소
+11-15 01:55:09.766 I/MOCA_NAVI(18514): onRouteEnded
