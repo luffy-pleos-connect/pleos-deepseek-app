@@ -1,133 +1,63 @@
 package ai.moca.app.link
 
-import android.view.WindowManager
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import ai.moca.app.MocaApp
+import ai.moca.app.R
 import ai.moca.app.nav.PlaceKind
 import moca.core.FixAction
 import org.json.JSONObject
 
 /**
- * 문제를 고칠 곳으로 이어 준다.
- * 제조사를 읽는 값이 앱에 없어 QR 정비 주소는 [LinkTargets.Maker.UNKNOWN](현대)을 쓴다.
+ * 문제를 고칠 곳으로 이어 준다. 내비 갈래 하나만 남는다(최종정리 5장 6·7·8번).
+ * 용품 구매 QR 은 상태관리 화면이 그 줄 안에 그림으로 보여 준다. 여기서 QR 을 만들지 않는다.
  */
 object FixLinks {
-    enum class Code { NAVI_OPENED, QR_SHOWN, BLOCKED_DRIVING, FAILED }
+    enum class Code { NAVI_OPENED, FAILED }
 
     data class Result(
         val code: Code,
         val message: String,
-        val fellBackFromNavi: Boolean = false,
+        val demoData: Boolean = false,
     ) {
         fun toJson(): String = JSONObject().apply {
-            val opened = code == Code.NAVI_OPENED || code == Code.QR_SHOWN
-            put("ok", opened)
+            put("ok", code == Code.NAVI_OPENED)
             put("result", code.name)
             put("message", message)
-            if (fellBackFromNavi) put("fallback", true)
+            if (demoData) put("demo", true)
         }.toString()
     }
 
     fun start(
         activity: FragmentActivity,
         action: FixAction,
-        drivingLimited: Boolean,
         onDone: (Result) -> Unit = {},
     ) {
         val once = java.util.concurrent.atomic.AtomicBoolean(false)
         fun done(result: Result) {
             if (once.compareAndSet(false, true)) onDone(result)
         }
-        dispatch(activity, action, drivingLimited, fellBackFromNavi = false, ::done)
-    }
-
-    private fun dispatch(
-        activity: FragmentActivity,
-        action: FixAction,
-        drivingLimited: Boolean,
-        fellBackFromNavi: Boolean,
-        onDone: (Result) -> Unit,
-    ) {
-        val maker = LinkTargets.Maker.UNKNOWN
-        val decision = LinkRoute.decide(
-            action,
-            maker,
-            searchPlaceWorks = if (fellBackFromNavi) false else LinkRoute.SEARCH_PLACE_WORKS,
-        )
-        when (decision.kind) {
-            LinkKind.NAVI -> {
-                val kind = placeKindOf(action)
-                val app = activity.application as? MocaApp
-                val naviResult = if (kind == null || app == null) {
-                    null
-                } else {
-                    app.navi.navigateTo(kind, demo = app.prefs.demoEnabled)
-                }
-                if (naviResult != null && naviResult.ok) {
-                    onDone(Result(Code.NAVI_OPENED, naviResult.message, fellBackFromNavi))
-                } else {
-                    dispatch(activity, action, drivingLimited, fellBackFromNavi = true, onDone)
-                }
-            }
-            LinkKind.QR -> {
-                if (drivingLimited) {
-                    onDone(Result(Code.BLOCKED_DRIVING, LinkRoute.MSG_BLOCKED_DRIVING, fellBackFromNavi))
-                    return
-                }
-                val url = decision.url
-                if (url == null) {
-                    onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
-                    return
-                }
-                showQr(activity, action.label, url, fellBackFromNavi, onDone)
-            }
-            LinkKind.NONE -> onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
+        val kind = placeKindOf(action)
+        val app = activity.application as? MocaApp
+        if (kind == null || app == null) {
+            done(Result(Code.FAILED, activity.getString(R.string.link_qr_in_status)))
+            return
         }
+        val result = app.navi.navigateTo(kind, demo = app.prefs.demoEnabled)
+        done(
+            Result(
+                code = if (result.ok) Code.NAVI_OPENED else Code.FAILED,
+                message = result.message,
+                demoData = result.demoData,
+            ),
+        )
     }
 
-    /** 내비로 갈 [FixAction] 을 장소 종류로 옮긴다. 부품은 내비 대상이 아니다. */
+    /** 내비로 갈 [FixAction] 을 장소 종류로 옮긴다. 부품은 내비 대상이 아니라 상태관리 QR 로 간다. */
     private fun placeKindOf(action: FixAction): PlaceKind? = when (action) {
         FixAction.REPAIR_SHOP -> PlaceKind.REPAIR_SHOP
         FixAction.TIRE_SHOP -> PlaceKind.TIRE_SHOP
         FixAction.CHARGE -> PlaceKind.CHARGING_STATION
         FixAction.FUEL -> PlaceKind.GAS_STATION
         FixAction.PARTS -> null
-    }
-
-    private fun showQr(
-        activity: FragmentActivity,
-        title: String,
-        url: String,
-        fellBackFromNavi: Boolean,
-        onDone: (Result) -> Unit,
-    ) {        activity.runOnUiThread {
-            if (activity.isFinishing) {
-                onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
-                return@runOnUiThread
-            }
-            try {
-                val dialog = android.app.Dialog(activity, ai.pleos.ds.R.style.Theme_PleosConnect_Popup)
-                val root = activity.layoutInflater.inflate(ai.moca.app.R.layout.dialog_qr, null)
-                root.findViewById<TextView>(ai.moca.app.R.id.qrTitle).text = title
-                root.findViewById<TextView>(ai.moca.app.R.id.qrDomain).text = LinkTargets.domainOf(url)
-                val sizePx = (360 * activity.resources.displayMetrics.density).toInt().coerceAtLeast(1)
-                root.findViewById<ImageView>(ai.moca.app.R.id.qrImage)
-                    .setImageBitmap(QrBitmap.render(QrMatrix.encode(url), sizePx))
-                root.findViewById<Button>(ai.moca.app.R.id.qrClose).setOnClickListener { dialog.dismiss() }
-                dialog.setContentView(root)
-                dialog.window?.setLayout(
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.MATCH_PARENT,
-                )
-                dialog.show()
-                val message = if (fellBackFromNavi) LinkRoute.MSG_NAVI_FAILED_QR else LinkRoute.MSG_QR_SHOWN
-                onDone(Result(Code.QR_SHOWN, message, fellBackFromNavi))
-            } catch (e: Exception) {
-                onDone(Result(Code.FAILED, LinkRoute.MSG_FIND_IN_NAVI, fellBackFromNavi))
-            }
-        }
     }
 }

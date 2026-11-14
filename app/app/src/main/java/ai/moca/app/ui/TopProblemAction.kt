@@ -32,7 +32,7 @@ object TopProblemAction {
         button.text = target.label
         button.visibility = android.view.View.VISIBLE
         button.setOnClickListener {
-            FixLinks.start(host, target.action, host.isDrivingLimited()) { linkResult ->
+            FixLinks.start(host, target.action) { linkResult ->
                 PleosToast.show(host, linkResult.message)
             }
         }

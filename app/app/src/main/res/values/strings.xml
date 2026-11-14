@@ -67,40 +67,47 @@
     <string name="main_button_battle_hint">다른 운전자와 관리 점수 겨루기</string>
     <string name="main_battle_no_grade">등급이 있어야 대전할 수 있어요</string>
 
-    <string name="status_title">상태관리</string>
-    <string name="status_todo">할 일</string>
-    <string name="status_trend">최근 추이</string>
     <string name="status_trend_title">최근 점검 종합 점수</string>
     <string name="status_trend_empty">점검이 쌓이면 추이를 보여 드려요</string>
-    <string name="status_label_values">읽은 값</string>
-    <string name="status_label_deductions">감점</string>
-    <string name="status_label_advice">조치</string>
-    <string name="status_no_deduction">감점 없음</string>
-    <string name="status_value_line">%1$s: %2$s</string>
-    <string name="status_telltale_line">%1$s 경고등: %2$s</string>
-    <string name="status_deduction_line">%1$s −%2$d</string>
-    <string name="status_detail_score">%1$s · %2$d</string>
-    <string name="status_percent_value">%1$s%%</string>
-    <string name="status_tire_low_count">저압 %1$d개</string>
-    <string name="status_tire_low_where">저압 바퀴 %1$s</string>
     <string name="boot_inspecting">차량을 점검하는 중이에요</string>
-    <string name="status_item_engine_oil">엔진오일</string>
-    <string name="status_item_transmission_oil">변속기오일</string>
-    <string name="status_item_brake_fluid">브레이크액</string>
-    <string name="status_item_tire">타이어</string>
-    <string name="status_item_battery">배터리</string>
-    <string name="status_item_fuel">연료</string>
-    <string name="status_item_washer">워셔액</string>
-    <string name="status_item_airbag">에어백 전개</string>
-    <string name="status_item_telltales">경고등</string>
-    <string name="status_level_normal">정상</string>
-    <string name="status_level_low">부족</string>
-    <string name="status_level_critical">심각 부족</string>
-    <string name="status_level_high">과다</string>
-    <string name="status_telltale_off">꺼짐</string>
-    <string name="status_color_red">빨강</string>
-    <string name="status_color_yellow">노랑</string>
-    <string name="status_color_green">초록</string>
+    <!-- 상태관리 2D 그림 (최종정리 5장 3번) -->
+    <string name="car_diagram_description">자동차 그림. %1$s</string>
+    <string name="car_zone_state">%1$s %2$s</string>
+    <string name="car_wheel_low">저압 %1$s</string>
+
+    <!-- 상태관리 해결방안 (최종정리 5장 5번 표) -->
+    <string name="status_care">관리 %1$d</string>
+    <string name="status_reinspect">다시 점검</string>
+    <string name="status_reinspect_loading">차량 상태 확인 중</string>
+    <string name="status_resolve_abs">ABS 해결 (데모)</string>
+    <string name="status_no_solution">지금 해결할 항목이 없어요</string>
+    <string name="status_zone_unreadable">이 구역은 읽을 수 없어요</string>
+    <string name="status_resolve_abs_failed">점검 기록을 찾지 못했어요. 다시 점검해 주세요</string>
+    <string name="status_solution_points">−%1$d</string>
+    <string name="status_solution_kind_repair_shop">정비소 방문</string>
+    <string name="status_solution_kind_buy">용품 구매</string>
+    <string name="status_solution_kind_self">직접 해결</string>
+    <string name="status_button_find_repair">정비소 찾기</string>
+    <string name="status_button_gas_station">주유소 안내</string>
+    <string name="status_button_charging_station">충전소 안내</string>
+    <string name="status_button_ask_ai">AI에게 물어보기</string>
+    <string name="status_qr_caption">휴대폰 카메라로 찍으면 쿠팡에서 상품을 볼 수 있어요</string>
+    <string name="status_qr_inflator_description">휴대용 타이어 공기 주입기 QR 코드</string>
+    <string name="status_qr_washer_description">워셔액 QR 코드</string>
+
+    <string name="solution_text_warning_red_second">고장일 수 있어요. 가까운 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_warning_yellow">이상이 있을 수 있어요. 가까운 시일 안에 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_engine_oil_low">엔진오일 교체가 필요해요. 가까운 정비소에서 교체하세요</string>
+    <string name="solution_text_engine_oil_high">엔진오일 양이 많아요. 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_transmission_oil">변속기오일에 이상이 있을 수 있어요. 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_brake_fluid">브레이크액에 이상이 있을 수 있어요. 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_airbag">에어백이 전개된 기록이 있어요. 정비소에서 점검을 받아 보세요</string>
+    <string name="solution_text_tire_low">공기를 넣은 뒤 [다시 점검]해도 저압이면 정비소 방문을 권해요</string>
+    <string name="solution_text_washer">워셔액을 보충해 주세요</string>
+    <string name="solution_text_fuel_low">연료가 10% 아래예요. 가까운 주유소에서 주유하세요</string>
+    <string name="solution_text_battery_low">배터리가 10% 아래예요. 가까운 충전소에서 충전하세요</string>
+    <string name="solution_text_energy_both_low">연료와 배터리가 모두 10% 아래예요. 가까운 주유소나 충전소에 들르세요</string>
+
 
     <string name="voice_title">AI 보이스</string>
     <string name="voice_hint_idle">마이크를 누르고 말해 보세요</string>
@@ -176,10 +183,5 @@
     <string name="common_close">닫기</string>
     <string name="common_loading">불러오는 중…</string>
 
-    <string name="link_blocked_driving">정차한 뒤에 볼 수 있어요</string>
-    <string name="link_find_in_navi">내비게이션에서 직접 찾아 주세요</string>
-    <string name="link_navi_opened">내비게이션 검색을 열었어요</string>
-    <string name="link_qr_shown">휴대폰으로 열 수 있는 QR 을 띄웠어요</string>
-    <string name="link_navi_failed_qr">내비게이션에 연결하지 못해 QR 을 띄웠어요</string>
-    <string name="link_qr_image">QR 코드</string>
+    <string name="link_qr_in_status">상태관리에서 QR 을 확인해 주세요</string>
 </resources>

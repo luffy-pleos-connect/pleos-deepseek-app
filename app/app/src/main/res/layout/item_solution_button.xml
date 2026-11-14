@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 감점 원인 줄에 붙는 단추(정비소 찾기 · 주유소 안내 · 충전소 안내). 코드로 줄에 붙인다. -->
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Pleos.Button.Primary.M"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/moca_gap_small"
+    android:layout_weight="1" />

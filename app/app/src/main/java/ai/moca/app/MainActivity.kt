@@ -134,6 +134,16 @@ class MainActivity : FragmentActivity() {
 
     fun goVoice() = show(VOICE_TAG) { VoiceFragment() }
 
+    /**
+     * 상태관리의 [AI에게 물어보기]. 항목 정보를 들고 보이스챗을 연다(최종정리 11.1절).
+     * 새 화면을 만들지 않고, 이미 떠 있는 보이스챗이 있으면 그것에 인자를 넘긴다.
+     */
+    fun openVoiceWithItem(item: Bundle) {
+        show(VOICE_TAG, forceNew = true) {
+            VoiceFragment().apply { arguments = item }
+        }
+    }
+
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
     fun goSettings() = show(SETTINGS_TAG) { SettingsFragment() }

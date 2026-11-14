@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  감점 원인 한 줄의 상세(최종정리 5장 5번 표). 이름·감점·해결방안 종류·안내 문구·단추·QR·[AI에게 물어보기].
+  이 파일은 구역 카드의 상세 안에 코드로 붙인다.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/solutionRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/moca_gap"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/solutionLabel"
+            style="@style/Pleos.Text.Body.L.Strong"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/solutionPoints"
+            style="@style/Pleos.Text.Title.S"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/moca_gap_small"
+            android:textColor="@color/pleos_regulation_red" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/solutionKinds"
+        style="@style/Pleos.Text.Label.M"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_tiny"
+        android:textColor="@color/pleos_text_dark_secondary" />
+
+    <TextView
+        android:id="@+id/solutionStopFirst"
+        style="@style/Pleos.Text.Body.L"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:text="@string/c14_stop_safely"
+        android:textColor="@color/pleos_regulation_red"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/solutionText"
+        style="@style/Pleos.Text.Body.L"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small" />
+
+    <TextView
+        android:id="@+id/solutionSecond"
+        style="@style/Pleos.Text.Body.L"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/qrRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/qrImage"
+            android:layout_width="@dimen/moca_qr_size"
+            android:layout_height="@dimen/moca_qr_size"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/qrCaption"
+            style="@style/Pleos.Text.Body.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_tiny"
+            android:text="@string/status_qr_caption"
+            android:textColor="@color/pleos_text_dark_secondary" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/solutionButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:orientation="horizontal" />
+
+    <TextView
+        android:id="@+id/solutionBonus"
+        style="@style/Pleos.Text.Body.M"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:textColor="@color/pleos_text_dark_secondary" />
+
+    <LinearLayout
+        android:id="@+id/solutionResultRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_tiny"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/solutionResult"
+            style="@style/Pleos.Text.Body.M"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/pleos_text_dark_secondary" />
+
+        <TextView
+            android:id="@+id/solutionDemoBadge"
+            style="@style/Pleos.Text.Label.M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/moca_gap_small"
+            android:text="@string/c13_badge_demo"
+            android:textColor="@color/pleos_text_dark_secondary"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/solutionAsk"
+        style="@style/Widget.Pleos.Button.Primary.S"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/moca_gap_small"
+        android:text="@string/status_button_ask_ai" />
+</LinearLayout>

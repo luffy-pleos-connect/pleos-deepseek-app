@@ -122,7 +122,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
             rerunInspection = { ai.moca.app.inspect.Inspector(app).run(force = true) },
             startFix = { action ->
                 suspendCancellableCoroutine { cont ->
-                    FixLinks.start(activity, action, activity.isDrivingLimited()) { result ->
+                    FixLinks.start(activity, action) { result ->
                         if (cont.isActive) cont.resume(result.toJson())
                     }
                 }
@@ -259,7 +259,7 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         fixButton.text = action.label
         fixButton.setOnClickListener {
             val host = activity as? ai.moca.app.MainActivity ?: return@setOnClickListener
-            FixLinks.start(host, action, host.isDrivingLimited()) { result ->
+            FixLinks.start(host, action) { result ->
                 PleosToast.show(host, result.message)
             }
         }
@@ -296,9 +296,16 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         else -> null
     }
 
-    private companion object {
-        const val REQ_AUDIO = 1001
-        val STATUS_TOOLS = setOf(
+    companion object {
+        /** 상태관리의 [AI에게 물어보기]가 넘기는 항목 정보(최종정리 11.1절). */
+        const val ARG_ITEM_CATEGORY = "item_category"
+        const val ARG_ITEM_GROUP = "item_group"
+        const val ARG_ITEM_LABEL = "item_label"
+        const val ARG_ITEM_POINTS = "item_points"
+        const val ARG_ITEM_KINDS = "item_kinds"
+
+        private const val REQ_AUDIO = 1001
+        private val STATUS_TOOLS = setOf(
             "get_active_warnings",
             "get_latest_inspection",
             "get_part_status",

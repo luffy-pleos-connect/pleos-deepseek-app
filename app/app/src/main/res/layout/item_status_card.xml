@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  구역 카드 한 장(최종정리 5장 2·5번). 머리(이름·점수·상태)는 항상 보이고,
+  누르면 상세(감점 원인·해결방안·단추·QR·면책)가 펼쳐진다.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cardRoot"
+    style="@style/Widget.Pleos.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/moca_gap_small"
+    android:background="@drawable/moca_status_card_bg"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="@dimen/moca_card_padding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/cardDot"
+            android:layout_width="@dimen/moca_status_dot"
+            android:layout_height="@dimen/moca_status_dot"
+            android:background="@drawable/moca_status_dot" />
+
+        <TextView
+            android:id="@+id/cardTitle"
+            style="@style/Pleos.Text.Title.S"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/moca_gap_small"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/cardStatus"
+            style="@style/Pleos.Text.Body.M"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/moca_gap_small" />
+
+        <TextView
+            android:id="@+id/cardScore"
+            style="@style/Pleos.Text.Title.S"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/cardDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone" />
+</LinearLayout>

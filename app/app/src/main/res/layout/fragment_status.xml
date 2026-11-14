@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  상태관리 (최종정리 5장). 왼쪽은 등급·관리 점수·2D 그림·[다시 점검]·추이, 오른쪽은 구역 카드 5개.
+  오른쪽만 스크롤한다. 왼쪽은 1680×1210 패널에 스크롤 없이 들어간다.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,360 +13,58 @@
     android:paddingEnd="@dimen/moca_screen_margin"
     android:paddingBottom="@dimen/moca_gap">
 
+    <!-- 왼쪽: 등급 · 관리 · 그림 · 다시 점검 · ABS 해결 · 추이 -->
     <LinearLayout
-        android:id="@+id/statusCategoryList"
-        style="@style/Widget.Pleos.Card"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="@dimen/moca_card_padding"
-        android:paddingTop="@dimen/moca_gap_small"
-        android:paddingEnd="@dimen/moca_card_padding"
-        android:paddingBottom="@dimen/moca_gap_small">
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/statusPower"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/moca_row_bg"
-            android:clickable="true"
-            android:focusable="true"
             android:gravity="center_vertical"
-            android:minHeight="@dimen/moca_status_row_min"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/moca_gap_small"
-            android:paddingEnd="@dimen/moca_gap_small">
-
-            <ImageView
-                android:layout_width="@dimen/moca_cat_icon"
-                android:layout_height="@dimen/moca_cat_icon"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_cat_power"
-                android:tint="@color/pleos_text_dark_primary" />
+            android:orientation="horizontal">
 
             <TextView
-                style="@style/Pleos.Text.Title.S"
+                android:id="@+id/statusGrade"
+                style="@style/Pleos.Text.Title.L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/home_grade_placeholder" />
+
+            <TextView
+                android:id="@+id/statusCare"
+                style="@style/Pleos.Text.Body.L"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:layout_weight="1"
-                android:text="@string/home_cat_power" />
-
-            <View
-                android:id="@+id/statusPowerDot"
-                android:layout_width="@dimen/moca_status_dot"
-                android:layout_height="@dimen/moca_status_dot"
-                android:background="@drawable/moca_status_dot" />
-
-            <TextView
-                android:id="@+id/statusPowerStatus"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:text="@string/c06_unmeasurable" />
-
-            <TextView
-                android:id="@+id/statusPowerScore"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/moca_gap"
-                android:text="@string/home_grade_placeholder" />
+                android:layout_weight="1"
+                android:textColor="@color/pleos_text_dark_secondary" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/statusBrake"
+        <ai.moca.app.ui.widget.CarDiagramView
+            android:id="@+id/carDiagram"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/moca_row_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:minHeight="@dimen/moca_status_row_min"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/moca_gap_small"
-            android:paddingEnd="@dimen/moca_gap_small">
-
-            <ImageView
-                android:layout_width="@dimen/moca_cat_icon"
-                android:layout_height="@dimen/moca_cat_icon"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_cat_brake"
-                android:tint="@color/pleos_text_dark_primary" />
-
-            <TextView
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:layout_weight="1"
-                android:text="@string/home_cat_brake" />
-
-            <View
-                android:id="@+id/statusBrakeDot"
-                android:layout_width="@dimen/moca_status_dot"
-                android:layout_height="@dimen/moca_status_dot"
-                android:background="@drawable/moca_status_dot" />
-
-            <TextView
-                android:id="@+id/statusBrakeStatus"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:text="@string/c06_unmeasurable" />
-
-            <TextView
-                android:id="@+id/statusBrakeScore"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap"
-                android:text="@string/home_grade_placeholder" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/statusTire"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/moca_row_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:minHeight="@dimen/moca_status_row_min"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/moca_gap_small"
-            android:paddingEnd="@dimen/moca_gap_small">
-
-            <ImageView
-                android:layout_width="@dimen/moca_cat_icon"
-                android:layout_height="@dimen/moca_cat_icon"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_cat_tire"
-                android:tint="@color/pleos_text_dark_primary" />
-
-            <TextView
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:layout_weight="1"
-                android:text="@string/home_cat_tire" />
-
-            <View
-                android:id="@+id/statusTireDot"
-                android:layout_width="@dimen/moca_status_dot"
-                android:layout_height="@dimen/moca_status_dot"
-                android:background="@drawable/moca_status_dot" />
-
-            <TextView
-                android:id="@+id/statusTireStatus"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:text="@string/c06_unmeasurable" />
-
-            <TextView
-                android:id="@+id/statusTireScore"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap"
-                android:text="@string/home_grade_placeholder" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/statusElectric"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/moca_row_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:minHeight="@dimen/moca_status_row_min"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/moca_gap_small"
-            android:paddingEnd="@dimen/moca_gap_small">
-
-            <ImageView
-                android:layout_width="@dimen/moca_cat_icon"
-                android:layout_height="@dimen/moca_cat_icon"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_cat_electric"
-                android:tint="@color/pleos_text_dark_primary" />
-
-            <TextView
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:layout_weight="1"
-                android:text="@string/home_cat_electric" />
-
-            <View
-                android:id="@+id/statusElectricDot"
-                android:layout_width="@dimen/moca_status_dot"
-                android:layout_height="@dimen/moca_status_dot"
-                android:background="@drawable/moca_status_dot" />
-
-            <TextView
-                android:id="@+id/statusElectricStatus"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:text="@string/c06_unmeasurable" />
-
-            <TextView
-                android:id="@+id/statusElectricScore"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap"
-                android:text="@string/home_grade_placeholder" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/statusSafety"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/moca_row_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:minHeight="@dimen/moca_status_row_min"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/moca_gap_small"
-            android:paddingEnd="@dimen/moca_gap_small">
-
-            <ImageView
-                android:layout_width="@dimen/moca_cat_icon"
-                android:layout_height="@dimen/moca_cat_icon"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_cat_safety"
-                android:tint="@color/pleos_text_dark_primary" />
-
-            <TextView
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:layout_weight="1"
-                android:text="@string/home_cat_safety" />
-
-            <View
-                android:id="@+id/statusSafetyDot"
-                android:layout_width="@dimen/moca_status_dot"
-                android:layout_height="@dimen/moca_status_dot"
-                android:background="@drawable/moca_status_dot" />
-
-            <TextView
-                android:id="@+id/statusSafetyStatus"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap_small"
-                android:text="@string/c06_unmeasurable" />
-
-            <TextView
-                android:id="@+id/statusSafetyScore"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/moca_gap"
-                android:text="@string/home_grade_placeholder" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        style="@style/Widget.Pleos.Card"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_marginStart="@dimen/moca_gap"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:padding="@dimen/moca_card_padding">
-
-        <TextView
-            android:id="@+id/detailTitle"
-            style="@style/Pleos.Text.Title.L"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/detailStatus"
-            style="@style/Pleos.Text.Title.S"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_marginTop="@dimen/moca_gap_small"
-            android:text="@string/home_inspecting" />
-
-        <TextView
-            android:id="@+id/detailValuesLabel"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
-            android:text="@string/status_label_values"
-            android:textColor="@color/pleos_text_dark_tertiary" />
-
-        <TextView
-            android:id="@+id/detailValues"
-            style="@style/Pleos.Text.Body.L"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap_small"
-            android:textColor="@color/pleos_text_dark_secondary" />
-
-        <TextView
-            android:id="@+id/detailDeductionsLabel"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
-            android:text="@string/status_label_deductions"
-            android:textColor="@color/pleos_text_dark_tertiary" />
-
-        <TextView
-            android:id="@+id/detailDeductions"
-            style="@style/Pleos.Text.Body.L"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap_small"
-            android:textColor="@color/pleos_text_dark_secondary" />
-
-        <TextView
-            android:id="@+id/detailAdviceLabel"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap"
-            android:text="@string/status_label_advice"
-            android:textColor="@color/pleos_text_dark_tertiary"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/detailAdvice"
-            style="@style/Pleos.Text.Body.L"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/moca_gap_small"
-            android:textColor="@color/pleos_text_dark_primary" />
+            android:layout_weight="1" />
 
         <Button
-            android:id="@+id/detailAction"
+            android:id="@+id/buttonReinspect"
             style="@style/Widget.Pleos.Button.Secondary.L"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/moca_gap"
+            android:text="@string/status_reinspect" />
+
+        <Button
+            android:id="@+id/buttonResolveAbs"
+            style="@style/Widget.Pleos.Button.Primary.M"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap_small"
+            android:text="@string/status_resolve_abs"
             android:visibility="gone" />
 
         <TextView
@@ -374,9 +76,8 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/moca_gap_small"
-            android:layout_weight="1">
+            android:layout_height="@dimen/moca_trend_height"
+            android:layout_marginTop="@dimen/moca_gap_small">
 
             <ai.moca.app.ui.widget.TrendGraphView
                 android:id="@+id/trendGraph"
@@ -395,4 +96,22 @@
                 android:visibility="gone" />
         </FrameLayout>
     </LinearLayout>
+
+    <!-- 오른쪽: 구역 카드 5개. 카드를 누르면 그 카드만 펼쳐진다. -->
+    <ScrollView
+        android:id="@+id/statusCardsScroll"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/moca_gap"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/statusCards"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 </LinearLayout>

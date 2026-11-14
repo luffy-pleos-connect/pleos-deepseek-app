@@ -5,82 +5,74 @@ import ai.moca.app.MocaApp
 import ai.moca.app.R
 import ai.moca.app.inspect.InspectionResult
 import ai.moca.app.inspect.Inspector
-import ai.moca.app.link.FixLinks
-import ai.moca.app.score.ScoreBridge
+import ai.moca.app.ui.model.Solution
+import ai.moca.app.ui.model.SolutionButton
+import ai.moca.app.ui.model.SolutionKind
+import ai.moca.app.ui.model.SolutionText
+import ai.moca.app.ui.model.Solutions
+import ai.moca.app.ui.model.StatusOrder
+import ai.moca.app.ui.widget.CarDiagramView
 import ai.moca.app.ui.widget.TrendGraphView
-import ai.moca.app.vehicle.ItemReading
-import ai.moca.app.vehicle.PleosVehicleSource
+import ai.moca.app.nav.PlaceKind
+import ai.moca.app.score.ScoreBridge
 import ai.pleos.ds.PleosToast
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import moca.core.Category
 import moca.core.CategoryStatus
-import moca.core.Color
-import moca.core.Deduction
-import moca.core.FluidLevel
 import moca.core.InspectionHistory
-import moca.core.Item
-import moca.core.Priority
 import moca.core.Profile
-import moca.core.Rules
-import moca.core.Telltale
-import moca.core.WheelArea
-import moca.core.VehicleSnapshot
 
 /**
- * 상세: 왼쪽 카테고리 다섯 줄, 오른쪽은 고른 카테고리의 값·감점·조치·추이.
- * 값은 읽은 것만 보여 준다. 못 읽은 항목과 지원하지 않는 항목을 구분한다.
+ * 상태관리 (최종정리 5장).
+ * 왼쪽: 등급·관리 점수, 2D 자동차 그림, [다시 점검], (데모 D3) [ABS 해결 (데모)], 추이.
+ * 오른쪽: 구역 카드 5개. 점수가 낮은 구역이 위. 카드를 누르면 그 카드만 펼쳐진다.
+ * 그림의 영역을 눌러도 그 구역 카드가 펼쳐진다.
  */
 class StatusFragment : Fragment(R.layout.fragment_status) {
 
     val requestedCategory: String?
         get() = arguments?.getString(ARG_CATEGORY)
 
-    private lateinit var rows: List<CatRow>
-    private lateinit var detailTitle: TextView
-    private lateinit var detailStatus: TextView
-    private lateinit var detailValues: TextView
-    private lateinit var detailDeductions: TextView
-    private lateinit var detailAdvice: TextView
-    private lateinit var detailAdviceLabel: TextView
-    private lateinit var detailAction: TextView
+    private lateinit var gradeText: TextView
+    private lateinit var careText: TextView
+    private lateinit var carDiagram: CarDiagramView
+    private lateinit var reinspectButton: Button
+    private lateinit var resolveAbsButton: Button
     private lateinit var trendGraph: TrendGraphView
     private lateinit var trendEmpty: TextView
+    private lateinit var cardsColumn: LinearLayout
+
+    private lateinit var cards: Map<Category, CardHolder>
     private var inspection: InspectionResult? = null
     private var selected: Category? = null
+    private var busy = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        rows = listOf(
-            catRow(view, Category.POWER, R.id.statusPower, R.id.statusPowerDot, R.id.statusPowerStatus, R.id.statusPowerScore),
-            catRow(view, Category.BRAKE_STEERING, R.id.statusBrake, R.id.statusBrakeDot, R.id.statusBrakeStatus, R.id.statusBrakeScore),
-            catRow(view, Category.TIRE, R.id.statusTire, R.id.statusTireDot, R.id.statusTireStatus, R.id.statusTireScore),
-            catRow(view, Category.ELECTRIC, R.id.statusElectric, R.id.statusElectricDot, R.id.statusElectricStatus, R.id.statusElectricScore),
-            catRow(view, Category.SAFETY, R.id.statusSafety, R.id.statusSafetyDot, R.id.statusSafetyStatus, R.id.statusSafetyScore),
-        )
-        detailTitle = view.findViewById(R.id.detailTitle)
-        detailStatus = view.findViewById(R.id.detailStatus)
-        detailValues = view.findViewById(R.id.detailValues)
-        detailDeductions = view.findViewById(R.id.detailDeductions)
-        detailAdvice = view.findViewById(R.id.detailAdvice)
-        detailAdviceLabel = view.findViewById(R.id.detailAdviceLabel)
-        detailAction = view.findViewById(R.id.detailAction)
+        gradeText = view.findViewById(R.id.statusGrade)
+        careText = view.findViewById(R.id.statusCare)
+        carDiagram = view.findViewById(R.id.carDiagram)
+        reinspectButton = view.findViewById(R.id.buttonReinspect)
+        resolveAbsButton = view.findViewById(R.id.buttonResolveAbs)
         trendGraph = view.findViewById(R.id.trendGraph)
         trendEmpty = view.findViewById(R.id.trendEmpty)
-        for (row in rows) {
-            row.root.setOnClickListener {
-                val current = inspection ?: return@setOnClickListener
-                selected = row.category
-                renderRows(current)
-                renderDetail(current)
-            }
-        }
+        cardsColumn = view.findViewById(R.id.statusCards)
+
+        cards = Category.entries.associateWith { category -> createCard(category) }
+        carDiagram.onZoneClick = { category -> openCard(category) }
+        reinspectButton.setOnClickListener { reinspect() }
+        resolveAbsButton.setOnClickListener { resolveAbs() }
 
         val app = requireActivity().application as MocaApp
         val cached = app.latestInspection
@@ -103,76 +95,245 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
 
     private fun bind(result: InspectionResult) {
         inspection = result
-        if (selected == null) selected = initialCategory(result.engine)
-        renderRows(result)
-        renderDetail(result)
+        if (selected == null) selected = initialCategory(result)
+        val evaluation = result.evaluation
+        val categories = evaluation?.categories.orEmpty()
+        val statuses = Category.entries.associateWith { CategoryStatus.of(categories[it]) }
+
+        gradeText.text = if (evaluation?.grade != null && evaluation.displayedOverall != null) {
+            getString(R.string.main_grade, evaluation.grade!!.label, evaluation.displayedOverall!!)
+        } else {
+            getString(R.string.home_grade_placeholder)
+        }
+        careText.text = evaluation?.care?.let { getString(R.string.status_care, it) }.orEmpty()
+        carDiagram.render(statuses, result.engine.lowTireWheels)
+        resolveAbsButton.visibility = if (canResolveAbs(result)) View.VISIBLE else View.GONE
+        renderCards(result, statuses)
         renderTrend(result)
     }
 
-    private fun initialCategory(snapshot: VehicleSnapshot): Category {
+    private fun initialCategory(result: InspectionResult): Category {
         val requested = Category.entries.firstOrNull { it.name == requestedCategory }
         if (requested != null) return requested
-        return Priority.topProblem(snapshot)?.category ?: Category.POWER
+        val order = orderOf(result)
+        return order.firstOrNull { result.evaluation?.categories?.get(it) != null } ?: order.first()
     }
 
-    private fun renderRows(result: InspectionResult) {
+    private fun orderOf(result: InspectionResult): List<Category> {
+        val evaluation = result.evaluation ?: return Category.entries.toList()
+        return StatusOrder.of(evaluation)
+    }
+
+    // ── 오른쪽 카드 ─────────────────────────────────────────────────
+
+    private fun createCard(category: Category): CardHolder {
+        val root = layoutInflater.inflate(R.layout.item_status_card, cardsColumn, false)
+        val holder = CardHolder(
+            category = category,
+            root = root,
+            dot = root.findViewById(R.id.cardDot),
+            title = root.findViewById(R.id.cardTitle),
+            status = root.findViewById(R.id.cardStatus),
+            score = root.findViewById(R.id.cardScore),
+            detail = root.findViewById(R.id.cardDetail),
+        )
+        holder.title.text = labelOf(category)
+        holder.root.setOnClickListener { openCard(category) }
+        return holder
+    }
+
+    private fun renderCards(result: InspectionResult, statuses: Map<Category, CategoryStatus>) {
         val chosen = selected
-        for (row in rows) {
-            val score = result.evaluation?.categories?.get(row.category)
-            val status = CategoryStatus.of(score)
-            row.status.text = status.label
-            row.score.text = score?.toString() ?: getString(R.string.home_grade_placeholder)
-            row.root.isSelected = row.category == chosen
-            val colorRes = when (status) {
-                CategoryStatus.OK -> ai.pleos.ds.R.color.pleos_informative_positive
-                CategoryStatus.CAUTION -> ai.pleos.ds.R.color.pleos_regulation_yellow
-                CategoryStatus.DANGER -> ai.pleos.ds.R.color.pleos_informative_negative
-                CategoryStatus.UNMEASURED -> ai.pleos.ds.R.color.pleos_text_dark_tertiary
-            }
-            row.dot.backgroundTintList = ColorStateList.valueOf(requireContext().getColor(colorRes))
+        cardsColumn.removeAllViews()
+        for (category in orderOf(result)) {
+            val holder = cards[category] ?: continue
+            val score = result.evaluation?.categories?.get(category)
+            val status = statuses.getValue(category)
+            holder.status.text = status.label
+            holder.score.text = score?.toString() ?: getString(R.string.home_grade_placeholder)
+            val color = ContextCompat.getColor(requireContext(), colorOf(status))
+            holder.dot.backgroundTintList = ColorStateList.valueOf(color)
+            holder.status.setTextColor(color)
+            holder.root.isSelected = category == chosen
+            holder.detail.removeAllViews()
+            holder.detail.visibility = if (category == chosen) View.VISIBLE else View.GONE
+            cardsColumn.addView(holder.root)
+            if (category == chosen) fillDetail(category, result)
         }
     }
 
-    private fun renderDetail(result: InspectionResult) {
-        val category = selected ?: Category.POWER
-        val score = result.evaluation?.categories?.get(category)
-        val status = CategoryStatus.of(score)
-        detailTitle.text = category.label
-        detailStatus.text = if (score == null) {
-            status.label
-        } else {
-            getString(R.string.status_detail_score, status.label, score)
-        }
-        val colorRes = when (status) {
-            CategoryStatus.OK -> ai.pleos.ds.R.color.pleos_informative_positive
-            CategoryStatus.CAUTION -> ai.pleos.ds.R.color.pleos_regulation_yellow
-            CategoryStatus.DANGER -> ai.pleos.ds.R.color.pleos_informative_negative
-            CategoryStatus.UNMEASURED -> ai.pleos.ds.R.color.pleos_text_dark_tertiary
-        }
-        detailStatus.setTextColor(requireContext().getColor(colorRes))
-        detailValues.text = valueLines(category, result.readings, result.engine)
-        detailDeductions.text = deductionLines(category, result.engine)
+    private fun openCard(category: Category) {
+        selected = category
+        val result = inspection ?: return
+        val statuses = Category.entries.associateWith { CategoryStatus.of(result.evaluation?.categories?.get(it)) }
+        renderCards(result, statuses)
+    }
 
-        val problem = biggest(category, result.engine)
-        if (problem == null) {
-            detailAdvice.text = ""
-            detailAdvice.visibility = View.GONE
-            detailAdviceLabel.visibility = View.GONE
-            detailAction.visibility = View.GONE
+    private fun fillDetail(category: Category, result: InspectionResult) {
+        val holder = cards[category] ?: return
+        holder.detail.removeAllViews()
+        val score = result.evaluation?.categories?.get(category)
+        if (score == null) {
+            holder.detail.addView(message(getString(R.string.status_zone_unreadable)))
+            holder.detail.addView(disclaimer())
             return
         }
-        detailAdviceLabel.visibility = View.VISIBLE
-        detailAdvice.visibility = View.VISIBLE
-        detailAdvice.text = Priority.advice(problem, result.engine)
-        val action = Priority.actionFor(problem, result.engine)
-        detailAction.visibility = View.VISIBLE
-        detailAction.text = action.label
-        detailAction.setOnClickListener {
-            val host = activity as? MainActivity ?: return@setOnClickListener
-            FixLinks.start(host, action, host.isDrivingLimited()) { linkResult ->
-                PleosToast.show(host, linkResult.message)
-            }
+        val solutions = Solutions.of(result.engine, category)
+        if (solutions.isEmpty()) {
+            holder.detail.addView(message(getString(R.string.status_no_solution)))
+            holder.detail.addView(disclaimer())
+            return
         }
+        for (solution in solutions) {
+            holder.detail.addView(solutionView(solution, result))
+        }
+        holder.detail.addView(disclaimer())
+    }
+
+    private fun message(text: String): TextView = TextView(requireContext()).apply {
+        setText(text)
+        setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Body_L)
+        setTextColor(ContextCompat.getColor(context, ai.pleos.ds.R.color.pleos_text_dark_secondary))
+        setPadding(0, resources.getDimensionPixelSize(R.dimen.moca_gap_small), 0, 0)
+    }
+
+    private fun disclaimer(): TextView = TextView(requireContext()).apply {
+        setText(R.string.c19_disclaimer)
+        setTextAppearance(ai.pleos.ds.R.style.Pleos_Text_Label_M)
+        setTextColor(ContextCompat.getColor(context, ai.pleos.ds.R.color.pleos_text_dark_tertiary))
+        setPadding(0, resources.getDimensionPixelSize(R.dimen.moca_gap), 0, 0)
+    }
+
+    private fun solutionView(solution: Solution, result: InspectionResult): View {
+        val root = layoutInflater.inflate(R.layout.item_solution, null, false)
+        root.findViewById<TextView>(R.id.solutionLabel).text = solution.label
+        root.findViewById<TextView>(R.id.solutionPoints).text =
+            getString(R.string.status_solution_points, solution.points)
+        root.findViewById<TextView>(R.id.solutionKinds).text =
+            solution.kinds.joinToString(" · ") { getString(kindLabel(it)) }
+
+        // 빨간 경고등은 안내 문구 자체가 정차 안내다(c14_stop_safely). 같은 줄을 두 번 쓰지 않는다.
+        val stopFirst = root.findViewById<TextView>(R.id.solutionStopFirst)
+        val showStopFirst = solution.stopFirst && solution.text != SolutionText.WARNING_RED
+        stopFirst.visibility = if (showStopFirst) View.VISIBLE else View.GONE
+
+        val text = root.findViewById<TextView>(R.id.solutionText)
+        text.setText(textOf(solution.text))
+        val second = root.findViewById<TextView>(R.id.solutionSecond)
+        if (solution.text == SolutionText.WARNING_RED) {
+            second.setText(R.string.solution_text_warning_red_second)
+            second.visibility = View.VISIBLE
+        } else {
+            second.visibility = View.GONE
+        }
+
+        val qrRow = root.findViewById<View>(R.id.qrRow)
+        val qrImage = root.findViewById<ImageView>(R.id.qrImage)
+        when {
+            solution.buttons.contains(SolutionButton.QR_INFLATOR) -> {
+                qrRow.visibility = View.VISIBLE
+                qrImage.setImageResource(R.drawable.qr_tire_inflator)
+                qrImage.contentDescription = getString(R.string.status_qr_inflator_description)
+            }
+            solution.buttons.contains(SolutionButton.QR_WASHER) -> {
+                qrRow.visibility = View.VISIBLE
+                qrImage.setImageResource(R.drawable.qr_washer_fluid)
+                qrImage.contentDescription = getString(R.string.status_qr_washer_description)
+            }
+            else -> qrRow.visibility = View.GONE
+        }
+
+        val buttons = root.findViewById<LinearLayout>(R.id.solutionButtons)
+        val repairActions = mutableListOf<Button>()
+        for (button in solution.buttons) {
+            val kind = placeKindOf(button) ?: continue
+            val view = layoutInflater.inflate(R.layout.item_solution_button, buttons, false) as Button
+            view.setText(labelOf(button))
+            view.setOnClickListener { navigate(kind, root) }
+            buttons.addView(view)
+            repairActions += view
+        }
+        buttons.visibility = if (buttons.childCount == 0) View.GONE else View.VISIBLE
+
+        root.findViewById<TextView>(R.id.solutionBonus).text =
+            getString(R.string.c07_bonus_fixed, solution.label)
+
+        root.findViewById<View>(R.id.solutionAsk).setOnClickListener {
+            val host = activity as? MainActivity ?: return@setOnClickListener
+            host.openVoiceWithItem(voiceArgs(solution))
+        }
+        return root
+    }
+
+    private fun navigate(kind: PlaceKind, solutionRoot: View) {
+        val host = activity as? MainActivity ?: return
+        val app = requireActivity().application as MocaApp
+        val naviResult = app.navi.navigateTo(kind, demo = app.prefs.demoEnabled)
+        val row = solutionRoot.findViewById<View>(R.id.solutionResultRow)
+        val text = solutionRoot.findViewById<TextView>(R.id.solutionResult)
+        val badge = solutionRoot.findViewById<TextView>(R.id.solutionDemoBadge)
+        row.visibility = View.VISIBLE
+        text.text = naviResult.message
+        badge.visibility = if (naviResult.demoData) View.VISIBLE else View.GONE
+        if (!naviResult.ok) PleosToast.show(host, naviResult.message)
+    }
+
+    private fun voiceArgs(solution: Solution): Bundle = Bundle().apply {
+        putString(VoiceFragment.ARG_ITEM_CATEGORY, labelOf(solution.category))
+        putString(VoiceFragment.ARG_ITEM_GROUP, solution.group)
+        putString(VoiceFragment.ARG_ITEM_LABEL, solution.label)
+        putInt(VoiceFragment.ARG_ITEM_POINTS, solution.points)
+        putString(
+            VoiceFragment.ARG_ITEM_KINDS,
+            solution.kinds.joinToString(",") { getString(kindLabel(it)) },
+        )
+    }
+
+    // ── 왼쪽 ────────────────────────────────────────────────────────
+
+    private fun reinspect() {
+        if (busy) return
+        val app = requireActivity().application as MocaApp
+        busy = true
+        reinspectButton.isEnabled = false
+        reinspectButton.setText(R.string.status_reinspect_loading)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = try {
+                Inspector(app).run(force = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            busy = false
+            if (!isAdded) return@launch
+            reinspectButton.isEnabled = true
+            reinspectButton.setText(R.string.status_reinspect)
+            if (result != null) bind(result)
+        }
+    }
+
+    /** 데모 D3 에서 ABS 빨간 경고등이 지금도 켜져 있을 때만 보인다. */
+    private fun canResolveAbs(result: InspectionResult): Boolean {
+        val app = requireActivity().application as MocaApp
+        if (!result.demo || !app.prefs.demoEnabled) return false
+        if (app.prefs.demoScenarioId != SCENARIO_D3) return false
+        return result.engine.telltales.any { it.active && it.telltale == moca.core.Telltale.ABS && it.color == moca.core.Color.RED }
+    }
+
+    private fun resolveAbs() {
+        val app = requireActivity().application as MocaApp
+        val host = activity as? MainActivity ?: return
+        app.store.demoResolveD3(ScoreBridge.today())
+        val result = Inspector.stored(app)
+        if (result == null) {
+            PleosToast.show(host, getString(R.string.status_resolve_abs_failed))
+            return
+        }
+        app.latestInspection = result
+        app.lastInspectKey = Inspector.currentKey(app)
+        selected = Category.BRAKE_STEERING
+        bind(result)
     }
 
     private fun renderTrend(result: InspectionResult) {
@@ -192,182 +353,81 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
     }
 
     private fun showUnread() {
-        detailStatus.text = getString(R.string.c06_unmeasurable)
-        detailValues.text = getString(R.string.c06_unmeasurable)
-        detailDeductions.text = getString(R.string.status_no_deduction)
-        detailAdvice.visibility = View.GONE
-        detailAdviceLabel.visibility = View.GONE
-        detailAction.visibility = View.GONE
+        gradeText.text = getString(R.string.home_grade_placeholder)
+        careText.text = ""
+        carDiagram.render(emptyMap(), emptySet())
+        resolveAbsButton.visibility = View.GONE
+        cardsColumn.removeAllViews()
+        cardsColumn.addView(message(getString(R.string.c06_unmeasurable)))
         trendGraph.visibility = View.GONE
         trendEmpty.visibility = View.VISIBLE
     }
 
-    /**
-     * 변속기 오일·연료·에어백 전개는 앱이 읽지 않는다(ScoreBridge).
-     * 엔진 기본값(정상)을 화면에 올리지 않고 측정 불가로 둔다.
-     */
-    private fun valueLines(
-        category: Category,
-        readings: Map<String, ItemReading>,
-        engine: VehicleSnapshot,
-    ): String {
-        val lines = mutableListOf<String>()
-        when (category) {
-            Category.POWER -> {
-                lines += fluidLine(
-                    getString(R.string.status_item_engine_oil),
-                    readings[PleosVehicleSource.KEY_OIL_ENGINE],
-                    engine.engineOil,
-                    Item.ENGINE_OIL,
-                    engine,
-                )
-                lines += unread(getString(R.string.status_item_transmission_oil))
-            }
-            Category.BRAKE_STEERING -> {
-                lines += fluidLine(
-                    getString(R.string.status_item_brake_fluid),
-                    readings[PleosVehicleSource.KEY_BRAKE_FLUID],
-                    engine.brakeFluid,
-                    Item.BRAKE_FLUID,
-                    engine,
-                )
-            }
-            Category.TIRE -> lines += tireLine(readings[PleosVehicleSource.KEY_TIRE_LOW], engine)
-            Category.ELECTRIC -> {
-                lines += batteryLine(readings[PleosVehicleSource.KEY_SOC])
-                lines += unread(getString(R.string.status_item_fuel))
-            }
-            Category.SAFETY -> {
-                lines += washerLine(readings[PleosVehicleSource.KEY_WASHER], engine)
-                lines += unread(getString(R.string.status_item_airbag))
-            }
-        }
-        lines += telltaleLines(category, readings[PleosVehicleSource.KEY_TELLTALES], engine)
-        return lines.joinToString("\n")
+    // ── 이름·색 ─────────────────────────────────────────────────────
+
+    private fun labelOf(category: Category): String = when (category) {
+        Category.POWER -> getString(R.string.home_cat_power)
+        Category.BRAKE_STEERING -> getString(R.string.home_cat_brake)
+        Category.TIRE -> getString(R.string.home_cat_tire)
+        Category.ELECTRIC -> getString(R.string.home_cat_electric)
+        Category.SAFETY -> getString(R.string.home_cat_safety)
     }
 
-    private fun fluidLine(
-        name: String,
-        reading: ItemReading?,
-        level: FluidLevel,
-        item: Item,
-        engine: VehicleSnapshot,
-    ): String {
-        if (reading != null && !reading.supported) return line(name, getString(R.string.c05_unsupported))
-        if (reading == null || reading.value == null || level == FluidLevel.ERROR || item in engine.unsupported) {
-            return unread(name)
-        }
-        val word = when (level) {
-            FluidLevel.NORMAL -> getString(R.string.status_level_normal)
-            FluidLevel.LOW -> getString(R.string.status_level_low)
-            FluidLevel.CRITICALLY_LOW -> getString(R.string.status_level_critical)
-            FluidLevel.HIGH -> getString(R.string.status_level_high)
-            FluidLevel.ERROR -> getString(R.string.c06_unmeasurable)
-        }
-        return line(name, word)
+    private fun colorOf(status: CategoryStatus): Int = when (status) {
+        CategoryStatus.OK -> ai.pleos.ds.R.color.pleos_informative_positive
+        CategoryStatus.CAUTION -> ai.pleos.ds.R.color.pleos_regulation_yellow
+        CategoryStatus.DANGER -> ai.pleos.ds.R.color.pleos_regulation_red
+        CategoryStatus.UNMEASURED -> ai.pleos.ds.R.color.pleos_text_dark_tertiary
     }
 
-    private fun tireLine(reading: ItemReading?, engine: VehicleSnapshot): String {
-        val name = getString(R.string.status_item_tire)
-        if (reading != null && !reading.supported) return line(name, getString(R.string.c05_unsupported))
-        if (reading == null || reading.value == null || Item.TIRE in engine.unsupported) return unread(name)
-        val wheels = engine.lowTireWheels
-        val word = if (wheels.isEmpty()) {
-            val count = reading.value?.toInt() ?: 0
-            if (count == 0) {
-                getString(R.string.status_level_normal)
-            } else {
-                getString(R.string.status_tire_low_count, count)
-            }
-        } else {
-            val where = WheelArea.entries.filter { it in wheels }.joinToString(", ") { it.label }
-            getString(R.string.status_tire_low_where, where)
-        }
-        return line(name, word)
+    private fun kindLabel(kind: SolutionKind): Int = when (kind) {
+        SolutionKind.REPAIR_SHOP -> R.string.status_solution_kind_repair_shop
+        SolutionKind.BUY -> R.string.status_solution_kind_buy
+        SolutionKind.SELF -> R.string.status_solution_kind_self
     }
 
-    private fun batteryLine(reading: ItemReading?): String {
-        val name = getString(R.string.status_item_battery)
-        if (reading != null && !reading.supported) return line(name, getString(R.string.c05_unsupported))
-        val value = reading?.value ?: return unread(name)
-        val asLong = value.toLong()
-        val shown = if (value == asLong.toDouble()) asLong.toString() else value.toString()
-        return line(name, getString(R.string.status_percent_value, shown))
+    private fun textOf(text: SolutionText): Int = when (text) {
+        SolutionText.WARNING_RED -> R.string.c14_stop_safely
+        SolutionText.WARNING_YELLOW -> R.string.solution_text_warning_yellow
+        SolutionText.ENGINE_OIL_LOW -> R.string.solution_text_engine_oil_low
+        SolutionText.ENGINE_OIL_HIGH -> R.string.solution_text_engine_oil_high
+        SolutionText.TRANSMISSION_OIL -> R.string.solution_text_transmission_oil
+        SolutionText.BRAKE_FLUID -> R.string.solution_text_brake_fluid
+        SolutionText.AIRBAG -> R.string.solution_text_airbag
+        SolutionText.TIRE_LOW -> R.string.solution_text_tire_low
+        SolutionText.WASHER -> R.string.solution_text_washer
+        SolutionText.FUEL_LOW -> R.string.solution_text_fuel_low
+        SolutionText.BATTERY_LOW -> R.string.solution_text_battery_low
+        SolutionText.ENERGY_BOTH_LOW -> R.string.solution_text_energy_both_low
     }
 
-    private fun washerLine(reading: ItemReading?, engine: VehicleSnapshot): String {
-        val name = getString(R.string.status_item_washer)
-        if (reading != null && !reading.supported) return line(name, getString(R.string.c05_unsupported))
-        if (reading == null || reading.value == null || Item.WASHER_FLUID in engine.unsupported) return unread(name)
-        val word = if (engine.washerFluidLow) {
-            getString(R.string.status_level_low)
-        } else {
-            getString(R.string.status_level_normal)
-        }
-        return line(name, word)
+    private fun labelOf(button: SolutionButton): Int = when (button) {
+        SolutionButton.FIND_REPAIR -> R.string.status_button_find_repair
+        SolutionButton.GAS_STATION -> R.string.status_button_gas_station
+        SolutionButton.CHARGING_STATION -> R.string.status_button_charging_station
+        SolutionButton.QR_INFLATOR, SolutionButton.QR_WASHER -> R.string.status_button_find_repair
     }
 
-    private fun telltaleLines(
-        category: Category,
-        reading: ItemReading?,
-        engine: VehicleSnapshot,
-    ): List<String> {
-        val name = getString(R.string.status_item_telltales)
-        val relevant = Telltale.entries.any { Rules.categoryOf(it) == category }
-        if (!relevant) return emptyList()
-        if (reading != null && !reading.supported) return listOf(line(name, getString(R.string.c05_unsupported)))
-        if (reading == null || reading.value == null || Item.TELLTALES in engine.unsupported) return listOf(unread(name))
-        val active = engine.telltales.filter { state ->
-            state.active && Rules.categoryOf(state.telltale) == category
-        }
-        if (active.isEmpty()) return listOf(line(name, getString(R.string.status_telltale_off)))
-        return active.map { state ->
-            val color = when (state.color) {
-                Color.RED -> getString(R.string.status_color_red)
-                Color.YELLOW -> getString(R.string.status_color_yellow)
-                Color.GREEN -> getString(R.string.status_color_green)
-                Color.OFF -> getString(R.string.status_telltale_off)
-                Color.UNKNOWN -> getString(R.string.c06_unmeasurable)
-            }
-            getString(R.string.status_telltale_line, state.telltale.label, color)
-        }
+    /** 내비로 갈 단추만 장소 종류가 있다. QR 은 단추가 아니라 그림이다. */
+    private fun placeKindOf(button: SolutionButton): PlaceKind? = when (button) {
+        SolutionButton.FIND_REPAIR -> PlaceKind.REPAIR_SHOP
+        SolutionButton.GAS_STATION -> PlaceKind.GAS_STATION
+        SolutionButton.CHARGING_STATION -> PlaceKind.CHARGING_STATION
+        SolutionButton.QR_INFLATOR, SolutionButton.QR_WASHER -> null
     }
 
-    private fun deductionLines(category: Category, engine: VehicleSnapshot): String {
-        val rows = Rules.deductions(engine).filter { it.category == category }
-        if (rows.isEmpty()) return getString(R.string.status_no_deduction)
-        return rows.joinToString("\n") { deduction ->
-            getString(R.string.status_deduction_line, deduction.label, deduction.points)
-        }
-    }
-
-    private fun biggest(category: Category, engine: VehicleSnapshot): Deduction? =
-        Rules.deductions(engine)
-            .filter { it.category == category }
-            .minWithOrNull(compareByDescending<Deduction> { it.points }.thenBy { it.group })
-
-    private fun unread(name: String): String = line(name, getString(R.string.c06_unmeasurable))
-
-    private fun line(name: String, value: String): String = getString(R.string.status_value_line, name, value)
-
-    private fun catRow(view: View, category: Category, rowId: Int, dotId: Int, statusId: Int, scoreId: Int): CatRow =
-        CatRow(
-            category = category,
-            root = view.findViewById(rowId),
-            dot = view.findViewById(dotId),
-            status = view.findViewById(statusId),
-            score = view.findViewById(scoreId),
-        )
-
-    private class CatRow(
+    private class CardHolder(
         val category: Category,
         val root: View,
         val dot: View,
+        val title: TextView,
         val status: TextView,
         val score: TextView,
+        val detail: LinearLayout,
     )
 
     companion object {
         const val ARG_CATEGORY = "category"
+        private const val SCENARIO_D3 = "D3"
     }
 }
