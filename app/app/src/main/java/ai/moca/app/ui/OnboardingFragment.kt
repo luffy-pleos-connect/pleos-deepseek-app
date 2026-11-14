@@ -2,15 +2,18 @@ package ai.moca.app.ui
 
 import ai.moca.app.MocaApp
 import ai.moca.app.R
+import ai.moca.app.data.NicknameRule
+import ai.pleos.ds.PleosPopup
 import android.os.Bundle
 import android.view.View
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 
 /**
- * 첫 실행: 동의 4개 + 닉네임.
- * 동의 2·3·4를 거부하면 오프라인 음성·연습 상대·기록 없음으로 동작한다(F-23).
+ * 첫 실행: 동의 3개(모두 필수) + 닉네임(최종정리 3장 0번).
+ * 하나라도 동의하지 않으면 안내 뒤 앱을 끝낸다. 동의 값은 저장하지 않고 onboarded 도 켜지 않는다.
  */
 class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
@@ -20,26 +23,35 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         val prefs = app.prefs
         val activity = requireActivity() as ai.moca.app.MainActivity
 
-        val consent1 = view.findViewById<CheckBox>(R.id.consent1)
-        val consent2 = view.findViewById<CheckBox>(R.id.consent2)
-        val consent3 = view.findViewById<CheckBox>(R.id.consent3)
-        val consent4 = view.findViewById<CheckBox>(R.id.consent4)
+        val consents = listOf(R.id.consent1, R.id.consent2, R.id.consent3)
+            .map { view.findViewById<CheckBox>(it) }
         val nicknameInput = view.findViewById<EditText>(R.id.nicknameInput)
+        val nicknameError = view.findViewById<TextView>(R.id.nicknameError)
 
         view.findViewById<View>(R.id.buttonStart).setOnClickListener {
-            prefs.consentData = consent1.isChecked
-            prefs.consentCloud = consent2.isChecked
-            prefs.applyBattleConsent(consent3.isChecked)
-            prefs.consentUsage = consent4.isChecked
             val typed = nicknameInput.text?.toString()?.trim().orEmpty()
-            if (typed.isNotEmpty()) prefs.nickname = typed
-            prefs.onboarded = true
-            activity.goHome()
-        }
+            // 비어 있으면 «드라이버» + 네 자리를 만든다. 채웠는데 규칙에 안 맞으면 넘어가지 않는다.
+            val nickname = NicknameRule.resolve(typed)
+            if (nickname == null) {
+                nicknameError.visibility = View.VISIBLE
+                nicknameInput.requestFocus()
+                return@setOnClickListener
+            }
+            nicknameError.visibility = View.GONE
 
-        view.findViewById<View>(R.id.buttonSkip).setOnClickListener {
-            // 건너뛰기는 동의를 받지 않는다. 나머지 값은 지금처럼 두고 사용 기록만 끈다.
-            prefs.consentUsage = false
+            if (consents.any { !it.isChecked }) {
+                PleosPopup.Builder(activity)
+                    .description(getString(R.string.onboarding_consent_required))
+                    .confirm(getString(R.string.common_confirm)) { activity.finishAffinity() }
+                    .cancelable(false)
+                    .show()
+                return@setOnClickListener
+            }
+
+            prefs.consentData = true
+            prefs.consentCloud = true
+            prefs.applyBattleConsent(true)
+            prefs.nickname = nickname
             prefs.onboarded = true
             activity.goHome()
         }

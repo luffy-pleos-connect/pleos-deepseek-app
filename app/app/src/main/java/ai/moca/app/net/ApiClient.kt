@@ -16,7 +16,7 @@ import java.net.URL
 
 /**
  * 서버 `/chat` 호출. 외부 라이브러리 없이 HttpURLConnection 만 쓴다.
- * - `/chat`·`/opponent` 에는 기기 비밀값을 보내지 않는다(기기 ID만). 비밀값은 `/snapshots` 에만 쓴다.
+ * - `/chat` 에는 기기 비밀값을 보내지 않는다(기기 ID만). 비밀값은 `/snapshots` 에만 쓴다.
  * - 로그에 본문·키·기기 ID 원문을 남기지 않는다.
  */
 class ApiClient(
@@ -71,31 +71,6 @@ class ApiClient(
         }
     }
 
-    /** 대전 상대 조회. 실패하면 null. */
-    suspend fun opponent(): JSONObject? = withContext(Dispatchers.IO) {
-        if (baseUrl.isBlank()) return@withContext null
-        var conn: HttpURLConnection? = null
-        try {
-            val url = URL("$baseUrl/opponent?deviceId=${prefs.deviceId}")
-            conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = OPPONENT_TIMEOUT_MS
-                readTimeout = OPPONENT_TIMEOUT_MS
-            }
-            if (conn.responseCode != 200) {
-                android.util.Log.w("MOCA_NET", "opponent ${'$'}{conn.responseCode}")
-                return@withContext null
-            }
-            val text = conn.inputStream.bufferedReader().use { it.readText() }
-            runCatching { JSONObject(text) }.getOrNull()
-        } catch (e: Exception) {
-            android.util.Log.e("MOCA_NET", "opponent failed", e)
-            null
-        } finally {
-            conn?.disconnect()
-        }
-    }
-
     /** 서버 순위. 서버 주소가 비었거나 답이 실패하면 null(화면은 연습 순위 그대로). */
     data class RankAnswer(val rank: Int, val of: Int, val real: Int)
 
@@ -107,8 +82,8 @@ class ApiClient(
             val url = URL("$baseUrl/rank?total=$total&deviceId=$device")
             conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
-                connectTimeout = OPPONENT_TIMEOUT_MS
-                readTimeout = OPPONENT_TIMEOUT_MS
+                connectTimeout = RANK_TIMEOUT_MS
+                readTimeout = RANK_TIMEOUT_MS
             }
             if (conn.responseCode != 200) {
                 android.util.Log.w("MOCA_NET", "rank ${'$'}{conn.responseCode}")
@@ -140,8 +115,8 @@ class ApiClient(
             try {
                 conn = (URL(url).openConnection() as HttpURLConnection).apply {
                     requestMethod = method
-                    connectTimeout = CONNECT_TIMEOUT_MS
-                    readTimeout = CONNECT_TIMEOUT_MS
+                    connectTimeout = SNAPSHOT_TIMEOUT_MS
+                    readTimeout = SNAPSHOT_TIMEOUT_MS
                     setRequestProperty("X-Device-Secret", secret)
                     if (body != null) {
                         doOutput = true
@@ -163,7 +138,10 @@ class ApiClient(
     private companion object {
         const val CONNECT_TIMEOUT_MS = 5_000
         const val READ_TIMEOUT_MS = 20_000
-        const val OPPONENT_TIMEOUT_MS = 3_000
+        const val RANK_TIMEOUT_MS = 3_000
+
+        /** [내 데이터 삭제]는 최대 3초만 기다리고 실패해도 넘어간다. 연결·응답을 각 1.5초로 묶는다. */
+        const val SNAPSHOT_TIMEOUT_MS = 1_500
     }
 }
 

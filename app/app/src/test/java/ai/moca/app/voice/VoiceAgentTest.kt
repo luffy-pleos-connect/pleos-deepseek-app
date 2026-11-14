@@ -95,13 +95,11 @@ class VoiceAgentTest {
     private fun agent(
         client: ChatClient,
         tools: Tools = buildTools(),
-        consent: Boolean = true,
         fillers: MutableList<String> = mutableListOf(),
     ): VoiceAgent = VoiceAgent(
         client = client,
         tools = tools,
         toolsJson = tools.definitions(),
-        consentCloud = consent,
         onFiller = { fillers += it },
     )
 
@@ -189,13 +187,13 @@ class VoiceAgentTest {
         assertTrue(answer.text.contains("경고등"))
     }
 
-    // ── 7. 동의 거부 → 처음부터 오프라인
+    // ── 7. 서버가 안 되면 오프라인 (동의는 필수라 「동의 없음」 갈래가 없다)
     @Test
-    fun `클라우드 동의가 없으면 LLM 을 부르지 않는다`() = runBlocking {
-        val client = ScriptedClient(listOf(ChatResult.Ok(textMessage("불려서는 안 됨"))))
-        val answer = agent(client, consent = false).ask("점검해 줘", drivingMode = false)
+    fun `서버가 안 되면 LLM 을 포기하고 기기 안의 답으로 간다`() = runBlocking {
+        val client = ScriptedClient(listOf(ChatResult.UpstreamError))
+        val answer = agent(client).ask("점검해 줘", drivingMode = false)
         assertTrue(answer.usedOffline)
-        assertEquals(0, client.bodies.size)
+        assertEquals(1, client.bodies.size)
         assertEquals(listOf("run_inspection"), answer.toolCalls)
     }
 
@@ -211,7 +209,7 @@ class VoiceAgentTest {
             "홈으로 가 줘" to "open_screen",
         )
         for ((question, expected) in cases) {
-            val answer = agent(ScriptedClient(listOf(ChatResult.UpstreamError)), consent = false)
+            val answer = agent(ScriptedClient(listOf(ChatResult.UpstreamError)))
                 .ask(question, drivingMode = false)
             assertEquals("질문: $question", listOf(expected), answer.toolCalls)
             assertTrue("질문: $question 는 오프라인이어야 한다", answer.usedOffline)
@@ -221,7 +219,7 @@ class VoiceAgentTest {
     // ── 14. 오프라인 매칭 실패
     @Test
     fun `오프라인에서 매칭 실패하면 안내 문구를 준다`() = runBlocking {
-        val answer = agent(ScriptedClient(listOf(ChatResult.UpstreamError)), consent = false)
+        val answer = agent(ScriptedClient(listOf(ChatResult.UpstreamError)))
             .ask("오늘 날씨 어때?", drivingMode = false)
         assertTrue(answer.usedOffline)
         assertTrue(answer.text.contains("이해하지 못했"))
@@ -313,7 +311,6 @@ class VoiceAgentTest {
             client = ScriptedClient(listOf(ChatResult.UpstreamError)),
             tools = tools,
             toolsJson = tools.definitions(),
-            consentCloud = false,
         ).ask("내 차 등급 몇이야?", drivingMode = false)
         assertTrue(answer.usedOffline)
         assertTrue("점검을 권해야 한다: ${answer.text}", answer.text.contains("점검"))

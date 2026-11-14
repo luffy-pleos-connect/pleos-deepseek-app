@@ -140,7 +140,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         myGrade.text = "${grade.label} · ${eval.displayedOverall ?: "—"}"
         showHint()
 
-        val repo = BattleRepository(app.prefs, ApiClient(app.prefs))
+        val repo = BattleRepository(app.prefs)
         val (w, d, l) = repo.record()
         recordText.text = getString(R.string.battle_record, w, d, l)
 
@@ -149,11 +149,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
                 opponent = found.opponent
                 opponentName.text = found.opponent.nickname
                 opponentScore.text = "${found.opponent.grade} · ${found.opponent.total.toInt()}"
-                opponentKind.text = if (found.isSeed || found.isPractice) {
-                    getString(R.string.battle_practice)
-                } else {
-                    getString(R.string.battle_real_user)
-                }
+                opponentKind.text = getString(R.string.battle_practice)
                 opponentKind.visibility = View.VISIBLE
                 startButton.isEnabled = true
             }
@@ -289,7 +285,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             startButton.isEnabled = true
             startButton.text = getString(R.string.battle_again)
 
-            BattleRepository(app.prefs, ApiClient(app.prefs)).record(
+            BattleRepository(app.prefs).record(
                 win = result.winner == BattleSide.MINE,
                 draw = result.winner == BattleSide.DRAW,
             )

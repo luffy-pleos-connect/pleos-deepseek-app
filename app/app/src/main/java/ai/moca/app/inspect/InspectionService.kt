@@ -35,7 +35,7 @@ class InspectionService : Service() {
         scope.launch {
             try {
                 val app = application as MocaApp
-                val reason = BootPolicy.skipReason(app.prefs.onboarded, app.prefs.consentData)
+                val reason = BootPolicy.skipReason(app.prefs.onboarded)
                 if (reason != null) {
                     Log.i(TAG, "skipped $reason")
                 } else {

@@ -1,16 +1,19 @@
 package ai.moca.app.ui
 
+import ai.moca.app.BuildConfig
 import ai.moca.app.MocaApp
 import ai.moca.app.net.ApiClient
 import ai.moca.app.net.netScope
 import kotlinx.coroutines.launch
 import ai.moca.app.MainActivity
 import ai.moca.app.R
+import ai.moca.app.data.NicknameRule
 import ai.moca.app.data.Prefs
 import ai.moca.app.vehicle.DemoScenario
 import ai.pleos.ds.PleosPopup
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.ToggleButton
@@ -79,29 +82,39 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             }
         }
 
-        val consent = view.findViewById<Switch>(R.id.switchConsent)
-        consent.isChecked = prefs.consentData
-        consent.setOnCheckedChangeListener { _, checked -> prefs.consentData = checked }
-
-        val consentCloud = view.findViewById<Switch>(R.id.switchConsentCloud)
-        consentCloud.isChecked = prefs.consentCloud
-        consentCloud.setOnCheckedChangeListener { _, checked -> prefs.consentCloud = checked }
-
-        val consentBattle = view.findViewById<Switch>(R.id.switchConsentBattle)
-        consentBattle.isChecked = prefs.consentBattle
-        consentBattle.setOnCheckedChangeListener { _, checked ->
-            prefs.applyBattleConsent(checked)
-            if (!checked) {
-                // 끄면 서버에 올린 대전용 요약을 지운다. 기기 ID·비밀값은 지우기 전에 읽어 둔다.
-                val deviceId = prefs.deviceId
-                val deviceSecret = prefs.deviceSecret
-                netScope.launch { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
+        val nicknameEdit = view.findViewById<EditText>(R.id.nicknameEdit)
+        val nicknameError = view.findViewById<TextView>(R.id.nicknameError)
+        view.findViewById<View>(R.id.buttonNicknameSave).setOnClickListener {
+            // 비운 채 누르면 바꾸지 않는다. «드라이버» 자동 생성은 첫 실행 때만 한다.
+            val resolved = NicknameRule.resolve(nicknameEdit.text?.toString().orEmpty())
+            if (resolved == null || nicknameEdit.text.isNullOrBlank()) {
+                nicknameError.visibility = View.VISIBLE
+                return@setOnClickListener
             }
+            nicknameError.visibility = View.GONE
+            prefs.nickname = resolved
+            nickname.text = nicknameText(prefs)
+            nicknameEdit.setText("")
         }
 
-        val consentUsage = view.findViewById<Switch>(R.id.switchConsentUsage)
-        consentUsage.isChecked = prefs.consentUsage
-        consentUsage.setOnCheckedChangeListener { _, checked -> prefs.consentUsage = checked }
+        view.findViewById<View>(R.id.buttonLicenses).setOnClickListener {
+            PleosPopup.Builder(requireActivity())
+                .title(getString(R.string.settings_licenses))
+                .description(getString(R.string.settings_licenses_body))
+                .confirm(getString(R.string.common_close))
+                .show()
+        }
+
+        view.findViewById<View>(R.id.buttonAbout).setOnClickListener {
+            PleosPopup.Builder(requireActivity())
+                .title(getString(R.string.settings_about))
+                .description(
+                    getString(R.string.settings_about_body, BuildConfig.VERSION_NAME) + "\n" +
+                        getString(R.string.c19_disclaimer),
+                )
+                .confirm(getString(R.string.common_close))
+                .show()
+        }
 
         view.findViewById<View>(R.id.buttonDeleteData).setOnClickListener {
             val activity = requireActivity() as MainActivity
@@ -112,12 +125,17 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                     // 서버에 올린 요약도 지운다. 기기 ID·비밀값은 로컬을 지우기 전에 읽어 둔다.
                     val deviceId = prefs.deviceId
                     val deviceSecret = prefs.deviceSecret
-                    netScope.launch { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
                     app.store.clear()
                     prefs.clearAll()
                     app.latestInspection = null
                     app.lastInspectKey = null
-                    activity.goOnboarding()
+                    // 서버 삭제는 최대 3초만 기다리고 실패해도 넘어간다. 끝나면 앱을 닫는다.
+                    netScope.launch {
+                        runCatching { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            activity.finishAffinity()
+                        }
+                    }
                 }
                 .cancel(getString(R.string.common_cancel)) { }
                 .show()

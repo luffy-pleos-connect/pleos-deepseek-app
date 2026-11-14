@@ -34,7 +34,8 @@ class Prefs(context: Context) {
 
     var nickname: String
         // 처음 만든 닉네임은 저장한다. 저장하지 않으면 읽을 때마다 숫자가 바뀐다.
-        get() = sp.getString(KEY_NICKNAME, null) ?: "드라이버${(1000..9999).random()}".also { nickname = it }
+        get() = sp.getString(KEY_NICKNAME, null)
+            ?: NicknameRule.resolve("").orEmpty().also { nickname = it }
         set(value) = sp.edit().putString(KEY_NICKNAME, value).apply()
 
     var onboarded: Boolean
@@ -60,11 +61,6 @@ class Prefs(context: Context) {
     fun applyBattleConsent(value: Boolean) {
         consentBattle = value
     }
-
-    /** 앱 사용 기록(누른 단추·화면)을 서버로 보내는 데 동의했는지. 기본은 꺼짐이다. */
-    var consentUsage: Boolean
-        get() = sp.getBoolean(KEY_CONSENT_USAGE, false)
-        set(value) = sp.edit().putBoolean(KEY_CONSENT_USAGE, value).apply()
 
     /** 프로필별 전적(승·무·패). key 는 "battle_real"·"battle_demo". */
     fun battleRecord(key: String): Triple<Int, Int, Int> = Triple(
@@ -126,7 +122,6 @@ class Prefs(context: Context) {
         const val KEY_DEMO = "demo_enabled"
         const val KEY_DEMO_SCENARIO = "demo_scenario"
         const val KEY_CONSENT_BATTLE = "consent_battle"
-        const val KEY_CONSENT_USAGE = "consent_usage"
     }
 
     private fun seenGradeKey(demo: Boolean) = if (demo) "seen_grade_demo" else "seen_grade_real"

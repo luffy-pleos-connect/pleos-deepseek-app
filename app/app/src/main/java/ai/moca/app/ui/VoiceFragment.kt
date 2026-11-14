@@ -134,7 +134,6 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
             client = client,
             tools = tools,
             toolsJson = tools.definitions(),
-            consentCloud = app.prefs.consentCloud,
             onFiller = { filler ->
                 stateText.text = getString(R.string.voice_state_speaking)
                 speak(filler)

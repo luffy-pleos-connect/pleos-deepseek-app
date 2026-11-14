@@ -108,7 +108,6 @@
     <string name="battle_draw">무승부</string>
     <string name="battle_lose">패배</string>
     <string name="battle_again">다시</string>
-    <string name="battle_real_user">실제 사용자</string>
     <string name="battle_round_score">%1$s : %2$s</string>
     <string name="battle_no_grade_opponent">등급이 나오면 상대를 찾아 드려요</string>
     <string name="battle_hint">대전을 시작하면 다섯 항목을 차례로 겨뤄요</string>
@@ -141,25 +140,27 @@
     <string name="settings_scenario_d7">D7 · 워셔액 부족</string>
     <string name="settings_delete_data">내 데이터 삭제</string>
     <string name="settings_delete_title">내 데이터를 지울까요?</string>
-    <string name="settings_delete_body">점검 기록, 전적, 닉네임, 동의가 모두 지워져요. 서버에 올린 대전용 요약도 지워요</string>
+    <string name="settings_delete_body">점검 기록, 전적, 닉네임, 동의가 모두 지워져요. 지운 뒤 앱이 꺼지고, 다시 켜면 동의부터 시작해요</string>
     <string name="settings_delete_confirm">지우기</string>
+    <string name="settings_nickname_edit">바꿀 닉네임</string>
+    <string name="settings_nickname_save">바꾸기</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
+    <string name="settings_licenses_body">Material Icons — Google\nApache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0</string>
     <string name="settings_about">앱 정보</string>
+    <string name="settings_about_body">MOCA · 버전 %1$s · 팀 해적단</string>
 
     <string name="onboarding_title">MOCA를 시작해 볼까요?</string>
     <string name="onboarding_feature_1">시동을 걸면 차가 스스로 점검해요</string>
     <string name="onboarding_feature_2">고칠 곳까지 바로 이어 줘요</string>
-    <string name="onboarding_feature_3">오늘의 순위로 관리 습관을 만들어요</string>
+    <string name="onboarding_feature_3">다른 운전자와 관리 점수를 겨뤄요</string>
     <string name="onboarding_consent_1">차량 상태로 점수를 계산해요</string>
     <string name="onboarding_consent_2">음성 질문과 점수 요약을 서버를 거쳐 AI에 보내요</string>
     <string name="onboarding_consent_3">대전 상대에게 닉네임·등급·점수가 보여요</string>
-    <string name="onboarding_consent_4">앱 사용 기록을 서버에 보내요</string>
-    <string name="onboarding_consent_2_hint">끄면 기기 안의 답으로만 답해요</string>
-    <string name="onboarding_consent_3_hint">끄면 연습 상대와만 겨뤄요</string>
-    <string name="onboarding_consent_4_hint">누른 단추와 화면만 보내요. 질문 글자와 위치는 보내지 않아요</string>
+    <string name="onboarding_consent_required_hint">세 가지 모두 동의해야 MOCA 를 쓸 수 있어요</string>
+    <string name="onboarding_consent_required">동의하지 않으면 서비스를 이용할 수 없어요</string>
     <string name="onboarding_agree">동의하고 시작</string>
     <string name="onboarding_nickname">닉네임</string>
-    <string name="onboarding_skip">건너뛰기</string>
+    <string name="nickname_invalid">닉네임은 한글·영문·숫자 2~10자로 적어 주세요</string>
 
     <string name="common_cancel">취소</string>
     <string name="common_confirm">확인</string>

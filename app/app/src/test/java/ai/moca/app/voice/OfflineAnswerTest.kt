@@ -47,7 +47,6 @@ class OfflineAnswerTest {
             },
             tools = t,
             toolsJson = t.definitions(),
-            consentCloud = true,
             onFiller = {},
         )
         val answer = agent.ask(question, drivingMode = false)

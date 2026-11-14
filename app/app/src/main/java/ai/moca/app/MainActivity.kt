@@ -162,8 +162,6 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    fun goOnboarding() = show(ONBOARD_TAG) { OnboardingFragment() }
-
     private fun show(tag: String, forceNew: Boolean = false, create: () -> Fragment) {
         val existing = if (forceNew) null else supportFragmentManager.findFragmentByTag(tag)
         val tx = supportFragmentManager.beginTransaction()

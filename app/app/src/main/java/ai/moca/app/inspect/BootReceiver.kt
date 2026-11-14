@@ -12,7 +12,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
         val app = context.applicationContext as? MocaApp ?: return
-        val reason = BootPolicy.skipReason(app.prefs.onboarded, app.prefs.consentData)
+        val reason = BootPolicy.skipReason(app.prefs.onboarded)
         if (reason != null) {
             Log.i(InspectionService.TAG, "skipped $reason")
             return

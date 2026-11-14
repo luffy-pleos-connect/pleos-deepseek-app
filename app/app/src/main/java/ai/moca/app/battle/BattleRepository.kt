@@ -1,7 +1,6 @@
 package ai.moca.app.battle
 
 import ai.moca.app.data.Prefs
-import ai.moca.app.net.ApiClient
 import ai.moca.app.vehicle.DemoScenario
 import moca.core.Category
 import moca.core.Grade
@@ -26,12 +25,11 @@ interface BattleGateway {
 /**
  * 상대 찾기.
  * - 데모 프로필: 시나리오별 고정 상대(계획 10장)
- * - 실제 프로필: 서버 → 3초 안에 없으면 앱 안 시드 = "연습 상대"
- * - 실사용자 대전 동의가 없으면 처음부터 연습 상대
+ * - 실제 프로필: 앱 안 시드 = "연습 상대"
+ * 실제 사용자 상대·서버 상대 조회는 데모 범위 밖이라 쓰지 않는다(최종정리 0.6절 [제안 13]).
  */
 class BattleRepository(
     private val prefs: Prefs,
-    private val api: ApiClient,
     private val random: java.util.Random = java.util.Random(),
 ) : BattleGateway {
 
@@ -44,21 +42,6 @@ class BattleRepository(
             return OpponentResult.Found(opponent, isSeed = true, isPractice = false)
         }
 
-        if (prefs.consentBattle) {
-            val json = runCatching { api.opponent() }.getOrNull()
-            if (json != null) {
-                val opponent = Opponent(
-                    nickname = json.optString("nickname"),
-                    grade = json.optString("grade"),
-                    total = json.optDouble("total", 0.0),
-                    categories = parseCategories(json.optJSONObject("categories")),
-                )
-                if (opponent.nickname.isNotEmpty()) {
-                    return OpponentResult.Found(opponent, json.optBoolean("isSeed"), isPractice = false)
-                }
-            }
-        }
-
         val pool = Seeds.battlePool
         if (pool.isEmpty()) return OpponentResult.Unavailable("no_seed")
         val seed = pool[random.nextInt(pool.size)]
@@ -66,18 +49,6 @@ class BattleRepository(
             Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories),
             isSeed = true,
             isPractice = true,
-        )
-    }
-
-    private fun parseCategories(json: org.json.JSONObject?): Map<Category, Int?> {
-        if (json == null) return emptyMap()
-        fun read(key: String): Int? = if (json.has(key) && !json.isNull(key)) json.optInt(key) else null
-        return mapOf(
-            Category.POWER to read("power"),
-            Category.BRAKE_STEERING to read("brake"),
-            Category.TIRE to read("tire"),
-            Category.ELECTRIC to read("electric"),
-            Category.SAFETY to read("safety"),
         )
     }
 

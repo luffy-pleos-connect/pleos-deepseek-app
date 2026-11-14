@@ -31,13 +31,12 @@ data class Answer(
  *  2. tool_calls 가 있으면 첫 호출 때 필러를 1회 말한다
  *  3. 도구를 실행해 tool 메시지로 붙이고 다시 /chat (최대 4회)
  *  4. 최종 답을 돌려준다
- *  5. 서버 실패·429·동의 거부 → 오프라인 의도 6개로 전환
+ *  5. 서버 실패·429 → 오프라인 의도로 전환
  */
 class VoiceAgent(
     private val client: ChatClient,
     private val tools: Tools,
     private val toolsJson: JSONArray,
-    private val consentCloud: Boolean,
     private val onFiller: (String) -> Unit = {},
 ) {
 
@@ -47,7 +46,6 @@ class VoiceAgent(
      * 분류기가 확신하는 6개 의도에만 쓴다. 실패하면 일반 경로([ask])로 되돌린다.
      */
     suspend fun askFast(question: String, drivingMode: Boolean): Answer {
-        if (!consentCloud) return offline(question, drivingMode)
         val intent = OfflineIntents.detect(question) ?: return ask(question, drivingMode)
         val toolName = OfflineIntents.toolName(intent)
         val toolJson = tools.execute(toolName, OfflineIntents.toolArgs(intent, question))
@@ -78,8 +76,6 @@ class VoiceAgent(
     }
 
     suspend fun ask(question: String, drivingMode: Boolean): Answer {
-        if (!consentCloud) return offline(question, drivingMode)
-
         val messages = JSONArray().apply {
             put(JSONObject().put("role", "system").put("content", systemPrompt(drivingMode)))
             put(JSONObject().put("role", "user").put("content", question))
