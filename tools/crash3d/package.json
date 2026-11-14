@@ -1,0 +1,12 @@
+{
+  "name": "moca-crash3d",
+  "private": true,
+  "type": "module",
+  "description": "대전하기 충돌 시네마틱 사전 렌더 도구 (three.js + 시스템 Chrome CDP + ffmpeg)",
+  "scripts": {
+    "render": "node render.mjs all"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}

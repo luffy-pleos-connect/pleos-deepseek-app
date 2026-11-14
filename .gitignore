@@ -37,3 +37,7 @@ __pycache__/
 
 # Agent Board 작업판(과제·로그)
 .board/
+
+# crash3d 렌더 도구 (npm 의존성·중간 프레임)
+tools/crash3d/node_modules/
+tools/crash3d/frames/

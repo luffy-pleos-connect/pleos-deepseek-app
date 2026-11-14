@@ -7,29 +7,25 @@ import ai.moca.app.battle.BattleRepository
 import ai.moca.app.battle.CatchUp
 import ai.moca.app.battle.CatchUpItem
 import ai.moca.app.battle.CatchUpPlanner
+import ai.moca.app.battle.CrashVariant
 import ai.moca.app.battle.objectParticle
 import ai.moca.app.inspect.InspectionResult
 import ai.moca.app.inspect.Inspector
-import ai.moca.app.ui.widget.CarDiagramLayout
-import ai.moca.app.ui.widget.CarDiagramView
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.VideoView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -38,7 +34,6 @@ import moca.core.BattleResult
 import moca.core.BattleRound
 import moca.core.BattleSide
 import moca.core.Category
-import moca.core.CategoryStatus
 import moca.core.Evaluation
 import moca.core.Seed
 import kotlin.coroutines.resume
@@ -47,12 +42,13 @@ import kotlin.coroutines.resume
  * 대전하기(최종정리 7장). 내 차와 상대 차를 나란히 놓고, 라운드 5개를 차례로 겨룬다.
  * 판정은 :core `Battle.judge` 하나만 쓴다(승패를 덮어쓰지 않는다). 이 화면은 표시와 연출만 맡는다.
  * 상대는 연습 상대(Seeds)뿐이고, 대전 결과는 등급·점수에 반영하지 않는다.
- * 연출은 한 번씩만 움직이고(반복 없음) 차가 부서지거나 찌그러지는 표현은 없다.
+ * [대전 시작]을 누르면 결과에 맞는 3D 충돌 영상(res/raw)을 한 번 재생하고, 끝나면(또는 건너뛰면) 결과를 보인다.
+ * 진 쪽 차는 부서진 그림, 이긴 쪽은 멀쩡한 그림이다(무승부는 둘 다 멀쩡). 영상 재생이 실패하면 영상 없이 바로 결과를 보인다.
  */
 class BattleFragment : Fragment(R.layout.fragment_battle) {
 
-    private lateinit var myCar: CarDiagramView
-    private lateinit var theirCar: CarDiagramView
+    private lateinit var myCar: ImageView
+    private lateinit var theirCar: ImageView
     private lateinit var myName: TextView
     private lateinit var myScore: TextView
     private lateinit var theirName: TextView
@@ -71,12 +67,15 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private lateinit var skipButton: Button
     private lateinit var againButton: Button
     private lateinit var rankingButton: Button
+    private lateinit var crashOverlay: View
+    private lateinit var crashVideo: VideoView
 
     private var myResult: InspectionResult? = null
     private var opponent: Seed? = null
     private var running = false
-    private var skipSignal = CompletableDeferred<Unit>()
-    private var currentAnimator: Animator? = null
+
+    /** 영상이 재생 중일 때만 있다. 부르면 재생을 끝내고 결과로 넘어간다([건너뛰기]·화면 이탈). */
+    private var finishCrash: (() -> Unit)? = null
 
     private enum class Phase { READY, RUNNING, DONE }
 
@@ -102,27 +101,31 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         skipButton = view.findViewById(R.id.battleSkip)
         againButton = view.findViewById(R.id.battleAgain)
         rankingButton = view.findViewById(R.id.battleRanking)
+        crashOverlay = view.findViewById(R.id.battleCrashOverlay)
+        crashVideo = view.findViewById(R.id.battleCrashVideo)
 
         // 이 Fragment 는 화면을 떠났다 돌아와도 같은 인스턴스다. 이전 화면의 진행 상태를 비운다.
         running = false
-        skipSignal = CompletableDeferred()
-        currentAnimator = null
+        finishCrash = null
+        crashOverlay.visibility = View.GONE
 
         startButton.setOnClickListener { startBattle() }
         againButton.setOnClickListener { fightAgain() }
-        skipButton.setOnClickListener {
-            skipSignal.complete(Unit)
-            currentAnimator?.cancel()
-        }
+        skipButton.setOnClickListener { finishCrash?.invoke() }
         rankingButton.setOnClickListener { (activity as? MainActivity)?.goRanking() }
 
         viewLifecycleOwner.lifecycleScope.launch { loadLobby() }
     }
 
+    override fun onPause() {
+        // 화면을 떠나면 재생을 멈춘다(결과 계산은 이어서 끝난다).
+        finishCrash?.invoke()
+        super.onPause()
+    }
+
     override fun onDestroyView() {
-        // 코루틴은 화면과 함께 취소된다. 움직이던 그림은 제자리로 돌려 둔다.
-        currentAnimator?.cancel()
-        currentAnimator = null
+        // 코루틴은 화면과 함께 취소된다. 재생 중이던 영상은 해제한다.
+        stopCrash()
         super.onDestroyView()
     }
 
@@ -145,8 +148,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         if (result == null || evaluation == null || grade == null) {
             // 등급이 없으면 겨룰 수 없다.
             opponent = null
-            myCar.render(emptyMap(), emptySet())
-            theirCar.render(emptyMap(), emptySet())
             myName.text = ""
             myScore.text = ""
             theirName.text = ""
@@ -160,7 +161,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
 
         myName.text = app.prefs.nickname
         myScore.text = getString(R.string.versus_grade_score, grade.label, evaluation.displayedOverall ?: 0)
-        myCar.render(statusesOf(evaluation), result.engine.lowTireWheels)
         opponent = BattleRepository(app.prefs).findOpponent()
         renderOpponent(app)
         renderRecord(app)
@@ -178,8 +178,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             evaluation.displayedOverall ?: seed.overall.toInt(),
         )
         theirBadge.text = getString(if (app.prefs.demoEnabled) R.string.c13_badge_demo else R.string.versus_practice_badge)
-        // 상대 차는 저압 바퀴 정보가 없다.
-        theirCar.render(statusesOf(evaluation), emptySet())
     }
 
     private fun renderRecord(app: MocaApp) {
@@ -187,13 +185,10 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         recordText.text = getString(R.string.versus_record, win, draw, lose)
     }
 
-    private fun statusesOf(evaluation: Evaluation): Map<Category, CategoryStatus> =
-        Category.entries.associateWith { CategoryStatus.of(evaluation.categories[it]) }
-
-    /** 라운드 줄·결과·승리 표시·이 차만큼 카드를 처음 모양으로 되돌린다. */
+    /** 라운드 줄·결과·승리 표시·이 차만큼 카드를 처음 모양으로 되돌리고, 두 차를 멀쩡한 그림으로 둔다. */
     private fun resetBoard() {
-        myCar.translationX = 0f
-        theirCar.translationX = 0f
+        myCar.setImageResource(R.drawable.battle_car_mine)
+        theirCar.setImageResource(R.drawable.battle_car_theirs)
         roundLabel.text = ""
         roundScore.text = ""
         winnerMine.visibility = View.INVISIBLE
@@ -230,7 +225,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         val seed = opponent ?: return
         if (running) return
         running = true
-        skipSignal = CompletableDeferred()
         resetBoard()
         showButtons(Phase.RUNNING)
 
@@ -239,21 +233,19 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         val app = requireActivity().application as MocaApp
 
         viewLifecycleOwner.lifecycleScope.launch {
-            for ((index, round) in judged.rounds.withIndex()) {
-                if (!skipSignal.isCompleted) {
-                    roundLabel.text = getString(R.string.versus_round_label, index + 1, round.category.label)
-                    roundScore.text = ""
-                    playRound(round)
-                    // 건너뛰기를 누르면 기다리지 않고 넘어간다.
-                    if (index < judged.rounds.lastIndex) withTimeoutOrNull(ROUND_DELAY_MS) { skipSignal.await() }
-                }
+            val variant = CrashVariant.of(judged.winner)
+            try {
+                // 영상이 멈춰 끝나지 않는 경우를 대비해 한도를 둔다. 한도가 지나면 영상 없이 결과로 넘어간다.
+                withTimeoutOrNull(CRASH_MAX_MS) { playCrash(variant) }
+            } finally {
+                stopCrash()
+            }
+            roundLabel.text = ""
+            roundScore.text = ""
+            judged.rounds.forEachIndexed { index, round ->
                 rounds.removeViewAt(index)
                 rounds.addView(roundCell(round.category, round), index)
             }
-            myCar.translationX = 0f
-            theirCar.translationX = 0f
-            roundLabel.text = ""
-            roundScore.text = ""
 
             BattleRepository(app.prefs).record(
                 win = judged.winner == BattleSide.MINE,
@@ -261,6 +253,10 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             )
             renderRecord(app)
             showResult(judged, mine, theirs)
+            myCar.setImageResource(if (variant.mineWrecked) R.drawable.battle_car_mine_wrecked else R.drawable.battle_car_mine)
+            theirCar.setImageResource(
+                if (variant.theirsWrecked) R.drawable.battle_car_theirs_wrecked else R.drawable.battle_car_theirs,
+            )
             renderCatchUp(CatchUpPlanner.of(result.engine, mine, theirs))
             showButtons(Phase.DONE)
             running = false
@@ -268,52 +264,39 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     }
 
     /**
-     * 한 라운드 연출. 두 그림이 가운데로 다가가 부딪치고(약 250ms), 점수가 낮은 쪽이 뒤로 더 밀려났다가(약 250ms)
-     * 둘 다 제자리로 돌아온다(약 250ms). 무승부는 다가갔다가 제자리로 돌아오기만 한다.
+     * 충돌 영상을 한 번 재생한다. 끝나거나, 건너뛰거나, 재생 오류가 나거나, 시작에 실패하면 돌아온다.
+     * 영상 파일(res/raw)은 소리가 없고 마지막 장면으로 멈춘다.
      */
-    private suspend fun playRound(round: BattleRound) {
-        val travel = travelPx()
-        val recoil = resources.getDimension(R.dimen.moca_battle_recoil)
-        animate(myCar to travel, theirCar to -travel)
-        if (skipSignal.isCompleted) return
-        roundScore.text = getString(R.string.versus_pair, scoreText(round.mine), scoreText(round.theirs))
-        // 진 쪽만 뒤(제자리 바깥쪽)로 더 밀려난다. 이긴 쪽은 부딪친 자리에 있다.
-        when (round.winner) {
-            BattleSide.MINE -> animate(theirCar to recoil)
-            BattleSide.THEIRS -> animate(myCar to -recoil)
-            BattleSide.DRAW -> Unit
+    private suspend fun playCrash(variant: CrashVariant) = suspendCancellableCoroutine<Unit> { cont ->
+        val done = { if (cont.isActive) cont.resume(Unit) }
+        finishCrash = done
+        try {
+            val raw = when (variant) {
+                CrashVariant.MINE_WINS -> R.raw.battle_crash_mine_wins
+                CrashVariant.THEIRS_WINS -> R.raw.battle_crash_theirs_wins
+                CrashVariant.DRAW -> R.raw.battle_crash_draw
+            }
+            crashVideo.setOnCompletionListener { done() }
+            // true 를 돌려주면 시스템의 «동영상을 재생할 수 없습니다» 대화상자를 띄우지 않는다.
+            crashVideo.setOnErrorListener { _, _, _ -> done(); true }
+            crashVideo.setVideoURI(Uri.parse("android.resource://${requireContext().packageName}/$raw"))
+            crashOverlay.visibility = View.VISIBLE
+            crashVideo.start()
+        } catch (e: Exception) {
+            done()
         }
-        if (skipSignal.isCompleted) return
-        animate(myCar to 0f, theirCar to 0f)
+    }
+
+    /** 오버레이를 걷고 MediaPlayer 를 해제한다. 여러 번 불러도 된다. */
+    private fun stopCrash() {
+        finishCrash = null
+        crashVideo.setOnCompletionListener(null)
+        crashVideo.setOnErrorListener(null)
+        crashVideo.stopPlayback()
+        crashOverlay.visibility = View.GONE
     }
 
     private fun scoreText(score: Int?): String = score?.toString() ?: getString(R.string.home_grade_placeholder)
-
-    /** 두 그림이 서로 닿을 때까지 한쪽이 움직일 거리(px). 그려진 차의 폭을 빼서 계산한다. */
-    private fun travelPx(): Float {
-        val mine = IntArray(2)
-        val theirs = IntArray(2)
-        myCar.getLocationInWindow(mine)
-        theirCar.getLocationInWindow(theirs)
-        val centers = (theirs[0] + theirCar.width / 2f) - (mine[0] + myCar.width / 2f)
-        val drawn = minOf(myCar.width.toFloat(), myCar.height * CarDiagramLayout.CAR_ASPECT)
-        return ((centers - drawn) / 2f).coerceAtLeast(0f)
-    }
-
-    private suspend fun animate(vararg moves: Pair<View, Float>) = suspendCancellableCoroutine { cont ->
-        val set = AnimatorSet().apply {
-            playTogether(moves.map { (view, x) -> ObjectAnimator.ofFloat(view, View.TRANSLATION_X, x) })
-            duration = STEP_MS
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    if (cont.isActive) cont.resume(Unit)
-                }
-            })
-        }
-        currentAnimator = set
-        cont.invokeOnCancellation { set.cancel() }
-        set.start()
-    }
 
     // ── 결과 ────────────────────────────────────────────────────────
 
@@ -470,9 +453,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private fun color(res: Int): Int = ContextCompat.getColor(requireContext(), res)
 
     companion object {
-        private const val ROUND_DELAY_MS = 600L
-
-        /** 다가가기·밀려나기·제자리 돌아오기 한 단계의 길이. */
-        private const val STEP_MS = 250L
+        /** 영상(5~6초)이 이보다 오래 끝나지 않으면 멈춘 것으로 보고 결과로 넘어간다. */
+        private const val CRASH_MAX_MS = 15_000L
     }
 }

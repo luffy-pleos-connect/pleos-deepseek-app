@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  대전하기 (최종정리 7장). 위: 내 차 · 가운데 라운드 · 상대 차. 가운데 아래(스크롤): 라운드 줄 · 결과 · 전적 · 이 차만큼 관리하려면.
+  대전하기 (최종정리 7장). 위: 내 차 · 가운데 · 상대 차. 가운데 아래(스크롤): 라운드 줄 · 결과 · 전적 · 이 차만큼 관리하려면.
   맨 아래: [월간랭킹] [건너뛰기] [다시] [대전 시작]. 채워진 단추는 [대전 시작] 하나다.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,200 +12,232 @@
     android:paddingEnd="@dimen/moca_screen_margin"
     android:paddingBottom="@dimen/moca_gap">
 
-    <!-- 이름 · 등급 · 종합 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/battleWinnerMine"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/versus_winner_mark"
-                android:textColor="@color/pleos_informative_positive"
-                android:visibility="invisible" />
-
-            <TextView
-                android:id="@+id/battleMyName"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:id="@+id/battleMyScore"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/pleos_text_dark_secondary" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="@dimen/moca_battle_center_width"
-            android:layout_height="match_parent"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/battleRoundLabel"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="@color/pleos_text_dark_secondary" />
-
-            <TextView
-                android:id="@+id/battleRoundScore"
-                style="@style/Pleos.Text.Title.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/battleWinnerTheirs"
-                style="@style/Pleos.Text.Title.S"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/versus_winner_mark"
-                android:textColor="@color/pleos_informative_positive"
-                android:visibility="invisible" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/battleTheirName"
-                    style="@style/Pleos.Text.Title.S"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:id="@+id/battleTheirBadge"
-                    style="@style/Pleos.Text.Label.M"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/moca_gap_small"
-                    android:textColor="@color/pleos_text_dark_tertiary" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/battleTheirScore"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/pleos_text_dark_secondary" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- 차 그림. 대전 연출 때 두 그림이 가운데로 다가간다(translationX). -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/moca_battle_car_height"
-        android:layout_marginTop="@dimen/moca_gap_small"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
-
-        <ai.moca.app.ui.widget.CarDiagramView
-            android:id="@+id/battleMyCar"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:enabled="false" />
-
-        <Space
-            android:layout_width="@dimen/moca_battle_center_width"
-            android:layout_height="match_parent" />
-
-        <ai.moca.app.ui.widget.CarDiagramView
-            android:id="@+id/battleTheirCar"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:enabled="false" />
-    </LinearLayout>
-
-    <ScrollView
+    <!-- 위쪽 내용 영역. 대전 영상 오버레이가 이 영역만 덮어서 아래 [건너뛰기] 단추는 계속 보인다. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/moca_gap"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:scrollbars="none">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <!-- 이름 · 등급 · 종합 -->
             <LinearLayout
-                android:id="@+id/battleRounds"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
-                android:orientation="horizontal" />
-
-            <TextView
-                android:id="@+id/battleResult"
-                style="@style/Pleos.Text.Title.M"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:gravity="center"
-                android:textColor="@color/pleos_text_dark_primary" />
-
-            <TextView
-                android:id="@+id/battleRecord"
-                style="@style/Pleos.Text.Body.L"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap_small"
-                android:gravity="center"
-                android:textColor="@color/pleos_text_dark_secondary" />
-
-            <LinearLayout
-                android:id="@+id/battleCatchUp"
-                style="@style/Widget.Pleos.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:orientation="vertical"
-                android:padding="@dimen/moca_card_padding"
-                android:visibility="gone">
-
-                <TextView
-                    style="@style/Pleos.Text.Title.S"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/versus_catchup_title" />
+                android:orientation="horizontal">
 
                 <LinearLayout
-                    android:id="@+id/battleCatchUpLines"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/battleWinnerMine"
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/versus_winner_mark"
+                        android:textColor="@color/pleos_informative_positive"
+                        android:visibility="invisible" />
+
+                    <TextView
+                        android:id="@+id/battleMyName"
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/battleMyScore"
+                        style="@style/Pleos.Text.Body.L"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="@dimen/moca_battle_center_width"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/battleRoundLabel"
+                        style="@style/Pleos.Text.Body.L"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+
+                    <TextView
+                        android:id="@+id/battleRoundScore"
+                        style="@style/Pleos.Text.Title.L"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/battleWinnerTheirs"
+                        style="@style/Pleos.Text.Title.S"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/versus_winner_mark"
+                        android:textColor="@color/pleos_informative_positive"
+                        android:visibility="invisible" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/battleTheirName"
+                            style="@style/Pleos.Text.Title.S"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:id="@+id/battleTheirBadge"
+                            style="@style/Pleos.Text.Label.M"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/moca_gap_small"
+                            android:textColor="@color/pleos_text_dark_tertiary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/battleTheirScore"
+                        style="@style/Pleos.Text.Body.L"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 차 그림. 로비·결과에서 정지 그림을 보인다(진 쪽은 부서진 그림). -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/moca_battle_car_height"
+                android:layout_marginTop="@dimen/moca_gap_small"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/battleMyCar"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitCenter" />
+
+                <Space
+                    android:layout_width="@dimen/moca_battle_center_width"
+                    android:layout_height="match_parent" />
+
+                <ImageView
+                    android:id="@+id/battleTheirCar"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitCenter" />
+            </LinearLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/moca_gap"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:scrollbars="none">
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
-            </LinearLayout>
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/battleRounds"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal" />
+
+                    <TextView
+                        android:id="@+id/battleResult"
+                        style="@style/Pleos.Text.Title.M"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap"
+                        android:gravity="center"
+                        android:textColor="@color/pleos_text_dark_primary" />
+
+                    <TextView
+                        android:id="@+id/battleRecord"
+                        style="@style/Pleos.Text.Body.L"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap_small"
+                        android:gravity="center"
+                        android:textColor="@color/pleos_text_dark_secondary" />
+
+                    <LinearLayout
+                        android:id="@+id/battleCatchUp"
+                        style="@style/Widget.Pleos.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/moca_gap"
+                        android:orientation="vertical"
+                        android:padding="@dimen/moca_card_padding"
+                        android:visibility="gone">
+
+                        <TextView
+                            style="@style/Pleos.Text.Title.S"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/versus_catchup_title" />
+
+                        <LinearLayout
+                            android:id="@+id/battleCatchUpLines"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+                    </LinearLayout>
+                </LinearLayout>
+            </ScrollView>
         </LinearLayout>
-    </ScrollView>
+
+        <!-- 충돌 영상. 16:9 를 지켜 가운데에 틀고, 남는 곳은 앱 배경색이다. -->
+        <FrameLayout
+            android:id="@+id/battleCrashOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/pleos_background_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <VideoView
+                android:id="@+id/battleCrashVideo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center" />
+        </FrameLayout>
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
