@@ -23,13 +23,8 @@
     <!-- 보이스: 음성 인식. 주행 중에는 PleosUxRestrictions 로 진입을 막는다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- 서버(/chat·/snapshots·/opponent) 통신. HTTPS 는 release, HTTP 는 디버그 전용 설정. -->
+    <!-- 서버(POST /chat, 내 데이터 삭제 때 DELETE /snapshots) 통신. HTTPS 는 release, HTTP 는 디버그 전용 설정. -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- 시동 때 화면 없이 한 번 점검하고 바로 끝낸다. -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".MocaApp"
@@ -53,17 +48,6 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".inspect.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
-        <service
-            android:name=".inspect.InspectionService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>

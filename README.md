@@ -84,7 +84,7 @@ MOCA는 차량이 알려 주는 부품 상태를 읽어 **0~100점과 등급(S+~
 | AI | Hive `deepseek-ai/deepseek-v4.1-flash-1017`, OpenAI 호환 `/chat/completions`, 도구 호출 |
 | 저장 | 기기 안 파일 `inspections_real.json`, `inspections_demo.json`과 SharedPreferences. 실제 점검 기록은 90일 보관 |
 
-권한(`AndroidManifest.xml` 기준)은 PRIVATE_CAR_SAFETY, CAR_SAFETY, CAR_ENERGY, CAR_DRIVE, CAR_INFO, NAVI_ROUTE, NAVI_ROUTE_SEARCH, NAVI_CUSTOM_MAP, RECORD_AUDIO, INTERNET, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC 다. 부팅·포그라운드 서비스 권한과 `inspect/BootReceiver` 는 매니페스트에 남아 있지만, 이 문서가 설명하는 점검(앱 시작·[다시 점검])과는 별개다. 시동 때 화면 없이 도는 점검을 계속 둘지는 **확인 필요**다.
+권한(`AndroidManifest.xml` 기준)은 PRIVATE_CAR_SAFETY, CAR_SAFETY, CAR_ENERGY, CAR_DRIVE, CAR_INFO, NAVI_ROUTE, NAVI_ROUTE_SEARCH, NAVI_CUSTOM_MAP, RECORD_AUDIO, INTERNET 이다. 점검은 앱을 켤 때와 [다시 점검]을 누를 때만 돈다. 시동 때 화면 없이 도는 점검은 없다.
 
 ### 4. 실행 방법
 

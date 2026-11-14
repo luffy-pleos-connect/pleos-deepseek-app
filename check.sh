@@ -106,11 +106,12 @@ LINT="$ROOT/../pleos-connect-design-system/.claude/skills/pleos-connect-ui-revie
 if [ -f "$LINT" ] && [ -d app ]; then
   out="$(python3 "$LINT" app 2>&1)"
   # P0/P1/P2 건수 파싱. 스크립트 출력 형식이 바뀌면 이 부분을 고친다.
-  p0=$(printf '%s' "$out" | grep -cE 'P0' || true)
-  if printf '%s' "$out" | grep -qE 'P0|안전'; then
-    row "PG-08" FAIL "lint P0 흔적 ${p0}건 — 원문 확인 필요"
+  # 마지막 줄이 «N finding(s) in M file(s). …» 다.
+  last="$(printf '%s\n' "$out" | tail -1)"
+  if printf '%s' "$last" | grep -qE '^0 finding'; then
+    row "PG-08" PASS "$last"
   else
-    row "PG-08" PASS "P0 0건"
+    row "PG-08" FAIL "$last"
   fi
   printf '%s\n' "$out" > docs/evidence/G3/pleos_lint.txt 2>/dev/null || true
 else
@@ -119,7 +120,7 @@ fi
 
 # ─────────────────────────────── 4. 정적 검사 (CQ-03, CQ-07, CQ-09, LY-06)
 say "정적 검사"
-SRC_PATHS=(app/src core/src server)
+SRC_PATHS=(app/app/src core/src server)
 existing=()
 for p in "${SRC_PATHS[@]}"; do [ -e "$p" ] && existing+=("$p"); done
 
@@ -135,7 +136,7 @@ if [ ${#existing[@]} -gt 0 ]; then
   if [ -z "$secret_hits" ]; then row "CQ-07(비밀값)" PASS "0건"; else row "CQ-07(비밀값)" FAIL "$(printf '%s' "$secret_hits" | head -3 | tr '\n' ' ')"; fi
 
   # LY-06: hex 색
-  hex_hits="$(grep -rnE '#[0-9a-fA-F]{6}\b' app/src/main/res 2>/dev/null | grep -v 'pleos_colors.xml' || true)"
+  hex_hits="$(grep -rnE '#[0-9a-fA-F]{6}\b' app/app/src/main/res 2>/dev/null | grep -v 'pleos_colors.xml' || true)"
   if [ -z "$hex_hits" ]; then row "LY-06" PASS "hex 색 0"; else row "LY-06" FAIL "$(printf '%s' "$hex_hits" | wc -l | tr -d ' ')건"; fi
 else
   row "CQ-03" SKIP "소스 없음"; row "CQ-07(비밀값)" SKIP "소스 없음"; row "LY-06" SKIP "소스 없음"

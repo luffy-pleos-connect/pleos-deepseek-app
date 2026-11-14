@@ -64,12 +64,11 @@
     <string name="main_button_voice">보이스챗</string>
     <string name="main_button_voice_hint">내 차 상태를 말로 물어보기</string>
     <string name="main_button_battle">대전하기</string>
-    <string name="main_button_battle_hint">다른 운전자와 관리 점수 겨루기</string>
+    <string name="main_button_battle_hint">연습 상대와 관리 점수 겨루기</string>
     <string name="main_battle_no_grade">등급이 있어야 대전할 수 있어요</string>
 
     <string name="status_trend_title">최근 점검 종합 점수</string>
     <string name="status_trend_empty">점검이 쌓이면 추이를 보여 드려요</string>
-    <string name="boot_inspecting">차량을 점검하는 중이에요</string>
     <!-- 상태관리 2D 그림 (최종정리 5장 3번) -->
     <string name="car_diagram_description">자동차 그림. %1$s</string>
     <string name="car_zone_state">%1$s %2$s</string>
@@ -150,14 +149,14 @@
     <string name="settings_nickname_edit">바꿀 닉네임</string>
     <string name="settings_nickname_save">바꾸기</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
-    <string name="settings_licenses_body">Material Icons — Google\nApache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0</string>
+    <string name="settings_licenses_body">Material Icons — Google\nAndroidX (AppCompat · Fragment · Lifecycle · Activity) — The Android Open Source Project\nMaterial Components for Android — Google\nKotlin 표준 라이브러리 · kotlinx.coroutines — JetBrains\n\n위 항목은 모두 Apache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0</string>
     <string name="settings_about">앱 정보</string>
     <string name="settings_about_body">MOCA · 버전 %1$s · 팀 해적단</string>
 
     <string name="onboarding_title">MOCA를 시작해 볼까요?</string>
-    <string name="onboarding_feature_1">시동을 걸면 차가 스스로 점검해요</string>
+    <string name="onboarding_feature_1">앱을 켜면 차가 스스로 점검해요</string>
     <string name="onboarding_feature_2">고칠 곳까지 바로 이어 줘요</string>
-    <string name="onboarding_feature_3">다른 운전자와 관리 점수를 겨뤄요</string>
+    <string name="onboarding_feature_3">연습 상대와 관리 점수를 겨뤄요</string>
     <string name="onboarding_consent_1">차량 상태로 점수를 계산해요</string>
     <string name="onboarding_consent_2">음성 질문과 점수 요약을 서버를 거쳐 AI에 보내요</string>
     <string name="onboarding_consent_3">대전 상대에게 닉네임·등급·점수가 보여요</string>
