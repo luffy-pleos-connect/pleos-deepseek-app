@@ -97,7 +97,7 @@ f1 = ImageFont.truetype(FONT, 150, index=6); f2 = ImageFont.truetype(FONT, 56, i
 w = d.textlength("MOCA", font=f1); d.text(((CW - w) / 2, 640), "MOCA", font=f1, fill=(255, 255, 255))
 for i, line in enumerate(["시동 걸면 스스로 점검하고,", "고칠 곳까지 이어 주는", "내 차 관리 파트너"]):
     w = d.textlength(line, font=f2); d.text(((CW - w) / 2, 860 + i * 84), line, font=f2, fill=(220, 224, 232))
-note = "화면은 Pleos Connect 에뮬레이터의 데모 데이터입니다"
+note = "화면은 Pleos Connect 에뮬레이터의 데모 시나리오입니다"
 w = d.textlength(note, font=f3); d.text(((CW - w) / 2, 1440), note, font=f3, fill=(130, 136, 148)); img.save(end_png)
 dst = os.path.join(tmp, "s6.mp4")
 run(["-loop", "1", "-t", "4", "-i", end_png, "-vf", "fps=30", "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", "-r", "30", "-t", "4", dst]); cuts.append(dst)
