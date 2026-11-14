@@ -4,7 +4,6 @@ import moca.core.Care
 import moca.core.Demo
 import moca.core.FluidLevel
 import moca.core.Inspection
-import moca.core.InspectionHistory
 import moca.core.Item
 import moca.core.Profile
 import moca.core.Telltale
@@ -292,23 +291,4 @@ class InspectionStore(
         const val SCENARIO_D3 = "D3"
         val SEOUL: ZoneId = ZoneId.of("Asia/Seoul")
     }
-}
-
-/** 오늘부터 거꾸로 점검이 하루도 빠지지 않고 이어진 날 수. 같은 날 여러 번은 하루로 센다. */
-fun streakDays(records: List<StoredInspection>, today: LocalDate): Int {
-    val days = records.map { it.date }.filter { !it.isAfter(today) }.toSortedSet()
-    var streak = 0
-    var day = today
-    while (day in days) {
-        streak++
-        day = day.minusDays(1)
-    }
-    return streak
-}
-
-/** 마지막 점검 날의 `M월 d일`. 기록이 없으면 "아직 점검한 적 없어요". */
-fun lastInspectedLabel(records: List<StoredInspection>, today: LocalDate): String {
-    val last = records.map { it.date }.filter { !it.isAfter(today) }.maxOrNull()
-        ?: return InspectionHistory.EMPTY_HOME_LABEL
-    return InspectionHistory.label(last)
 }

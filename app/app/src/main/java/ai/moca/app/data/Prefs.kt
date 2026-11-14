@@ -86,28 +86,6 @@ class Prefs(context: Context) {
         sp.edit().remove(KEY_DEVICE_SECRET).apply()
     }
 
-    /** 홈이 마지막으로 그린 등급·순위·종합 점수. 데모와 실차를 따로 둔다. */
-    class Seen(val grade: String?, val rank: Int?, val score: Int?)
-
-    fun seen(demo: Boolean): Seen {
-        val rankKey = seenRankKey(demo)
-        val scoreKey = seenScoreKey(demo)
-        val rank = if (sp.contains(rankKey)) sp.getInt(rankKey, 0).takeIf { it > 0 } else null
-        val score = if (sp.contains(scoreKey)) sp.getInt(scoreKey, 0) else null
-        return Seen(sp.getString(seenGradeKey(demo), null), rank, score)
-    }
-
-    fun rememberSeen(demo: Boolean, grade: String?, rank: Int?, score: Int?) {
-        val edit = sp.edit()
-        val gradeKey = seenGradeKey(demo)
-        val rankKey = seenRankKey(demo)
-        val scoreKey = seenScoreKey(demo)
-        if (grade == null) edit.remove(gradeKey) else edit.putString(gradeKey, grade)
-        if (rank == null) edit.remove(rankKey) else edit.putInt(rankKey, rank)
-        if (score == null) edit.remove(scoreKey) else edit.putInt(scoreKey, score)
-        edit.apply()
-    }
-
     fun clearAll() {
         sp.edit().clear().apply()
     }
@@ -123,8 +101,4 @@ class Prefs(context: Context) {
         const val KEY_DEMO_SCENARIO = "demo_scenario"
         const val KEY_CONSENT_BATTLE = "consent_battle"
     }
-
-    private fun seenGradeKey(demo: Boolean) = if (demo) "seen_grade_demo" else "seen_grade_real"
-    private fun seenRankKey(demo: Boolean) = if (demo) "seen_rank_demo" else "seen_rank_real"
-    private fun seenScoreKey(demo: Boolean) = if (demo) "seen_score_demo" else "seen_score_real"
 }

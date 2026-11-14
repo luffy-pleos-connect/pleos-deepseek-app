@@ -10,12 +10,14 @@
     <dimen name="moca_category_min_height">64dp</dimen>
     <dimen name="moca_status_row_min">88dp</dimen>
     <dimen name="moca_cat_icon">56dp</dimen>
-    <dimen name="moca_score_ring">400dp</dimen>
-    <dimen name="moca_score_ring_port">280dp</dimen>
-    <dimen name="moca_score_ring_stroke">24dp</dimen>
     <dimen name="moca_status_dot">20dp</dimen>
     <!-- Body.L 세 줄(45sp×3) 높이. 차에게 묻기 답 카드가 이 높이에서 멈추고 안에서 스크롤한다. -->
     <dimen name="moca_answer_max_height">135dp</dimen>
     <!-- 차에게 묻기 마이크 크기. -->
     <dimen name="moca_mic_size">160dp</dimen>
+    <!-- 시작·홈 화면의 점수 칸과 단추 크기. -->
+    <dimen name="moca_score_column">96dp</dimen>
+    <dimen name="moca_wide_button_min_width">360dp</dimen>
+    <dimen name="moca_home_tile_min_height">160dp</dimen>
+    <dimen name="moca_badge_dot">24dp</dimen>
 </resources>

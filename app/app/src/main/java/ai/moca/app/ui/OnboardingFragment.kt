@@ -53,7 +53,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             prefs.applyBattleConsent(true)
             prefs.nickname = nickname
             prefs.onboarded = true
-            activity.goHome()
+            activity.goStart()
         }
     }
 }

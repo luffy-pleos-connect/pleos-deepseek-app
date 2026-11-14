@@ -2,7 +2,6 @@ package ai.moca.app
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.RadioGroup
 import ai.pleos.ds.PleosUxRestrictions
 import androidx.fragment.app.FragmentActivity
@@ -15,8 +14,10 @@ import ai.moca.app.ui.BattleFragment
 import ai.moca.app.ui.HomeFragment
 import ai.moca.app.ui.OnboardingFragment
 import ai.moca.app.ui.SettingsFragment
+import ai.moca.app.ui.StartFragment
 import ai.moca.app.ui.StatusFragment
 import ai.moca.app.ui.VoiceFragment
+import ai.moca.app.ui.DrivingLimitPopup
 import moca.core.Category
 
 /**
@@ -28,7 +29,6 @@ class MainActivity : FragmentActivity() {
     private lateinit var prefs: Prefs
     private lateinit var ux: PleosUxRestrictions
     private var drivingLimited = false
-    private var lastUxState: PleosUxRestrictions.State = PleosUxRestrictions.State.UNRESTRICTED
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var suppressTabCallback = false
     private var currentTag: String? = null
@@ -36,10 +36,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        findViewById<android.view.View>(android.R.id.content).setOnTouchListener { _, e ->
-            android.util.Log.i("MOCA_TOUCH", "touch ${e.action} ${e.x},${e.y}")
-            false
-        }
         prefs = (application as MocaApp).prefs
         ux = PleosUxRestrictions(this) { state -> applyUxRestrictions(state) }
 
@@ -47,16 +43,19 @@ class MainActivity : FragmentActivity() {
             if (suppressTabCallback) return@setOnCheckedChangeListener
             when (checkedId) {
                 R.id.tabHome -> show(HOME_TAG) { HomeFragment() }
-                R.id.tabStatus -> show(STATUS_TAG) { StatusFragment() }
+                R.id.tabStatus -> openGuarded(STATUS_TAG) { StatusFragment() }
                 R.id.tabVoice -> show(VOICE_TAG) { VoiceFragment() }
-                R.id.tabBattle -> show(BATTLE_TAG) { BattleFragment() }
-                R.id.tabSettings -> show(SETTINGS_TAG) { SettingsFragment() }
+                R.id.tabBattle -> openGuarded(BATTLE_TAG) { BattleFragment() }
+                R.id.tabSettings -> openGuarded(SETTINGS_TAG) { SettingsFragment() }
             }
         }
 
         currentTag = savedInstanceState?.getString(KEY_TAG)
         if (savedInstanceState == null) {
-            if (prefs.onboarded) show(HOME_TAG) { HomeFragment() } else show(ONBOARD_TAG) { OnboardingFragment() }
+            when {
+                !prefs.onboarded -> show(ONBOARD_TAG) { OnboardingFragment() }
+                else -> show(START_TAG) { StartFragment() }
+            }
         }
 
         // 디버그 전용 자동 시연(adb 입력이 전달되지 않는 이 에뮬레이터에서 녹화하기 위한 것).
@@ -68,20 +67,10 @@ class MainActivity : FragmentActivity() {
 
     /**
      * 주행 중 차단(평가기준 C-02).
-     * 상세·순위·대전·설정 탭을 끈다. 홈과 보이스 탭은 남긴다.
-     * 홈의 카테고리 줄은 HomeFragment 가 막는다.
+     * 탭을 끄지 않는다. 누르면 [DrivingLimitPopup] 이 음성으로 묻는 길을 알려 준다.
      */
     private fun applyUxRestrictions(state: PleosUxRestrictions.State) {
-        lastUxState = state
         drivingLimited = state.distractionOptimized
-        val allow = !drivingLimited
-        for (id in intArrayOf(
-            R.id.tabStatus, R.id.tabBattle, R.id.tabSettings,
-        )) {
-            findViewById<Button>(id).isEnabled = allow
-        }
-        (supportFragmentManager.findFragmentByTag(HOME_TAG) as? HomeFragment)
-            ?.setDrivingLimited(drivingLimited)
     }
 
     fun isDrivingLimited(): Boolean = drivingLimited
@@ -126,6 +115,9 @@ class MainActivity : FragmentActivity() {
 
     fun goHome() = show(HOME_TAG) { HomeFragment() }
 
+    /** 앱 시작 화면으로. 동의를 막 끝낸 직후에 부른다. */
+    fun goStart() = show(START_TAG) { StartFragment() }
+
     fun goStatus(category: Category? = null) {
         if (category == null) {
             show(STATUS_TAG) { StatusFragment() }
@@ -145,6 +137,19 @@ class MainActivity : FragmentActivity() {
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
     fun goSettings() = show(SETTINGS_TAG) { SettingsFragment() }
+
+    /**
+     * 주행 중에 들어갈 수 없는 화면의 탭. 화면은 바꾸지 않고 안내만 띄운다.
+     * 탭의 선택 표시는 지금 화면으로 되돌린다.
+     */
+    private fun openGuarded(tag: String, create: () -> Fragment) {
+        if (drivingLimited) {
+            DrivingLimitPopup.show(this) { goVoice() }
+            currentTag?.let { selectTab(it) }
+            return
+        }
+        show(tag, create = create)
+    }
 
     /** 순위·대전 화면을 열고, 로비가 준비되면 대전을 시작한다. */
     fun openBattleAndStart() {
@@ -173,11 +178,9 @@ class MainActivity : FragmentActivity() {
         tx.commit()
         updateDemoBadge()
         selectTab(tag)
-        // 주행 제한 상태를 새 화면에도 다시 적용한다.
-        mainHandler.post { applyUxRestrictions(lastUxState) }
     }
 
-    /** 지금 화면의 탭을 선택한다. 온보딩에서는 탭 바를 숨긴다. */
+    /** 지금 화면의 탭을 선택한다. 온보딩·시작 화면에서는 탭 바를 숨긴다. */
     private fun selectTab(tag: String) {
         val bar = findViewById<RadioGroup>(R.id.tabBar)
         val id = when (tag) {
@@ -200,7 +203,7 @@ class MainActivity : FragmentActivity() {
 
     private fun updateDemoBadge() {
         val badge = findViewById<android.widget.TextView>(R.id.demoBadge)
-        badge.visibility = if (prefs.demoEnabled) android.view.View.VISIBLE else android.view.View.GONE
+        badge.visibility = if (prefs.demoEnabled) View.VISIBLE else View.GONE
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -229,6 +232,7 @@ class MainActivity : FragmentActivity() {
     private companion object {
         const val KEY_TAG = "current_tag"
         const val HOME_TAG = "home"
+        const val START_TAG = "start"
         const val STATUS_TAG = "status"
         const val VOICE_TAG = "voice"
         const val BATTLE_TAG = "battle"
