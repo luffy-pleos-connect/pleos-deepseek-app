@@ -1,0 +1,104 @@
+[
+ {
+  "scene": 2,
+  "step": "실제 모드 앱 시작 화면",
+  "ok": true,
+  "detail": "startGrade = 「이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요」"
+ },
+ {
+  "scene": 2,
+  "step": "앱 시작 화면 등급",
+  "ok": true,
+  "detail": "startGrade = 「B · 75」"
+ },
+ {
+  "scene": 2,
+  "step": "조치 항목 startAction1",
+  "ok": true,
+  "detail": "ABS 경고등 −50"
+ },
+ {
+  "scene": 2,
+  "step": "조치 항목 startAction2",
+  "ok": true,
+  "detail": "타이어 공기압 경고등 −25"
+ },
+ {
+  "scene": 2,
+  "step": "메인 등급",
+  "ok": true,
+  "detail": "mainGrade = 「B · 75」"
+ },
+ {
+  "scene": 3,
+  "step": "상태관리 등급",
+  "ok": true,
+  "detail": "statusGrade = 「B · 75」"
+ },
+ {
+  "scene": 4,
+  "step": "넘어온 항목",
+  "ok": true,
+  "detail": "voiceContextText = 「제동·조향 · ABS 경고등 −50 · 정비소 방문」"
+ },
+ {
+  "scene": 4,
+  "step": "AI 답",
+  "ok": true,
+  "detail": "안전한 곳에 정차한 뒤 점검을 받으세요. 데모 데이터 기준으로 ABS 경고등이 빨강, 타이어 공기압 경고등이 노랑으로 확인됐어요. ABS 경고등"
+ },
+ {
+  "scene": 4,
+  "step": "확인 카드",
+  "ok": true,
+  "detail": "navConfirmText = 「MOCA 데모 정비소로 안내할까요?」"
+ },
+ {
+  "scene": 4,
+  "step": "내비가 경로 시작을 알림",
+  "ok": true,
+  "detail": "onRouteStarted MOCA 데모 정비소"
+ },
+ {
+  "scene": 5,
+  "step": "상대",
+  "ok": true,
+  "detail": "battleTheirName = 「라이벌드라이버」"
+ },
+ {
+  "scene": 5,
+  "step": "결과",
+  "ok": true,
+  "detail": "battleResult = 「2 : 2 · 종합 75 대 88 로 졌어요」"
+ },
+ {
+  "scene": 6,
+  "step": "내 순위",
+  "ok": true,
+  "detail": "rankingMine = 「13명 중 9위 · 1위 새벽드라이버 97점 · 22점 차이」"
+ },
+ {
+  "scene": 6,
+  "step": "1위와 차이",
+  "ok": true,
+  "detail": "rankingMine = 「13명 중 9위 · 1위 새벽드라이버 97점 · 22점 차이」"
+ },
+ {
+  "scene": 6,
+  "step": "관리 요약 카드",
+  "ok": true,
+  "detail": "voiceContextText = 「이번 달 관리 요약 · 점검 1일 · 연속 1일 · 해결 0개 · 1위와 22점 차이」"
+ },
+ {
+  "scene": 7,
+  "step": "상태관리",
+  "ok": true,
+  "detail": "statusGrade = 「B · 75」"
+ },
+ {
+  "scene": 7,
+  "step": "해결 뒤 등급",
+  "ok": true,
+  "detail": "statusGrade = 「A · 83」"
+ }
+]
