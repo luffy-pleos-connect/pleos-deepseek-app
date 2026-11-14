@@ -160,8 +160,10 @@ def record():
     scene("대전하기: 연습 상대와 구역별로 겨뤄요")
     front(); tap("tabBattle")
     expect("상대", "battleTheirName", "라이벌드라이버"); time.sleep(3); shot("09-대전-로비")
-    tap("battleStart"); cap("동력 · 제동·조향 · 타이어 · 전기 · 안전, 다섯 라운드")
+    tap("battleStart"); cap("[대전 시작] — 두 차가 마주 달려와 부딪쳐요")
+    time.sleep(2.2); shot("09-대전-충돌"); cap("진 쪽 차는 부서지고, 이긴 쪽은 멀쩡해요")
     expect("결과", "battleResult", "2 : 2 · 종합 75 대 88", sec=40); shot("10-대전-결과")
+    cap("동력 · 제동·조향 · 타이어 · 전기 · 안전, 다섯 라운드 결과"); time.sleep(3)
     cap("2 : 2 동점이면 종합 점수로 가려요. 75 대 88 로 졌어요"); time.sleep(5)
     cap("「이 차만큼 관리하려면」 — 무엇을 고치면 따라잡는지 알려 줘요"); time.sleep(5)
 
@@ -204,7 +206,8 @@ def compose():
     tmp = os.path.join(OUT, "_합성"); os.makedirs(tmp, exist_ok=True)
     W, X, Y = 600, 20, 690                       # 1920×1080 기준. 왼쪽(차량 패널) 아래에 자막 카드를 둔다
     total_raw = sum(dur(os.path.join(OUT, f"seg{int(n):02d}.mp4")) for n in caps)
-    speed = float(os.environ.get("DEMO_SPEED", "0")) or max(1.1, total_raw / 175)   # 3분 안에 들어오게
+    speed = float(os.environ.get("DEMO_SPEED", "0")) or max(1.1, total_raw / 175)   # 3분 안에 들어오게. DEMO_SPEED=1 이면 원래 속도
+    crf = os.environ.get("DEMO_CRF", "24")                                       # 고화질판은 DEMO_CRF=18
     print(f"원본 {total_raw:.0f}초 → 속도 {speed:.2f}배")
 
     def card(title, text, path):
@@ -230,10 +233,10 @@ def compose():
         chain.insert(0, "[0:v]scale=1920:1080[base]"); chain[1] = chain[1].replace("[0:v]", "[base]", 1)
         chain.append(f"[{last}]setpts=PTS/{speed}[out]")
         dst = os.path.join(tmp, f"part{int(n):02d}.mp4")
-        run_ff([*inputs, "-filter_complex", ";".join(chain), "-map", "[out]", "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p", "-r", "30", dst])
+        run_ff([*inputs, "-filter_complex", ";".join(chain), "-map", "[out]", "-an", "-c:v", "libx264", "-preset", "medium" if crf != "24" else "veryfast", "-crf", crf, "-pix_fmt", "yuv420p", "-r", "30", dst])
         parts.append(dst)
     lst = os.path.join(tmp, "list.txt"); open(lst, "w").writelines(f"file '{p}'\n" for p in parts)
-    final = os.path.join(OUT, "MOCA_시연영상.mp4")
+    final = os.path.join(OUT, os.environ.get("DEMO_OUT", "MOCA_시연영상.mp4"))
     run_ff(["-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", final])
     print(final, f"{dur(final):.0f}초, {os.path.getsize(final) / 1e6:.1f}MB")
 
