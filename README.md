@@ -19,11 +19,11 @@
 |---|---|
 | 점수 엔진 단위 테스트 | **247 / 247** (`core/run-tests.sh`, JDK 17) |
 | 서버 테스트 | **122 / 122** (`server` 에서 `node --test`) |
-| Pleos 디자인 시스템 정적 검사 | **0 findings / 116 files** (`pleos_lint.py app`) |
+| Pleos 디자인 시스템 정적 검사 | **0 findings / 110 files** (`pleos_lint.py app`) |
 | 평가 도구 자체 단위 테스트 | 48 / 48 (`python3 -m unittest tools/test_moca_eval.py`). 이 도구의 기준표는 옛 화면 기준이라 **지금 앱에 대한 평가 결과는 없다** |
-| 앱 단위 테스트 | **197 / 197** (`app` 에서 `./gradlew :app:testDebugUnitTest`, 실패·오류 0) |
-| `./check.sh` 전체 | **다시 돌리지 않음** (확인 필요). 이 게이트는 release APK 의 크기·서명도 보는데, APK 를 다시 만들어야 한다 |
-| release APK | **다시 빌드해야 함** (앱이 새 구조로 바뀌기 전 파일이다) |
+| 앱 단위 테스트 | **196 / 196** (`app` 에서 `./gradlew :app:testDebugUnitTest`, 실패·오류 0) |
+| `./check.sh` 전체 | **PASS 12 / FAIL 0 / SKIP 0** (2026-11-14, 출력은 `docs/evidence/V12/check.txt`) |
+| release APK | 2026-11-14 다시 빌드. 4MB, 서명 주체 `CN=해적단`. 깨끗한 에뮬레이터에 설치해 동의부터 설정까지 눌러 본 기록은 `docs/evidence/V12/result.json`(확인 17 / 17) |
 
 ## 공모전 README 필수 항목
 
@@ -193,9 +193,9 @@ check.sh        품질 게이트
 
 ## 스크린샷
 
-`docs/evidence/V9/` 의 캡처는 **앱이 새 구조로 바뀌기 전(2026-11-11~12) 화면**이다. 지금 앱과 다르므로 이 README 에서 대표 화면으로 쓰지 않는다. 새 화면 캡처는 데모 D3 기준으로 다시 찍어야 한다(확인 필요: 아직 안 찍음).
+새 화면 캡처는 `docs/evidence/V12/` 에 있다(2026-11-14, release APK, 데모 D3). 동의 → 앱 시작(실제 모드·데모) → 메인 → 상태관리 → 보이스챗(항목·답·확인 카드) → 내비 안내 → 대전 → 월간랭킹 → 해결 뒤 → 설정 순서다. `docs/evidence/V9/` 의 캡처는 앱이 새 구조로 바뀌기 전(2026-11-11~12) 화면이라 지금 앱과 다르다.
 
-내비게이션 시험 보고서: 좌표로 길안내 요청(`requestRoute`)은 `docs/evidence/S1/report.md`, 검색 화면 열기는 `docs/evidence/S3/report.md`. 둘 다 시험 앱으로 한 기록이다. 지금 앱의 [안내 시작]으로 다시 확인한 기록 파일은 없다.
+내비게이션 시험 보고서: 좌표로 길안내 요청(`requestRoute`)은 `docs/evidence/S1/report.md`, 검색 화면 열기는 `docs/evidence/S3/report.md`. 둘 다 시험 앱으로 한 기록이다. 지금 앱의 [안내 시작]으로 확인한 기록은 `docs/evidence/V12/logcat-navi.txt`(길안내 요청 → 내비의 경로 시작 알림)와 `08-내비.png` 다.
 
 ## 알려진 제약
 
