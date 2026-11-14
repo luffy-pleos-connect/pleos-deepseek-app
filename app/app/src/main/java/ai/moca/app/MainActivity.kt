@@ -144,6 +144,13 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    /** 월간랭킹의 [질문하기]: 이번 달 관리 요약을 들고 보이스챗으로 간다(최종정리 11.1절). */
+    fun openVoiceWithCare(care: Bundle) {
+        show(VOICE_TAG, forceNew = true) {
+            VoiceFragment().apply { arguments = care }
+        }
+    }
+
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
     fun goSettings() = show(SETTINGS_TAG) { SettingsFragment() }

@@ -304,6 +304,14 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         const val ARG_ITEM_POINTS = "item_points"
         const val ARG_ITEM_KINDS = "item_kinds"
 
+        /** 월간랭킹의 [질문하기]가 넘기는 이번 달 관리 요약(최종정리 11.1절). 모두 Int. */
+        const val ARG_CARE_DAYS = "care_days"
+        const val ARG_CARE_STREAK = "care_streak"
+        const val ARG_CARE_RESOLVED = "care_resolved"
+        const val ARG_CARE_GAP = "care_gap"
+        const val ARG_CARE_RANK = "care_rank"
+        const val ARG_CARE_TOTAL = "care_total"
+
         private const val REQ_AUDIO = 1001
         private val STATUS_TOOLS = setOf(
             "get_active_warnings",
