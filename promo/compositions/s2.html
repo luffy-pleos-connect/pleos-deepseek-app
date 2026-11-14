@@ -1,0 +1,65 @@
+<template>
+  <style>
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Black.woff2') format('woff2');font-weight:900;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2');font-weight:800;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2');font-weight:600;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Medium.woff2') format('woff2');font-weight:500;}
+
+#root{position:absolute;inset:0;overflow:hidden;font-family:'Pretendard',sans-serif;color:#fff;}
+#root *{box-sizing:border-box;}
+.cap{position:absolute;left:120px;width:820px;font-weight:900;font-size:92px;line-height:1.16;letter-spacing:-0.035em;white-space:nowrap;}
+.cap .ln{display:block;}
+.cap .ln span{display:inline-block;}
+.cap .ln span+span{margin-left:.26em;}
+.chip{padding:0 .2em .06em;border-radius:.2em;margin-left:-.06em;}
+.chip.blue{background:#0064FF;}
+.chip.red{background:#FE3D16;}
+.chip.white{background:#fff;color:#0064FF;}
+.card{position:absolute;left:56px;top:560px;width:968px;height:680px;border-radius:38px;background:#10141d;border:2px solid #2b3347;box-shadow:0 34px 70px rgba(0,0,0,.55);opacity:0;}
+.scr{position:absolute;left:14px;top:14px;width:940px;height:652px;border-radius:24px;overflow:hidden;background:#F7F8FA;}
+.cam{position:absolute;left:0;top:0;width:1581px;height:1137px;transform-origin:0 0;}
+.cam video{position:absolute;left:0;top:0;width:1581px;height:1137px;}
+.fb{position:absolute;left:0;top:560px;width:1080px;height:680px;overflow:hidden;background:#F7F8FA;opacity:0;}
+.fb .cam,.fb .cam video{width:1682px;height:1210px;}
+.ghost{position:absolute;left:36px;top:1290px;font-weight:900;font-size:640px;line-height:1;letter-spacing:-0.06em;white-space:nowrap;pointer-events:none;}
+.cur{position:absolute;left:0;top:0;width:0;height:0;}
+.cur svg{position:absolute;left:-4px;top:-2px;width:56px;height:56px;transform-origin:4px 2px;overflow:visible;}
+
+#s2-flood{position:absolute;inset:0;background:#0064FF;clip-path:circle(0% at 50% 52%);}
+#s2-bgglyph{position:absolute;left:330px;top:1290px;width:900px;height:965px;opacity:.1;}
+#s2-glyph{position:absolute;left:120px;top:330px;width:240px;height:257px;overflow:visible;}
+#s2-word{position:absolute;left:120px;top:610px;font-weight:900;font-size:216px;line-height:1;letter-spacing:-0.05em;white-space:nowrap;}
+#s2-word span{display:inline-block;}
+#s2-t1{top:930px;}
+#s2-t2{top:1052px;}
+</style>
+  <div id="root" data-composition-id="s2" data-width="1080" data-height="1920">
+    <div id="s2-flood">
+      <svg id="s2-bgglyph" viewBox="26 34 56 60" data-layout-ignore><path d="M30,58 L44,58 L50,38 L60,74 L68,52 L78,52 L78,62 L73,62 L62,90 L52,58 L48,62 L30,62 Z" fill="#fff"/></svg>
+      <svg id="s2-glyph" viewBox="26 34 56 60"><path id="s2-gp" d="M30,58 L44,58 L50,38 L60,74 L68,52 L78,52 L78,62 L73,62 L62,90 L52,58 L48,62 L30,62 Z" fill="#fff" fill-opacity="0" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <div id="s2-word"><span id="s2-m">M</span><span id="s2-o">O</span><span id="s2-c">C</span><span id="s2-a">A</span></div>
+      <div id="s2-t1" class="cap"><span class="ln"><span id="s2-t1a">차가 알려 주는</span></span></div>
+      <div id="s2-t2" class="cap"><span class="ln"><span id="s2-t2a" class="chip white">내 차 점수</span></span></div>
+    </div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const gp = document.getElementById("s2-gp");
+const len = gp.getTotalLength();
+gp.style.strokeDasharray = len; 
+// 2.2 s host start: iris lands on the 2.647 s beat
+tl.fromTo("#s2-flood", { clipPath: "circle(0% at 50% 52%)" }, { clipPath: "circle(150% at 50% 52%)", duration: 0.3, ease: "power3.out" }, 0.15);
+tl.fromTo("#s2-gp", { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" }, 0.5);
+tl.fromTo("#s2-gp", { fillOpacity: 0 }, { fillOpacity: 1, duration: 0.25, ease: "power1.out" }, 0.85);
+tl.fromTo("#s2-bgglyph", { opacity: 0 }, { opacity: 0.1, duration: 0.5, ease: "power2.out" }, 0.9);
+["m","o","c","a"].forEach((l, i) => {
+  tl.fromTo("#s2-" + l, { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power3.out" }, 0.68 + i * 0.06);
+});
+tl.fromTo("#s2-t1a", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 1.1);
+tl.fromTo("#s2-t2a", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 1.72);
+window.__timelines["s2"] = tl;
+
+  </script>
+</template>

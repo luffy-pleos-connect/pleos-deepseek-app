@@ -1,0 +1,12 @@
+assets/footage/raw/
+assets/footage/cut/
+out/
+node_modules/
+.hyperframes/
+*.log
+*.tmp
+renders/
+
+# Pixabay 음원·효과음은 단독 재배포 금지라 공개 저장소에 올리지 않는다(받는 곳은 SPEC.md)
+assets/music/*.mp3
+assets/sfx/*.mp3

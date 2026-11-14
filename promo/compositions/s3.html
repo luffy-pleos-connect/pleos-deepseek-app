@@ -1,0 +1,88 @@
+<template>
+  <style>
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Black.woff2') format('woff2');font-weight:900;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2');font-weight:800;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2');font-weight:600;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Medium.woff2') format('woff2');font-weight:500;}
+
+#root{position:absolute;inset:0;overflow:hidden;font-family:'Pretendard',sans-serif;color:#fff;}
+#root *{box-sizing:border-box;}
+.cap{position:absolute;left:120px;width:820px;font-weight:900;font-size:92px;line-height:1.16;letter-spacing:-0.035em;white-space:nowrap;}
+.cap .ln{display:block;}
+.cap .ln span{display:inline-block;}
+.cap .ln span+span{margin-left:.26em;}
+.chip{padding:0 .2em .06em;border-radius:.2em;margin-left:-.06em;}
+.chip.blue{background:#0064FF;}
+.chip.red{background:#FE3D16;}
+.chip.white{background:#fff;color:#0064FF;}
+.card{position:absolute;left:56px;top:560px;width:968px;height:680px;border-radius:38px;background:#10141d;border:2px solid #2b3347;box-shadow:0 34px 70px rgba(0,0,0,.55);opacity:0;}
+.scr{position:absolute;left:14px;top:14px;width:940px;height:652px;border-radius:24px;overflow:hidden;background:#F7F8FA;}
+.cam{position:absolute;left:0;top:0;width:1581px;height:1137px;transform-origin:0 0;}
+.cam video{position:absolute;left:0;top:0;width:1581px;height:1137px;}
+.fb{position:absolute;left:0;top:560px;width:1080px;height:680px;overflow:hidden;background:#F7F8FA;opacity:0;}
+.fb .cam,.fb .cam video{width:1682px;height:1210px;}
+.ghost{position:absolute;left:36px;top:1290px;font-weight:900;font-size:640px;line-height:1;letter-spacing:-0.06em;white-space:nowrap;pointer-events:none;}
+.cur{position:absolute;left:0;top:0;width:0;height:0;}
+.cur svg{position:absolute;left:-4px;top:-2px;width:56px;height:56px;transform-origin:4px 2px;overflow:visible;}
+
+#s3-ground{position:absolute;inset:0;background:#0A0F1C;clip-path:inset(0 0 0 100%);}
+#s3-ghost{color:rgba(254,61,22,.10);}
+#s3-capA,#s3-capB{top:304px;}
+</style>
+  <div id="root" data-composition-id="s3" data-width="1080" data-height="1920">
+    <div id="s3-ground"></div>
+    <div id="s3-ghost" class="ghost" data-layout-allow-overflow data-layout-ignore>75</div>
+    <div id="s3-capA" class="cap">
+      <span class="ln" id="s3-a1"><span>켜자마자</span></span>
+      <span class="ln" id="s3-a2"><span class="chip blue">점검 끝</span></span>
+    </div>
+    <div id="s3-capB" class="cap">
+      <span class="ln" id="s3-b1"><span>어디가 문제인지</span></span>
+      <span class="ln" id="s3-b2"><span class="chip red">한눈에</span></span>
+    </div>
+    <div id="s3-card" class="card" data-layout-allow-overflow>
+      <div class="scr">
+        <div id="s3-camA" class="cam"><video id="s3-vA" class="clip" data-start="0.4" data-duration="2.59" data-track-index="1" data-media-start="0.3" muted playsinline src="assets/footage/cut/c1_start.mp4"></video></div>
+      </div>
+    </div>
+    <div id="s3-fb" class="fb">
+      <div id="s3-camB" class="cam"><video id="s3-vB" class="clip" data-start="2.99" data-duration="2.6" data-track-index="2" data-media-start="0.6" muted playsinline src="assets/footage/cut/c2_status.mp4"></video></div>
+    </div>
+    <div id="s3-dip" style="position:absolute;left:0;top:560px;width:1080px;height:680px;background:#05070d;opacity:0;"></div>
+  </div>
+  <script>
+
+function mk(W,H,k){return function(cx,cy,z){const w=1682*k*z,h=1210*k*z;let x=W/2-z*k*cx,y=H/2-z*k*cy;x=Math.min(0,Math.max(W-w,x));y=Math.min(0,Math.max(H-h,y));return{x:x,y:y,scale:z};};}
+const P=mk(940,652,0.94), F=mk(1080,680,1.0);
+
+const tl = gsap.timeline({ paused: true });
+const cap = (a, b, t) => {
+  tl.fromTo(a, { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, t);
+  tl.fromTo(b, { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, t + 0.13);
+};
+// host starts at 4.85 s; wipe lands on the 5.247 s beat
+tl.fromTo("#s3-ground", { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", duration: 0.4, ease: "power3.inOut" }, 0);
+tl.set("#s3-card", { opacity: 0, x: 1120 }, 0);
+tl.to("#s3-card", { opacity: 1, duration: 0.01 }, 0.38);
+tl.fromTo("#s3-card", { x: 1120, filter: "blur(16px)" }, { x: 0, filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, 0.38);
+tl.fromTo("#s3-ghost", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.5);
+cap("#s3-a1", "#s3-a2", 0.45);
+tl.to("#s3-capA", { opacity: 0, filter: "blur(10px)", duration: 0.12, ease: "power2.in" }, 2.85);
+cap("#s3-b1", "#s3-b2", 2.99);
+// dip, then hard cut from the card to the full-bleed slab at 7.84 s (local 2.99)
+tl.set("#s3-dip", { opacity: 0 }, 0);
+tl.to("#s3-dip", { opacity: 0.5, duration: 0.1, ease: "none" }, 2.89);
+tl.set("#s3-dip", { opacity: 0 }, 2.99);
+tl.set("#s3-card", { opacity: 0 }, 2.99);
+tl.set("#s3-fb", { opacity: 1 }, 2.99);
+// camera A (card): B . 75 + warning lamps from the first frame -> right column (6.54 s)
+tl.set("#s3-camA", P(430,360,1.19), 0);
+tl.to("#s3-camA", Object.assign(P(1262,400,1.19), { duration: 0.4, ease: "power2.inOut" }), 1.69);
+// camera B (full-bleed): score + car -> red ABS card (9.14 s)
+tl.set("#s3-camB", F(430,350,1.3), 0);
+tl.to("#s3-camB", Object.assign(F(1244,383,1.3), { duration: 0.4, ease: "power2.inOut" }), 4.29);
+window.__timelines["s3"] = tl;
+
+  </script>
+</template>

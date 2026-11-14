@@ -1,0 +1,125 @@
+<template>
+  <style>
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Black.woff2') format('woff2');font-weight:900;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2');font-weight:800;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2');font-weight:600;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Medium.woff2') format('woff2');font-weight:500;}
+
+#root{position:absolute;inset:0;overflow:hidden;font-family:'Pretendard',sans-serif;color:#fff;}
+#root *{box-sizing:border-box;}
+.cap{position:absolute;left:120px;width:820px;font-weight:900;font-size:92px;line-height:1.16;letter-spacing:-0.035em;white-space:nowrap;}
+.cap .ln{display:block;}
+.cap .ln span{display:inline-block;}
+.cap .ln span+span{margin-left:.26em;}
+.chip{padding:0 .2em .06em;border-radius:.2em;margin-left:-.06em;}
+.chip.blue{background:#0064FF;}
+.chip.red{background:#FE3D16;}
+.chip.white{background:#fff;color:#0064FF;}
+.card{position:absolute;left:56px;top:560px;width:968px;height:680px;border-radius:38px;background:#10141d;border:2px solid #2b3347;box-shadow:0 34px 70px rgba(0,0,0,.55);opacity:0;}
+.scr{position:absolute;left:14px;top:14px;width:940px;height:652px;border-radius:24px;overflow:hidden;background:#F7F8FA;}
+.cam{position:absolute;left:0;top:0;width:1581px;height:1137px;transform-origin:0 0;}
+.cam video{position:absolute;left:0;top:0;width:1581px;height:1137px;}
+.fb{position:absolute;left:0;top:560px;width:1080px;height:680px;overflow:hidden;background:#F7F8FA;opacity:0;}
+.fb .cam,.fb .cam video{width:1682px;height:1210px;}
+.ghost{position:absolute;left:36px;top:1290px;font-weight:900;font-size:640px;line-height:1;letter-spacing:-0.06em;white-space:nowrap;pointer-events:none;}
+.cur{position:absolute;left:0;top:0;width:0;height:0;}
+.cur svg{position:absolute;left:-4px;top:-2px;width:56px;height:56px;transform-origin:4px 2px;overflow:visible;}
+
+#s4-ground{position:absolute;inset:0;background:#071634;clip-path:inset(100% 0 0 0);}
+#s4-ghost{color:rgba(0,100,255,.20);}
+#s4-capA,#s4-capB,#s4-capC{top:304px;}
+</style>
+  <div id="root" data-composition-id="s4" data-width="1080" data-height="1920">
+    <div id="s4-ground"></div>
+    <div id="s4-ghost" class="ghost" data-layout-allow-overflow data-layout-ignore>75</div>
+    <div id="s4-capA" class="cap">
+      <span class="ln" id="s4-a1"><span>말로 물으면</span></span>
+      <span class="ln" id="s4-a2"><span class="chip blue">바로 답해요</span></span>
+    </div>
+    <div id="s4-capB" class="cap">
+      <span class="ln" id="s4-b1"><span>정비소를 말하면</span></span>
+      <span class="ln" id="s4-b2"><span class="chip blue">먼저 물어봐요</span></span>
+    </div>
+    <div id="s4-capC" class="cap">
+      <span class="ln" id="s4-c1"><span>탭 한 번이면</span></span>
+      <span class="ln" id="s4-c2"><span class="chip blue">길 안내 시작</span></span>
+    </div>
+    <div id="s4-card" class="card" data-layout-allow-overflow>
+      <div class="scr">
+        <div id="s4-camA1" class="cam"><video id="s4-vA1" class="clip" data-start="0.44" data-duration="1.3" data-track-index="1" data-media-start="1.0" muted playsinline src="assets/footage/cut/c3_voice.mp4"></video><div id="s4-curA" class="cur"><div id="s4-curiA" style="position:absolute;left:0;top:0;"><svg viewBox="0 0 56 56"><path d="M4 2 L4 40 L14 31 L21 47 L29 43 L22 28 L36 28 Z" fill="#fff" stroke="#0A0F1C" stroke-width="3" stroke-linejoin="round"/></svg></div></div></div>
+        <div id="s4-camA2" class="cam"><video id="s4-vA2" class="clip" data-start="1.74" data-duration="1.3" data-track-index="2" data-media-start="5.1" muted playsinline src="assets/footage/cut/c3_voice.mp4"></video></div>
+        <div id="s4-camB1" class="cam"><video id="s4-vB1" class="clip" data-start="3.04" data-duration="1.4" data-track-index="3" data-media-start="1.0" muted playsinline src="assets/footage/cut/c4_confirm.mp4"></video><div id="s4-curB1" class="cur"><div id="s4-curiB1" style="position:absolute;left:0;top:0;"><svg viewBox="0 0 56 56"><path d="M4 2 L4 40 L14 31 L21 47 L29 43 L22 28 L36 28 Z" fill="#fff" stroke="#0A0F1C" stroke-width="3" stroke-linejoin="round"/></svg></div></div></div>
+        <div id="s4-camB2" class="cam"><video id="s4-vB2" class="clip" data-start="4.44" data-duration="1.2" data-track-index="4" data-media-start="8.85" muted playsinline src="assets/footage/cut/c4_confirm.mp4"></video><div id="s4-curB2" class="cur"><div id="s4-curiB2" style="position:absolute;left:0;top:0;"><svg viewBox="0 0 56 56"><path d="M4 2 L4 40 L14 31 L21 47 L29 43 L22 28 L36 28 Z" fill="#fff" stroke="#0A0F1C" stroke-width="3" stroke-linejoin="round"/></svg></div></div></div>
+      </div>
+    </div>
+    <div id="s4-fb" class="fb">
+      <div id="s4-camC1" class="cam"><video id="s4-vC1" class="clip" data-start="5.64" data-duration="1.3" data-track-index="5" data-media-start="1.7" muted playsinline src="assets/footage/cut/c5_nav.mp4"></video></div>
+      <div id="s4-camC2" class="cam"><video id="s4-vC2" class="clip" data-start="6.94" data-duration="1.3" data-track-index="6" data-media-start="7.0" muted playsinline src="assets/footage/cut/c5_nav.mp4"></video></div>
+    </div>
+    <div id="s4-dip" style="position:absolute;left:0;top:560px;width:1080px;height:680px;background:#05070d;opacity:0;"></div>
+  </div>
+  <script>
+
+function mk(W,H,k){return function(cx,cy,z){const w=1682*k*z,h=1210*k*z;let x=W/2-z*k*cx,y=H/2-z*k*cy;x=Math.min(0,Math.max(W-w,x));y=Math.min(0,Math.max(H-h,y));return{x:x,y:y,scale:z};};}
+const P=mk(940,652,0.94), F=mk(1080,680,1.0);
+
+const tl = gsap.timeline({ paused: true });
+const K = 0.94;
+const cap = (a, b, t) => {
+  tl.fromTo(a, { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, t);
+  tl.fromTo(b, { opacity: 0, filter: "blur(12px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power3.out" }, t + 0.13);
+};
+const tap = (id, t) => {
+  tl.to("#s4-curi" + id, { scale: 0.8, duration: 0.07, ease: "power2.in" }, t);
+  tl.to("#s4-curi" + id, { scale: 1, duration: 0.12, ease: "power2.out" }, t + 0.07);
+};
+// host starts at 10.0 s; rise lands on the 10.44 s beat
+tl.fromTo("#s4-ground", { clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0% 0 0 0)", duration: 0.44, ease: "power3.inOut" }, 0);
+tl.set("#s4-card", { opacity: 0 }, 0);
+tl.to("#s4-card", { opacity: 1, duration: 0.01 }, 0.4);
+tl.fromTo("#s4-card", { y: 420, filter: "blur(14px)" }, { y: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out" }, 0.4);
+tl.fromTo("#s4-ghost", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.5);
+cap("#s4-a1", "#s4-a2", 0.5);
+tl.to("#s4-capA", { opacity: 0, filter: "blur(10px)", duration: 0.12, ease: "power2.in" }, 2.9);
+cap("#s4-b1", "#s4-b2", 3.04);
+tl.to("#s4-capB", { opacity: 0, filter: "blur(10px)", duration: 0.12, ease: "power2.in" }, 5.5);
+cap("#s4-c1", "#s4-c2", 5.64);
+// jump-cut dips (11.74 s, 14.44 s), card -> full-bleed slab at 15.64 s (local 5.64)
+tl.set("#s4-dip", { opacity: 0 }, 0);
+[1.74, 4.44, 5.64, 6.29].forEach((t) => {
+  tl.to("#s4-dip", { opacity: 0.45, duration: 0.08, ease: "none" }, t - 0.08);
+  tl.set("#s4-dip", { opacity: 0 }, t);
+});
+tl.set("#s4-card", { opacity: 0 }, 5.64);
+tl.set("#s4-fb", { opacity: 1 }, 5.64);
+// A1: buttons + mic from the first frame, cursor taps the question button at 11.29 s (local 1.29)
+tl.set("#s4-camA1", P(841,600,1.0), 0);
+tl.set("#s4-curA", { x: 1450 * K, y: 900 * K, opacity: 0 }, 0);
+tl.to("#s4-curA", { opacity: 1, duration: 0.05 }, 0.5);
+tl.to("#s4-curA", { x: 1225 * K, y: 725 * K, duration: 0.65, ease: "power3.out" }, 0.5);
+tap("A", 1.27);
+tl.to("#s4-curA", { opacity: 0, duration: 0.15 }, 1.6);
+// A2: answer sentence, camera reads along the lines (answer appears 11.94 s)
+tl.set("#s4-camA2", P(520,520,1.1), 0);
+tl.to("#s4-camA2", Object.assign(P(1160,520,1.1), { duration: 0.9, ease: "power1.inOut" }), 2.0);
+// B1/B2: right half only (no text left of x 640), taps at 13.59 s and 15.39 s
+tl.set("#s4-camB1", P(1130,700,1.05), 0);
+tl.set("#s4-curB1", { x: 1500 * K, y: 1000 * K, opacity: 0 }, 0);
+tl.to("#s4-curB1", { opacity: 1, duration: 0.05 }, 3.1);
+tl.to("#s4-curB1", { x: 825 * K, y: 945 * K, duration: 0.45, ease: "power3.out" }, 3.1);
+tap("B1", 3.57);
+tl.to("#s4-curB1", { opacity: 0, duration: 0.15 }, 3.9);
+tl.set("#s4-camB2", P(1130,700,1.05), 0);
+tl.set("#s4-curB2", { x: 1650 * K, y: 700 * K, opacity: 0 }, 0);
+tl.to("#s4-curB2", { opacity: 1, duration: 0.05 }, 4.7);
+tl.to("#s4-curB2", { x: 1520 * K, y: 552 * K, duration: 0.6, ease: "power3.out" }, 4.7);
+tap("B2", 5.37);
+// C1: route list (below the title bar) -> route map; C2: turn banner, full-bleed
+tl.set("#s4-camC1", F(540,460,1.0), 0);
+tl.set("#s4-camC1", F(1160,650,1.0), 6.29);
+tl.set("#s4-camC2", F(415,262,1.3), 0);
+window.__timelines["s4"] = tl;
+
+  </script>
+</template>

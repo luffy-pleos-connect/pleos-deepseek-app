@@ -1,0 +1,67 @@
+<template>
+  <style>
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Black.woff2') format('woff2');font-weight:900;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2');font-weight:800;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2');font-weight:600;}
+@font-face{font-family:'Pretendard';src:url('assets/fonts/Pretendard-Medium.woff2') format('woff2');font-weight:500;}
+
+#root{position:absolute;inset:0;overflow:hidden;font-family:'Pretendard',sans-serif;color:#fff;}
+#root *{box-sizing:border-box;}
+.cap{position:absolute;left:120px;width:820px;font-weight:900;font-size:92px;line-height:1.16;letter-spacing:-0.035em;white-space:nowrap;}
+.cap .ln{display:block;}
+.cap .ln span{display:inline-block;}
+.cap .ln span+span{margin-left:.26em;}
+.chip{padding:0 .2em .06em;border-radius:.2em;margin-left:-.06em;}
+.chip.blue{background:#0064FF;}
+.chip.red{background:#FE3D16;}
+.chip.white{background:#fff;color:#0064FF;}
+.card{position:absolute;left:56px;top:560px;width:968px;height:680px;border-radius:38px;background:#10141d;border:2px solid #2b3347;box-shadow:0 34px 70px rgba(0,0,0,.55);opacity:0;}
+.scr{position:absolute;left:14px;top:14px;width:940px;height:652px;border-radius:24px;overflow:hidden;background:#F7F8FA;}
+.cam{position:absolute;left:0;top:0;width:1581px;height:1137px;transform-origin:0 0;}
+.cam video{position:absolute;left:0;top:0;width:1581px;height:1137px;}
+.fb{position:absolute;left:0;top:560px;width:1080px;height:680px;overflow:hidden;background:#F7F8FA;opacity:0;}
+.fb .cam,.fb .cam video{width:1682px;height:1210px;}
+.ghost{position:absolute;left:36px;top:1290px;font-weight:900;font-size:640px;line-height:1;letter-spacing:-0.06em;white-space:nowrap;pointer-events:none;}
+.cur{position:absolute;left:0;top:0;width:0;height:0;}
+.cur svg{position:absolute;left:-4px;top:-2px;width:56px;height:56px;transform-origin:4px 2px;overflow:visible;}
+
+#s7-ground{position:absolute;inset:0;background:#05070D;clip-path:inset(0 0 100% 0);}
+#s7-glyph{position:absolute;left:120px;top:440px;width:180px;height:193px;overflow:visible;}
+#s7-word{position:absolute;left:324px;top:446px;font-weight:900;font-size:176px;line-height:1;letter-spacing:-0.05em;white-space:nowrap;clip-path:inset(0 100% 0 0);}
+#s7-t1{top:760px;}
+#s7-t2{top:882px;}
+#s7-sub{position:absolute;left:120px;top:1050px;font-weight:600;font-size:40px;letter-spacing:-0.01em;color:#A9B4CC;white-space:nowrap;}
+#s7-bg{position:absolute;left:330px;top:1290px;width:900px;height:965px;opacity:.16;}
+#s7-rule{position:absolute;left:120px;top:1020px;width:120px;height:6px;border-radius:3px;background:#0064FF;transform-origin:0 0;}
+</style>
+  <div id="root" data-composition-id="s7" data-width="1080" data-height="1920">
+    <div id="s7-ground"></div>
+    <svg id="s7-bg" viewBox="26 34 56 60" data-layout-ignore><path d="M30,58 L44,58 L50,38 L60,74 L68,52 L78,52 L78,62 L73,62 L62,90 L52,58 L48,62 L30,62 Z" fill="#0064FF"/></svg>
+    <svg id="s7-glyph" viewBox="26 34 56 60"><path id="s7-gp" d="M30,58 L44,58 L50,38 L60,74 L68,52 L78,52 L78,62 L73,62 L62,90 L52,58 L48,62 L30,62 Z" fill="#0064FF" fill-opacity="0" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    <div id="s7-word">MOCA</div>
+    <div id="s7-t1" class="cap"><span class="ln"><span id="s7-t1a">내 차를 키우는</span></span></div>
+    <div id="s7-t2" class="cap"><span class="ln"><span id="s7-t2a">관리 파트너</span></span></div>
+    <div id="s7-rule"></div>
+    <div id="s7-sub">Pleos Connect 차량용 앱</div>
+  </div>
+  <script>
+
+const tl = gsap.timeline({ paused: true });
+const gp = document.getElementById("s7-gp");
+const len = gp.getTotalLength();
+gp.style.strokeDasharray = len;
+// host starts at 25.63 s; wipe lands on the 26.03 s beat (local 0.4)
+tl.fromTo("#s7-ground", { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.4, ease: "power3.inOut" }, 0);
+tl.fromTo("#s7-bg", { opacity: 0 }, { opacity: 0.16, duration: 0.5, ease: "power2.out" }, 0.3);
+tl.fromTo("#s7-gp", { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 0.1);
+tl.fromTo("#s7-gp", { fillOpacity: 0 }, { fillOpacity: 1, duration: 0.25, ease: "power1.out" }, 0.4);
+tl.fromTo("#s7-word", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.3, ease: "power3.inOut" }, 0.45);
+tl.fromTo("#s7-t1a", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 1.05);
+tl.fromTo("#s7-t2a", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 1.7);
+tl.fromTo("#s7-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 2.3);
+tl.fromTo("#s7-sub", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power3.out" }, 2.3);
+window.__timelines["s7"] = tl;
+
+  </script>
+</template>
