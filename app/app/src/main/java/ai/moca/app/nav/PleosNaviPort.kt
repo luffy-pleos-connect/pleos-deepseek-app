@@ -26,7 +26,7 @@ class PleosNaviPort(
 ) : NaviPort {
 
     /** 내비가 알려 주는 사건. [NaviGateway] 의 같은 이름 함수로 넘긴다. */
-    enum class Event { ROUTE_STARTED, ROUTE_CANCELLED, ROUTE_ENDED, DESTINATION_ARRIVED }
+    enum class Event { ROUTE_STARTED, ROUTE_CANCELLED, WAYPOINT_CHANGED, ERROR, DESTINATION_ARRIVED }
 
     private val appContext = context.applicationContext
     private val handler = Handler(Looper.getMainLooper())
@@ -48,16 +48,20 @@ class PleosNaviPort(
             onEvent(Event.ROUTE_CANCELLED)
         }
 
+        // 안내가 끝났다는 뜻이 아니다. 에뮬레이터에서 onRouteStarted 5ms 뒤에 오고 그때 naviMode 는 ROUTE_GUIDING 이다
+        // (2026-11-11·11-14 실측, docs/evidence/S1). 안내 끝은 취소·도착 사건으로만 본다.
         override fun onRouteEnded() {
-            onEvent(Event.ROUTE_ENDED)
+            Log.i(TAG, "onRouteEnded")
         }
 
         override fun onError(errorCode: ai.pleos.playground.navi.constants.NaviErrorCode) {
             Log.w(TAG, "onError $errorCode")
+            onEvent(Event.ERROR)
         }
 
         override fun onWaypointChanged(info: ai.pleos.playground.navi.data.WaypointChangedInfo) {
             Log.i(TAG, "onWaypointChanged $info")
+            onEvent(Event.WAYPOINT_CHANGED)
         }
 
         override fun onDestinationArrived(info: ai.pleos.playground.navi.data.DestinationArrivedInfo) {

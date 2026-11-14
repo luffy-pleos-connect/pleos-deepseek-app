@@ -126,20 +126,9 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         super.onDestroyView()
     }
 
-    /** 디버그 자동 시연용: 상대를 찾은 뒤 대전을 시작한다. */
-    fun autoStart() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(1200)
-            if (opponent != null && myResult?.evaluation?.grade != null) startBattle()
-        }
-    }
-
     // ── 로비 ────────────────────────────────────────────────────────
 
     private suspend fun loadLobby() {
-        val pendingStart = arguments?.getBoolean(ARG_START) == true
-        if (pendingStart) arguments?.putBoolean(ARG_START, false)
-
         val app = requireActivity().application as MocaApp
         val result = app.latestInspection ?: try {
             Inspector(app).run(force = false)
@@ -177,7 +166,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
         renderRecord(app)
         startButton.isEnabled = opponent != null
         showButtons(Phase.READY)
-        if (pendingStart && opponent != null && !running) startBattle()
     }
 
     private fun renderOpponent(app: MocaApp) {
@@ -482,8 +470,6 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
     private fun color(res: Int): Int = ContextCompat.getColor(requireContext(), res)
 
     companion object {
-        /** 보이스챗의 «대전 시작» 도구가 쓰는 자동 시작 인자. 정리는 다른 작업이 한다. */
-        const val ARG_START = "start"
         private const val ROUND_DELAY_MS = 600L
 
         /** 다가가기·밀려나기·제자리 돌아오기 한 단계의 길이. */

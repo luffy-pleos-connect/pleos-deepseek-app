@@ -1,13 +1,11 @@
 package ai.moca.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.RadioGroup
 import ai.pleos.ds.PleosUxRestrictions
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.fragment.app.Fragment
 import ai.moca.app.data.Prefs
 import ai.moca.app.ui.BattleFragment
@@ -59,11 +57,7 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        // 디버그 전용 자동 시연(adb 입력이 전달되지 않는 이 에뮬레이터에서 녹화하기 위한 것).
-        // release 빌드에는 포함되지 않는다.
-        if (intent.getBooleanExtra("moca_autodemo", false) && BuildConfig.DEBUG) {
-            viewLifecycleScopeAutoDemo()
-        }
+        debugAsk(intent)
     }
 
     /**
@@ -90,32 +84,19 @@ class MainActivity : FragmentActivity() {
         super.onStop()
     }
 
-    private fun viewLifecycleScopeAutoDemo() {
-        lifecycleScope.launch {
-            delay(1500)
-            prefs.consentData = true
-            prefs.consentCloud = true
-            prefs.applyBattleConsent(true)
-            android.util.Log.i("MOCA_AUTODEMO", "start")
-            prefs.onboarded = true
-            goHome()
-            delay(4000)
-            goStatus()
-            delay(3000)
-            goBattle()
-            delay(3500)
-            (supportFragmentManager.findFragmentByTag(BATTLE_TAG) as? BattleFragment)?.autoStart()
-            delay(14000)
-            goVoice()
-            delay(5000)
-            autoAskVoice("경고등 뭐야?")
-        }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        debugAsk(intent)
     }
 
-    /** 보이스 화면이 뜬 뒤 자동으로 질문을 넣는다(디버그 전용). */
-    private fun autoAskVoice(question: String) {
-        val f = supportFragmentManager.findFragmentByTag(VOICE_TAG) as? VoiceFragment ?: return
-        f.autoAsk(question)
+    /**
+     * 디버그 전용: adb 로 한글을 칠 수 없어, 검증·녹화 때 보이스챗 질문을 인텐트로 넣는다.
+     * `am start --activity-single-top -n ai.moca.app/.MainActivity --es moca_ask "질문"`. release 에서는 아무 일도 하지 않는다.
+     */
+    private fun debugAsk(intent: Intent?) {
+        if (!BuildConfig.DEBUG) return
+        val question = intent?.getStringExtra("moca_ask") ?: return
+        (supportFragmentManager.findFragmentByTag(VOICE_TAG) as? VoiceFragment)?.debugAsk(question)
     }
 
     fun goHome() = show(HOME_TAG) { HomeFragment() }
@@ -174,22 +155,6 @@ class MainActivity : FragmentActivity() {
             return
         }
         show(tag, create = create)
-    }
-
-    /** 순위·대전 화면을 열고, 로비가 준비되면 대전을 시작한다. */
-    fun openBattleAndStart() {
-        val launch = {
-            show(BATTLE_TAG, forceNew = true) {
-                BattleFragment().apply {
-                    arguments = Bundle().apply { putBoolean(BattleFragment.ARG_START, true) }
-                }
-            }
-        }
-        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
-            launch()
-        } else {
-            mainHandler.post { launch() }
-        }
     }
 
     private fun show(tag: String, forceNew: Boolean = false, create: () -> Fragment) {

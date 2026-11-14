@@ -61,7 +61,8 @@ class MocaApp : Application() {
             when (event) {
                 PleosNaviPort.Event.ROUTE_STARTED -> navi.onRouteStarted()
                 PleosNaviPort.Event.ROUTE_CANCELLED -> navi.onRouteCancelled()
-                PleosNaviPort.Event.ROUTE_ENDED -> navi.onRouteEnded()
+                PleosNaviPort.Event.WAYPOINT_CHANGED -> navi.onWaypointChanged()
+                PleosNaviPort.Event.ERROR -> navi.onError()
                 PleosNaviPort.Event.DESTINATION_ARRIVED -> navi.onDestinationArrived()
             }
         }

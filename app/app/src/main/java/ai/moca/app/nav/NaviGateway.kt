@@ -47,6 +47,14 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
     var guiding: Boolean = false
         private set
 
+    /**
+     * 우리가 경로를 바꿔 달라고 보낸 직후인가. 내비는 목적지·경유지 요청을 받으면 먼저 «이전 경로 취소»를 알리고
+     * 몇 초 뒤 새 경로를 알린다(2026-11-14 에뮬레이터 실측). 그 취소를 안내 종료로 보면 안 된다.
+     * ponytail: 요청 한 번에 취소 한 번만 무시한다. 내비가 오류도 안 알리고 경로를 못 잡으면 다음 진짜 취소 한 번을 놓친다.
+     */
+    @Volatile
+    private var rerouting = false
+
     /** 이번 안내에 넣은 경유지 수. 새 목적지·안내 종료에서 0 이 된다. */
     private val stopCount = AtomicInteger(0)
     val stops: Int
@@ -105,6 +113,7 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
         val index = stops + 1
         val sent = runCatching { port.addWaypoint(place, index) }.getOrDefault(false)
         if (!sent) return failed()
+        rerouting = true
         stopCount.incrementAndGet()
         return NaviResult(NaviCode.STOP_ADDED, "${place.name}${objectParticle(place.name)} 경유지로 넣었어요", place, demoData = true)
     }
@@ -113,6 +122,7 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
         if (!guiding) return NaviResult(NaviCode.NOT_GUIDING, MSG_NOT_GUIDING)
         val sent = runCatching { port.cancelRoute() }.getOrDefault(false)
         if (!sent) return failed()
+        rerouting = false
         stopCount.set(0)
         return NaviResult(NaviCode.CANCELLED, MSG_CANCELLED)
     }
@@ -122,15 +132,29 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
     fun onRouteStarted() {
         // 경유지를 넣으면 내비가 경로를 다시 잡고 시작을 또 알린다. 그때 경유지 수를 지우면 안 된다.
         guiding = true
+        rerouting = false
     }
 
-    fun onRouteCancelled() = finished()
+    /** 경유지가 바뀐 경로가 잡혔다. 이때는 내비가 [onRouteStarted] 를 다시 보내지 않는다(실측). */
+    fun onWaypointChanged() = onRouteStarted()
 
-    fun onRouteEnded() = finished()
+    fun onRouteCancelled() {
+        if (rerouting) {
+            rerouting = false
+            return
+        }
+        finished()
+    }
+
+    /** 내비가 요청을 처리하지 못했다. 기다리던 새 경로는 오지 않는다. */
+    fun onError() {
+        rerouting = false
+    }
 
     fun onDestinationArrived() = finished()
 
     private fun finished() {
+        rerouting = false
         guiding = false
         stopCount.set(0)
     }
@@ -141,6 +165,7 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
         stopCount.set(0)
         val sent = runCatching { port.requestRoute(place) }.getOrDefault(false)
         if (!sent) return failed()
+        rerouting = true
         return NaviResult(
             NaviCode.ROUTE_REQUESTED,
             "${place.name}${direction(place.name)} 길 안내를 요청했어요",

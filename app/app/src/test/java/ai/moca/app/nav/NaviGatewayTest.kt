@@ -40,7 +40,7 @@ import org.junit.Test
  *       fun addStop(kind: PlaceKind, demo: Boolean): NaviResult
  *       fun cancel(): NaviResult
  *       내비가 알려 주는 사건(실제 구현의 리스너가 부른다):
- *       fun onRouteStarted(); fun onRouteCancelled(); fun onRouteEnded(); fun onDestinationArrived()
+ *       fun onRouteStarted(); fun onRouteCancelled(); fun onDestinationArrived()
  *   }
  */
 class NaviGatewayTest {
@@ -244,7 +244,6 @@ class NaviGatewayTest {
         val (g, _) = gateway()
         g.onRouteStarted(); assertTrue(g.guiding)
         g.onDestinationArrived(); assertFalse(g.guiding)
-        g.onRouteStarted(); g.onRouteEnded(); assertFalse(g.guiding)
         g.onRouteStarted(); g.addStop(PlaceKind.GAS_STATION, demo = true); assertEquals(1, g.stops)
         g.onRouteStarted()
         assertEquals("경유지를 넣으면 내비가 경로를 다시 잡고 시작을 또 알릴 수 있다. 그때 수를 지우면 안 된다", 1, g.stops)
@@ -261,5 +260,29 @@ class NaviGatewayTest {
         assertFalse(result.demoData)
         assertEquals(listOf("타이어"), port.searches)
         assertNotNull(g.plan(PlaceKind.TIRE_SHOP, demo = true).question)
+    }
+
+    @Test
+    fun `우리가 경로를 바꾼 직후의 취소 알림은 안내 종료가 아니다`() {
+        // 2026-11-14 에뮬레이터 실측: 요청 → onRouteCancelled(이전 경로) → 몇 초 뒤 onRouteStarted / onWaypointChanged.
+        val (g, _) = gateway()
+        g.onRouteStarted()
+        g.navigateTo(PlaceKind.REPAIR_SHOP, demo = true)
+        g.onRouteCancelled(); assertTrue("새 목적지 요청 직후의 취소", g.guiding)
+        g.onRouteStarted()
+        g.addStop(PlaceKind.GAS_STATION, demo = true)
+        g.onRouteCancelled(); assertTrue("경유지 요청 직후의 취소", g.guiding)
+        g.onWaypointChanged(); assertTrue(g.guiding)
+        assertEquals(1, g.stops)
+        g.onRouteCancelled(); assertFalse("그 뒤의 취소는 진짜 종료", g.guiding)
+
+        g.onRouteStarted()
+        g.cancel()
+        g.onRouteCancelled(); assertFalse("우리가 끈 안내", g.guiding)
+
+        g.navigateTo(PlaceKind.REPAIR_SHOP, demo = true)
+        g.onError()
+        g.onRouteStarted()
+        g.onRouteCancelled(); assertFalse("오류 뒤에는 무시할 취소가 남아 있지 않다", g.guiding)
     }
 }
