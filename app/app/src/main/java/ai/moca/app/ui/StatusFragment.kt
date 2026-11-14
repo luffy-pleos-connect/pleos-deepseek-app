@@ -23,7 +23,6 @@ import moca.core.Category
 import moca.core.CategoryStatus
 import moca.core.Color
 import moca.core.Deduction
-import moca.core.Demo
 import moca.core.FluidLevel
 import moca.core.InspectionHistory
 import moca.core.Item
@@ -179,16 +178,8 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
     private fun renderTrend(result: InspectionResult) {
         val app = requireActivity().application as MocaApp
         val today = ScoreBridge.today()
-        val points = if (result.demo) {
-            val records = runCatching { Demo.recordsOf(app.prefs.demoScenarioId, today) }.getOrNull()
-            if (records == null) {
-                emptyList()
-            } else {
-                InspectionHistory.trendPoints(records, Profile.DEMO, today)
-            }
-        } else {
-            InspectionHistory.trendPoints(app.prefs.inspectionLog(false), Profile.REAL, today)
-        }
+        val profile = if (result.demo) Profile.DEMO else Profile.REAL
+        val points = InspectionHistory.trendPoints(app.store.records(profile), profile, today)
         // 점수를 못 낸 날만 있으면 그릴 선이 없다.
         if (points.count { it.overall != null } < 2) {
             trendGraph.visibility = View.GONE

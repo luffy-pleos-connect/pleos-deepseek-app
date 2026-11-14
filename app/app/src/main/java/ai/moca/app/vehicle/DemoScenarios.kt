@@ -1,122 +1,41 @@
 package ai.moca.app.vehicle
 
+import ai.moca.app.score.ScoreBridge
+import moca.core.Demo
+
 /**
- * 데모 시나리오 D0~D7 (계획 10장 표). 실제 차량 값이 아니다.
- * 모든 데모 화면에는 "데모 데이터" 배지가 붙는다.
- *
- * 값의 의미는 PleosVehicleSource 의 읽기 키와 같다.
- *  - oil_engine: 0=정상, 1=LOW, 2=CRITICALLY_LOW, 3=HIGH
- *  - tire_low: 저압 바퀴 수. note 는 위치(예: FL+FR). 위치가 없으면 바퀴를 만들지 않는다.
- *  - soc: 배터리 %
- *  - telltales: 켜진 경고등 수
+ * 데모 시나리오 D0~D7. 값은 손으로 쓰지 않고 엔진의 데모 데이터(`moca.core.Demo`)에서 가져온다.
+ * 화면에 쓰는 "데모 데이터" 배지는 그대로 붙는다.
  */
-enum class DemoScenario(
-    val id: String,
-    val label: String,
-    /** 점검 결과 기대값(계획 10장). 화면·테스트가 이 값을 쓴다. */
-    val expectedGrade: String,
-    val expectedTotal: Int,
-) {
-    D0("D0", "정상, 연료 62%", "A", 85),
-    D1("D1", "엔진오일 부족", "A", 80),
-    D2("D2", "TPMS 노랑 + 바퀴 2개 저압", "A", 80),
-    D3("D3", "ABS 빨강 + TPMS 노랑 + 바퀴 1개 저압", "B", 75),
-    D4("D4", "배터리 9%", "A", 84),
-    D5("D5", "엔진오일 부족 + TPMS 노랑 + 바퀴 1개 저압", "B", 76),
-    D6("D6", "타이어 미지원", "A", 85),
-    D7("D7", "워셔액 부족", "A", 84),
+enum class DemoScenario(val id: String) {
+    D0("D0"),
+    D1("D1"),
+    D2("D2"),
+    D3("D3"),
+    D4("D4"),
+    D5("D5"),
+    D6("D6"),
+    D7("D7"),
     ;
 
-    fun readings(): LinkedHashMap<String, ItemReading> {
-        val map = LinkedHashMap<String, ItemReading>()
-        fun put(key: String, value: Double?, supported: Boolean = true, note: String? = null) {
-            map[key] = ItemReading(key, supported, value, note)
-        }
+    /** 엔진 데모 시나리오(제목·상대·기대값의 원본). */
+    private val engine: moca.core.DemoScenario
+        get() = Demo.scenarios().first { it.first.id == id }.first
 
-        put(PleosVehicleSource.KEY_OIL_TRANSMISSION, 0.0)
-        put(PleosVehicleSource.KEY_BRAKE_FLUID, 0.0)
-        put(PleosVehicleSource.KEY_WASHER, 0.0)
-        put(PleosVehicleSource.KEY_POWER_DOWN, 0.0)
-        put(PleosVehicleSource.KEY_AIRBAG, 0.0)
-        put(PleosVehicleSource.KEY_FUEL, 62.0)
-        put(PleosVehicleSource.KEY_TIRE_KPA, 235.0)
+    val label: String get() = engine.title
 
-        when (this) {
-            D0 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 0.0)
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
-            }
-            D1 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 1.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 0.0)
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
-            }
-            D2 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 2.0, note = "FL+FR")
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 1.0) // TPMS 노랑
-            }
-            D3 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0, note = "FL")
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 2.0) // ABS 빨강 + TPMS 노랑
-            }
-            D4 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 0.0)
-                put(PleosVehicleSource.KEY_SOC, 9.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
-            }
-            D5 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 1.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 1.0, note = "FL")
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 1.0)
-            }
-            D6 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, null, supported = false)
-                put(PleosVehicleSource.KEY_TIRE_KPA, null, supported = false)
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
-            }
-            D7 -> {
-                put(PleosVehicleSource.KEY_OIL_ENGINE, 0.0)
-                put(PleosVehicleSource.KEY_TIRE_LOW, 0.0)
-                put(PleosVehicleSource.KEY_SOC, 62.0)
-                put(PleosVehicleSource.KEY_TELLTALES, 0.0)
-                // hasLowWasherFluidWarning 이 true 이면 1.0. ScoreBridge 는 0 보다 크면 부족이다.
-                put(PleosVehicleSource.KEY_WASHER, 1.0)
-            }
-        }
-        return map
-    }
+    /** 점검 결과 기대값(최종정리 2.5절). 화면·테스트가 이 값을 쓴다. */
+    val expectedGrade: String get() = engine.expectedGrade.label
+    val expectedTotal: Int get() = engine.expectedDisplayed
 
-    fun warnings(): WarningSummary = WarningCounter.summarize(
-        when (this) {
-            D3 -> listOf(ActiveWarning("ABS", 4), ActiveWarning("TPMS", 3))
-            D2, D5 -> listOf(ActiveWarning("TPMS", 3))
-            else -> emptyList()
-        },
-        isDemo = true,
-    )
+    fun readings(): LinkedHashMap<String, ItemReading> = LinkedHashMap(ScoreBridge.toReadings(snapshot()))
+
+    fun warnings(): WarningSummary = ScoreBridge.toWarnings(snapshot(), isDemo = true)
 
     /** 계획 10장의 고정 상대. */
-    fun opponentNickname(): String = when (this) {
-        D0 -> "달리는곰"
-        D1 -> "세차는사랑"
-        D2 -> "출근길요정"
-        D3 -> "라이벌드라이버"
-        D4 -> "주말캠퍼"
-        D5 -> "경고등수집가"
-        D6 -> "퇴근길질주"
-        D7 -> "초보운전3년차"
-    }
+    fun opponentNickname(): String = engine.opponent
+
+    private fun snapshot() = Demo.snapshotOf(id)
 
     companion object {
         fun byId(id: String?): DemoScenario = entries.firstOrNull { it.id == id } ?: D3
@@ -127,16 +46,17 @@ object DemoScenarios {
 
     fun source(scenarioId: String?): VehicleSource = object : VehicleSource {
         private val scenario = DemoScenario.byId(scenarioId)
+        private val snapshot = Demo.snapshotOf(scenario.id)
         private var watcher: ((WarningSummary) -> Unit)? = null
 
         override suspend fun read(): VehicleSnapshot =
-            VehicleSnapshot(scenario.readings(), System.currentTimeMillis(), isDemo = true)
+            VehicleSnapshot(ScoreBridge.toReadings(snapshot), System.currentTimeMillis(), isDemo = true)
 
-        override fun cachedWarnings(): WarningSummary = scenario.warnings()
+        override fun cachedWarnings(): WarningSummary = ScoreBridge.toWarnings(snapshot, isDemo = true)
 
         override fun startWatchingWarnings(onChange: (WarningSummary) -> Unit) {
             watcher = onChange
-            onChange(scenario.warnings())
+            onChange(cachedWarnings())
         }
 
         override fun stopWatchingWarnings() {

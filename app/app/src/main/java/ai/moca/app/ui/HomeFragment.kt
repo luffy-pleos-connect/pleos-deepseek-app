@@ -8,6 +8,8 @@ import ai.moca.app.inspect.Inspector
 import ai.moca.app.inspect.InspectPolicy
 import ai.moca.app.net.ApiClient
 import ai.moca.app.score.ScoreBridge
+import ai.moca.app.data.lastInspectedLabel
+import ai.moca.app.data.streakDays
 import ai.moca.app.ui.widget.ScoreRingView
 import ai.moca.app.vehicle.WarningSummary
 import android.content.res.ColorStateList
@@ -24,8 +26,8 @@ import moca.core.CategoryStatus
 import moca.core.DailyRank
 import moca.core.Evaluation
 import moca.core.GradeHow
-import moca.core.InspectionHistory
 import moca.core.Priority
+import moca.core.Profile
 import moca.core.RankText
 
 /**
@@ -154,8 +156,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         renderWarnings(result.warnings)
         renderTop(result)
         renderCategories(evaluation)
-        val saved = (requireActivity().application as MocaApp).prefs.inspectionLog(result.demo)
-        lastInspection.text = InspectionHistory.homeLabel(saved, ScoreBridge.today())
+        val app = requireActivity().application as MocaApp
+        val profile = if (result.demo) Profile.DEMO else Profile.REAL
+        lastInspection.text = lastInspectedLabel(app.store.all(profile), ScoreBridge.today())
     }
 
     private fun renderGrade(evaluation: Evaluation?) {
@@ -358,10 +361,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     /** 급한 문제가 없을 때만 부른다. 등급을 못 내는 차도 점검 기록은 쌓이므로 같이 보여 준다. */
     private fun renderStreak(result: InspectionResult) {
-        val streak = InspectionHistory.streakDays(
-            (requireActivity().application as MocaApp).prefs.inspectionLog(result.demo),
-            ScoreBridge.today(),
-        )
+        val app = requireActivity().application as MocaApp
+        val profile = if (result.demo) Profile.DEMO else Profile.REAL
+        val streak = streakDays(app.store.all(profile), ScoreBridge.today())
         homeStreak.visibility = if (streak >= 1) View.VISIBLE else View.GONE
         if (streak >= 1) homeStreak.text = getString(R.string.home_streak, streak)
     }

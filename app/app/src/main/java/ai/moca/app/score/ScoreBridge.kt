@@ -1,12 +1,14 @@
 package ai.moca.app.score
 
-import ai.moca.app.data.Prefs
+import ai.moca.app.vehicle.ActiveWarning
 import ai.moca.app.vehicle.ItemReading
 import ai.moca.app.vehicle.PleosVehicleSource
+import ai.moca.app.vehicle.TelltaleColorMap
 import ai.moca.app.vehicle.TelltaleTypeMap
+import ai.moca.app.vehicle.WarningCounter
 import ai.moca.app.vehicle.WarningSummary
-import moca.core.Category
 import moca.core.Color
+import moca.core.Demo
 import moca.core.Evaluation
 import moca.core.FluidLevel
 import moca.core.Item
@@ -20,7 +22,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * 앱의 원본값 읽기([ItemReading])를 점수 엔진의 입력([VehicleSnapshot])으로 바꾼다.
+ * 앱의 원본값 읽기([ItemReading])와 점수 엔진의 입력([VehicleSnapshot])을 서로 바꾼다.
  * 엔진은 :core 의 순수 함수다. 여기서는 변환만 한다.
  */
 object ScoreBridge {
@@ -83,6 +85,83 @@ object ScoreBridge {
     }
 
     /**
+     * 엔진 스냅샷 → 읽기 값. 화면이 읽은 값으로 그리는 동안 데모에도 같은 모양을 쓴다.
+     * [toEngineSnapshot] 에 그대로 넣으면 처음 스냅샷이 나온다.
+     */
+    fun toReadings(snapshot: VehicleSnapshot): Map<String, ItemReading> {
+        val map = LinkedHashMap<String, ItemReading>()
+        fun put(key: String, value: Double?, supported: Boolean = true, note: String? = null) {
+            map[key] = ItemReading(key, supported, value, note)
+        }
+
+        put(
+            PleosVehicleSource.KEY_OIL_ENGINE,
+            oilValue(snapshot.engineOil),
+            supported = Item.ENGINE_OIL !in snapshot.unsupported,
+            note = if (snapshot.engineOil == FluidLevel.ERROR) NOTE_SENSOR_ERROR else null,
+        )
+        put(
+            PleosVehicleSource.KEY_OIL_TRANSMISSION,
+            oilValue(snapshot.transmissionOil),
+            supported = Item.TRANSMISSION_OIL !in snapshot.unsupported,
+            note = if (snapshot.transmissionOil == FluidLevel.ERROR) NOTE_SENSOR_ERROR else null,
+        )
+        put(
+            PleosVehicleSource.KEY_BRAKE_FLUID,
+            oilValue(snapshot.brakeFluid),
+            supported = Item.BRAKE_FLUID !in snapshot.unsupported,
+            note = if (snapshot.brakeFluid == FluidLevel.ERROR) NOTE_SENSOR_ERROR else null,
+        )
+        put(
+            PleosVehicleSource.KEY_TIRE_LOW,
+            if (Item.TIRE in snapshot.unsupported) null else snapshot.lowTireWheels.size.toDouble(),
+            supported = Item.TIRE !in snapshot.unsupported,
+            note = tireNote(snapshot.lowTireWheels),
+        )
+        put(
+            PleosVehicleSource.KEY_SOC,
+            snapshot.batteryPercent,
+            supported = snapshot.batteryPercent != null && Item.ENERGY !in snapshot.unsupported,
+        )
+        put(
+            PleosVehicleSource.KEY_FUEL,
+            snapshot.fuelPercent,
+            supported = snapshot.fuelPercent != null && Item.ENERGY !in snapshot.unsupported,
+        )
+        put(
+            PleosVehicleSource.KEY_WASHER,
+            if (snapshot.washerFluidLow) 1.0 else 0.0,
+            supported = Item.WASHER_FLUID !in snapshot.unsupported,
+        )
+        put(
+            PleosVehicleSource.KEY_AIRBAG,
+            if (snapshot.airbagDeployed) 1.0 else 0.0,
+            supported = Item.AIRBAG !in snapshot.unsupported,
+        )
+        put(
+            PleosVehicleSource.KEY_TELLTALES,
+            snapshot.telltales.count { it.active }.toDouble(),
+            supported = Item.TELLTALES !in snapshot.unsupported,
+        )
+        // 경고등이 이미 담고 있으므로 파워다운은 따로 켜지 않는다(두 번 넣지 않는다).
+        put(PleosVehicleSource.KEY_POWER_DOWN, 0.0)
+        return map
+    }
+
+    /** 엔진 스냅샷 → 화면 배지용 경고 요약. 감점 대상만 세는 규칙은 [WarningCounter] 에 있다. */
+    fun toWarnings(snapshot: VehicleSnapshot, isDemo: Boolean): WarningSummary =
+        WarningCounter.summarize(
+            snapshot.telltales.map { state ->
+                ActiveWarning(
+                    type = TelltaleTypeMap.toSdk(state.telltale),
+                    color = TelltaleColorMap.assumedInt(state.color),
+                    blinking = state.blinking,
+                )
+            },
+            isDemo = isDemo,
+        )
+
+    /**
      * fluid 는 감점 판정용이다. "못 읽음"은 여기서 표현하지 않는다.
      * 못 읽음(value=null·미지원)은 [toEngineSnapshot] 의 unsupported 집합이 담당한다.
      * 여기서 ERROR 로 만들면 Rules.measured 가 카테고리를 통째로 지워
@@ -93,12 +172,20 @@ object ScoreBridge {
      */
     private fun fluid(reading: ItemReading?): FluidLevel = when {
         reading == null || !reading.supported -> FluidLevel.NORMAL
-        reading.note == "sensor_error" -> FluidLevel.ERROR
+        reading.note == NOTE_SENSOR_ERROR -> FluidLevel.ERROR
         reading.value == null -> FluidLevel.NORMAL
         reading.value >= 3.0 -> FluidLevel.HIGH
         reading.value >= 2.0 -> FluidLevel.CRITICALLY_LOW
         reading.value >= 1.0 -> FluidLevel.LOW
         else -> FluidLevel.NORMAL
+    }
+
+    /** [fluid] 의 반대. ERROR 는 note 로만 표현할 수 있다. */
+    private fun oilValue(level: FluidLevel): Double = when (level) {
+        FluidLevel.LOW -> 1.0
+        FluidLevel.CRITICALLY_LOW -> 2.0
+        FluidLevel.HIGH -> 3.0
+        FluidLevel.NORMAL, FluidLevel.ERROR -> 0.0
     }
 
     /**
@@ -116,6 +203,11 @@ object ScoreBridge {
             .toSet()
     }
 
+    private fun tireNote(wheels: Set<WheelArea>): String? {
+        val names = WheelArea.entries.filter { it in wheels }.map { it.name }
+        return if (names.isEmpty()) null else names.joinToString("+")
+    }
+
     /**
      * 경고등 요약 → 엔진 입력.
      * 색 정수 ↔ RED/YELLOW 매핑은 아직 미확인이지만(G0 §4), **type 은 실제 값을 쓴다.**
@@ -131,7 +223,7 @@ object ScoreBridge {
     /**
      * 정수 색 → :core Color.
      * ⚠️ 정수↔색 대응은 미확인이다(G0 §4). 임시 매핑이며, 틀리면 모든 경고등 감점이 흔들린다.
-     * 임시값: 4=RED, 3=YELLOW (TelltaleColor ordinal 가정).
+     * 임시값: 4=RED, 3=YELLOW (TelltaleColor ordinal 가정, [TelltaleColorMap] 과 같은 숫자).
      */
     private fun Int.toEngineColor(): Color = when (this) {
         4 -> Color.RED
@@ -140,29 +232,20 @@ object ScoreBridge {
     }
 
     /**
-     * 실차 관리 점수. 앱이 저장된 점검 기록으로 바꾼다.
-     * 기록이 없으면 시즌 시작값 50.
+     * 점수 평가. 관리 점수는 저장된 점검 기록에서 계산해 넘긴다.
+     * 넘기지 않으면 데모는 엔진 데모 값(53), 실제는 이번 달 시작값(50)이다.
      */
-    var realCare: (LocalDate) -> Int = { _ -> 50 }
-
-    /**
-     * 관리 점수.
-     * - 데모: `Demo.CARE_TODAY` (53). 기록으로 바꾸지 않는다.
-     * - 실차: [realCare]
-     */
-    fun careForNow(isDemo: Boolean = false): Int =
-        if (isDemo) moca.core.Demo.CARE_TODAY else realCare(today())
-
     fun evaluate(
         readings: Map<String, ItemReading>,
         warnings: WarningSummary,
         isDemo: Boolean,
+        care: Int = if (isDemo) Demo.CARE_TODAY else 50,
     ): Evaluation {
         val snapshot = toEngineSnapshot(readings, warnings, isDemo)
-        val care = careForNow(isDemo)
-        val redCap = Rules.hasRed(snapshot)
-        return Scoring.evaluate(snapshot, care, redCap)
+        return Scoring.evaluate(snapshot, care, Rules.hasRed(snapshot))
     }
 
     fun today(): LocalDate = LocalDate.now(SEOUL)
+
+    private const val NOTE_SENSOR_ERROR = "sensor_error"
 }

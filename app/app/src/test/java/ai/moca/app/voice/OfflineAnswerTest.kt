@@ -111,7 +111,8 @@ class OfflineAnswerTest {
         assertTrue(d3, d3.contains("앞왼쪽"))
         val d2 = ask(DemoScenario.D2, "타이어 어때?")
         assertTrue(d2, d2.contains("앞왼쪽"))
-        assertTrue(d2, d2.contains("앞오른쪽"))
+        // 엔진 데모의 D2 는 앞왼쪽·뒤오른쪽이다(손으로 쓴 옛 값은 앞오른쪽이었다).
+        assertTrue(d2, d2.contains("뒤오른쪽"))
         val d0 = ask(DemoScenario.D0, "타이어 어때?")
         assertTrue(d0, d0.contains("타이어"))
         assertTrue(d0, d0.contains("정상"))
@@ -127,8 +128,9 @@ class OfflineAnswerTest {
 
     @Test
     fun `배터리를 물으면 잔량 숫자를 말한다`() {
+        // 엔진 데모(Demo.kt)의 D0 은 배터리 80%, 연료 62% 다. 손으로 쓴 옛 값(배터리 62)을 따르지 않는다.
         val d0 = ask(DemoScenario.D0, "배터리 얼마나 남았어?")
-        assertTrue(d0, d0.contains("62"))
+        assertTrue(d0, d0.contains("80"))
         val d4 = ask(DemoScenario.D4, "배터리 얼마나 남았어?")
         assertTrue(d4, d4.contains("9%"))
         assertTrue(d4, d4.contains("충전"))

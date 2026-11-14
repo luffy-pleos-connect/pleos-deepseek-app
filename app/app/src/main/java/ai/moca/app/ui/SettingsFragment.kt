@@ -113,6 +113,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                     val deviceId = prefs.deviceId
                     val deviceSecret = prefs.deviceSecret
                     netScope.launch { ApiClient(prefs).deleteSnapshot(deviceId, deviceSecret) }
+                    app.store.clear()
                     prefs.clearAll()
                     app.latestInspection = null
                     app.lastInspectKey = null

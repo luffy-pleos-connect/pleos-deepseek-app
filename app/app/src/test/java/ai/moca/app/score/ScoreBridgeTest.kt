@@ -124,7 +124,8 @@ class ScoreBridgeTest {
             scenario.warnings(),
             isDemo = true,
         ).lowTireWheels
-        assertEquals(setOf(WheelArea.FL, WheelArea.FR), wheels(DemoScenario.D2))
+        // 엔진 데모(Demo.kt)의 D2 는 앞왼쪽·뒤오른쪽이다. 손으로 쓴 옛 값(FL+FR)을 따르지 않는다.
+        assertEquals(setOf(WheelArea.FL, WheelArea.RR), wheels(DemoScenario.D2))
         assertEquals(setOf(WheelArea.FL), wheels(DemoScenario.D3))
         assertEquals(setOf(WheelArea.FL), wheels(DemoScenario.D5))
         assertEquals(emptySet<WheelArea>(), wheels(DemoScenario.D0))

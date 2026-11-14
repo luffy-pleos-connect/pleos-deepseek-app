@@ -115,7 +115,10 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
                     else -> false
                 }
             },
-            evaluate = { readings, warnings, isDemo -> ScoreBridge.evaluate(readings, warnings, isDemo) },
+            evaluate = { readings, warnings, isDemo ->
+                val profile = if (isDemo) moca.core.Profile.DEMO else moca.core.Profile.REAL
+                ScoreBridge.evaluate(readings, warnings, isDemo, app.store.care(profile, ScoreBridge.today()))
+            },
             rerunInspection = { ai.moca.app.inspect.Inspector(app).run(force = true) },
             startFix = { action ->
                 suspendCancellableCoroutine { cont ->

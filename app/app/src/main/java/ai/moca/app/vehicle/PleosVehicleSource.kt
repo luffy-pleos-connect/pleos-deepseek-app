@@ -434,4 +434,11 @@ object TelltaleColorMap {
     )
 
     fun severity(color: Int): Severity = assumed[color] ?: Severity.NONE
+
+    /** [severity] 의 반대. 가정한 숫자(빨강 4, 노랑 3)를 그대로 돌려준다. */
+    fun assumedInt(color: moca.core.Color): Int = when (color) {
+        moca.core.Color.RED -> 4
+        moca.core.Color.YELLOW -> 3
+        else -> 0
+    }
 }

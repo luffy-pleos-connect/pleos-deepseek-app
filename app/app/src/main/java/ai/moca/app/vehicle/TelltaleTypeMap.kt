@@ -11,6 +11,12 @@ import moca.core.Telltale
  */
 object TelltaleTypeMap {
 
+    /** 엔진 경고등 → SDK 이름. [toEngine] 의 반대이며 같은 표를 쓴다. */
+    fun toSdk(telltale: Telltale): String = when (telltale) {
+        Telltale.SEATBELT -> "SEAT_BELT"
+        else -> telltale.name
+    }
+
     fun toEngine(type: String): Telltale? = when (type.uppercase()) {
         "ENGINE" -> Telltale.ENGINE
         "ENGINE_OIL_PRESSURE" -> Telltale.ENGINE_OIL_PRESSURE

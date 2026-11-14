@@ -1,8 +1,6 @@
 package ai.moca.app.data
 
 import android.content.Context
-import ai.moca.app.score.ScoreBridge
-import moca.core.InspectionHistory
 import java.util.UUID
 
 /**
@@ -92,14 +90,6 @@ class Prefs(context: Context) {
         sp.edit().remove(KEY_DEVICE_SECRET).apply()
     }
 
-    fun inspectionLog(demo: Boolean): String =
-        sp.getString(logKey(demo), "").orEmpty()
-
-    fun appendInspection(demo: Boolean, line: String) {
-        val merged = InspectionHistory.append(inspectionLog(demo), line, ScoreBridge.today())
-        sp.edit().putString(logKey(demo), merged).apply()
-    }
-
     /** 홈이 마지막으로 그린 등급·순위·종합 점수. 데모와 실차를 따로 둔다. */
     class Seen(val grade: String?, val rank: Int?, val score: Int?)
 
@@ -126,8 +116,6 @@ class Prefs(context: Context) {
         sp.edit().clear().apply()
     }
 
-    private fun logKey(demo: Boolean): String = if (demo) KEY_LOG_DEMO else KEY_LOG_REAL
-
     private companion object {
         const val KEY_DEVICE_ID = "device_id"
         const val KEY_DEVICE_SECRET = "device_secret"
@@ -139,8 +127,6 @@ class Prefs(context: Context) {
         const val KEY_DEMO_SCENARIO = "demo_scenario"
         const val KEY_CONSENT_BATTLE = "consent_battle"
         const val KEY_CONSENT_USAGE = "consent_usage"
-        const val KEY_LOG_REAL = "inspection_log_real"
-        const val KEY_LOG_DEMO = "inspection_log_demo"
     }
 
     private fun seenGradeKey(demo: Boolean) = if (demo) "seen_grade_demo" else "seen_grade_real"

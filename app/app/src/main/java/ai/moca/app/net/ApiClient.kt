@@ -8,8 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
-import moca.core.Category
-import moca.core.Evaluation
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
@@ -131,10 +129,6 @@ class ApiClient(
         }
     }
 
-    /** 점검 결과 요약을 올린다. 다른 기기의 대전 상대 풀에 들어간다(데모 요약은 서버가 풀에서 뺀다). */
-    suspend fun uploadSnapshot(body: JSONObject): Boolean =
-        snapshots("POST", "$baseUrl/snapshots", prefs.deviceSecret, body)
-
     /** 서버에 올린 내 요약을 지운다. 로컬 값을 지우기 전에 읽어 둔 기기 ID·비밀값을 받는다. */
     suspend fun deleteSnapshot(deviceId: String, deviceSecret: String): Boolean =
         snapshots("DELETE", "$baseUrl/snapshots?deviceId=$deviceId", deviceSecret, null)
@@ -173,36 +167,8 @@ class ApiClient(
     }
 }
 
-/** 화면이 닫혀도 끝까지 보내야 하는 호출(요약 올리기·지우기)이 쓰는 범위. */
+/** 화면이 닫혀도 끝까지 보내야 하는 호출(지우기)이 쓰는 범위. */
 val netScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-/** 서버 `POST /snapshots` 본문. 서버의 검증 규칙(server/validate.mjs)과 같은 모양이다. */
-object SnapshotPayload {
-    /** 등급이 나오지 않은 점검은 올릴 것이 없다(null). 점수는 화면에 보이는 종합 점수다. */
-    fun build(deviceId: String, nickname: String, evaluation: Evaluation?, isDemo: Boolean, inspectedAt: Long): JSONObject? {
-        val grade = evaluation?.grade ?: return null
-        val total = evaluation.displayedOverall ?: return null
-        fun score(category: Category): Any = evaluation.categories[category] ?: JSONObject.NULL
-        return JSONObject().apply {
-            put("deviceId", deviceId)
-            put("nickname", nickname)
-            put("grade", grade.label)
-            put("total", total)
-            put(
-                "categories",
-                JSONObject().apply {
-                    put("power", score(Category.POWER))
-                    put("brake", score(Category.BRAKE_STEERING))
-                    put("tire", score(Category.TIRE))
-                    put("electric", score(Category.ELECTRIC))
-                    put("safety", score(Category.SAFETY))
-                },
-            )
-            put("isDemo", isDemo)
-            put("inspectedAt", inspectedAt)
-        }
-    }
-}
 
 /** 서버 메시지에서 tool_calls 만 꺼내는 편의 함수(테스트·디버그용). */
 fun JSONObject.toolCalls(): JSONArray? = optJSONArray("tool_calls")
