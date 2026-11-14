@@ -119,16 +119,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@color/pleos_text_dark_secondary" />
-
-        <TextView
-            android:id="@+id/solutionDemoBadge"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/moca_gap_small"
-            android:text="@string/c13_badge_demo"
-            android:textColor="@color/pleos_text_dark_secondary"
-            android:visibility="gone" />
     </LinearLayout>
 
     <Button

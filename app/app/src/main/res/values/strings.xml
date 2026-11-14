@@ -16,7 +16,6 @@
     <string name="c11_practice_opponent">연습 상대와 대전해요</string>
     <string name="c12_inspect_first">먼저 점검해 주세요</string>
     <string name="c20_not_enough_data">이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요</string>
-    <string name="c13_badge_demo">데모 데이터</string>
     <string name="c14_stop_safely">안전한 곳에 정차한 뒤 점검을 받으세요</string>
     <string name="c15_red_to_grade">빨간 경고등을 해결하면 %1$s까지 %2$d점</string>
     <string name="c16_checking">확인해 볼게요</string>
@@ -133,7 +132,7 @@
     <string name="settings_group_data">데이터</string>
     <string name="settings_nickname">닉네임</string>
     <string name="settings_demo">데모 모드</string>
-    <string name="settings_demo_help">차 없이 시나리오로 앱을 살펴봐요. 화면 위에 \'데모 데이터\'가 보여요</string>
+    <string name="settings_demo_help">차 없이 시나리오로 앱을 살펴봐요</string>
     <string name="settings_scenario_d0">D0 · 정상, 연료 62%</string>
     <string name="settings_scenario_d1">D1 · 엔진오일 부족</string>
     <string name="settings_scenario_d2">D2 · TPMS 노랑 + 바퀴 2개 저압</string>

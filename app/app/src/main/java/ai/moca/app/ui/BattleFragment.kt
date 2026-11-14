@@ -177,7 +177,7 @@ class BattleFragment : Fragment(R.layout.fragment_battle) {
             evaluation.grade?.label ?: seed.grade.label,
             evaluation.displayedOverall ?: seed.overall.toInt(),
         )
-        theirBadge.text = getString(if (app.prefs.demoEnabled) R.string.c13_badge_demo else R.string.versus_practice_badge)
+        theirBadge.text = getString(R.string.versus_practice_badge)
     }
 
     private fun renderRecord(app: MocaApp) {

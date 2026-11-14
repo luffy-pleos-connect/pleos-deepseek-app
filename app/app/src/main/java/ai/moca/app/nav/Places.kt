@@ -21,7 +21,7 @@ data class Place(
 )
 
 /**
- * res/raw/places_demo.json 을 읽는다. 화면에 이 목록을 쓰면 «데모 데이터» 배지가 붙는다.
+ * res/raw/places_demo.json 을 읽는다.
  * 깨진 JSON, 모르는 종류, 이름이 빈 줄, 한국 밖 좌표는 버린다.
  */
 object Places {

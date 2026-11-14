@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="voice_badge_demo">데모 데이터</string>
     <string name="voice_badge_offline">오프라인 음성</string>
     <string name="voice_state_idle">대기</string>
     <string name="voice_ask_anything">무엇이든 물어보세요</string>

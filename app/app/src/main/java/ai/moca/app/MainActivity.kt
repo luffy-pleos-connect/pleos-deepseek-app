@@ -166,7 +166,6 @@ class MainActivity : FragmentActivity() {
         currentTag = tag
         tx.replace(R.id.navHost, target, tag)
         tx.commit()
-        updateDemoBadge()
         selectTab(tag)
     }
 
@@ -191,11 +190,6 @@ class MainActivity : FragmentActivity() {
         suppressTabCallback = false
     }
 
-    private fun updateDemoBadge() {
-        val badge = findViewById<android.widget.TextView>(R.id.demoBadge)
-        badge.visibility = if (prefs.demoEnabled) View.VISIBLE else View.GONE
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(KEY_TAG, currentTag)
@@ -214,7 +208,6 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::prefs.isInitialized) updateDemoBadge()
         val tag = supportFragmentManager.findFragmentById(R.id.navHost)?.tag
         if (tag != null) selectTab(tag)
     }

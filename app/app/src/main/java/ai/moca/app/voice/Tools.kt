@@ -157,7 +157,6 @@ class Tools(
         val eval = s.evaluation ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
-            put("isDemo", isDemo)
             put("grade", eval.grade?.label ?: JSONObject.NULL)
             put("overall", eval.displayedOverall ?: JSONObject.NULL)
             put("health", eval.health?.toInt() ?: JSONObject.NULL)
@@ -179,7 +178,6 @@ class Tools(
         val s = snapshot() ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
-            put("isDemo", isDemo)
             put("red", s.warnings.redCount)
             put("yellow", s.warnings.yellowCount)
             put("total", s.warnings.total)
@@ -229,7 +227,6 @@ class Tools(
         }
         return JSONObject().apply {
             put("ok", true)
-            put("isDemo", isDemo)
             put("items", filtered)
             put("problems", JSONArray().apply {
                 for (d in Rules.deductions(engine)) put(d.label)
@@ -389,7 +386,6 @@ class Tools(
         val s = snapshot() ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
-            put("isDemo", isDemo)
             readPercent(s, PleosVehicleSource.KEY_FUEL)?.let { put("fuelPercent", it) }
             readPercent(s, PleosVehicleSource.KEY_SOC)?.let { put("batteryPercent", it) }
             s.odometer?.let { put("odometer", it) }

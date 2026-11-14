@@ -20,16 +20,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start|center_vertical"
             android:text="@string/app_name" />
-
-        <TextView
-            android:id="@+id/demoBadge"
-            style="@style/Pleos.Text.Label.M"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|center_vertical"
-            android:text="@string/c13_badge_demo"
-            android:textColor="@color/pleos_text_dark_secondary"
-            android:visibility="gone" />
     </FrameLayout>
 
     <androidx.fragment.app.FragmentContainerView

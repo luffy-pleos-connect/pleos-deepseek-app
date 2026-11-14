@@ -271,10 +271,8 @@ class StatusFragment : Fragment(R.layout.fragment_status) {
         val naviResult = app.navi.navigateTo(kind, demo = app.prefs.demoEnabled)
         val row = solutionRoot.findViewById<View>(R.id.solutionResultRow)
         val text = solutionRoot.findViewById<TextView>(R.id.solutionResult)
-        val badge = solutionRoot.findViewById<TextView>(R.id.solutionDemoBadge)
         row.visibility = View.VISIBLE
         text.text = naviResult.message
-        badge.visibility = if (naviResult.demoData) View.VISIBLE else View.GONE
         if (!naviResult.ok) PleosToast.show(host, naviResult.message)
     }
 

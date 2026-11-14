@@ -69,7 +69,6 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
     private lateinit var contextText: TextView
     private lateinit var navCard: View
     private lateinit var navText: TextView
-    private lateinit var navBadge: View
     private lateinit var navYes: Button
     private lateinit var navNo: Button
     private lateinit var suggestions: List<Button>
@@ -105,7 +104,6 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         contextText = view.findViewById(R.id.voiceContextText)
         navCard = view.findViewById(R.id.navConfirmCard)
         navText = view.findViewById(R.id.navConfirmText)
-        navBadge = view.findViewById(R.id.navConfirmBadge)
         navYes = view.findViewById(R.id.navConfirmYes)
         navNo = view.findViewById(R.id.navConfirmNo)
         suggestions = listOf(R.id.suggestion1, R.id.suggestion2, R.id.suggestion3, R.id.suggestion4)
@@ -356,7 +354,6 @@ class VoiceFragment : Fragment(R.layout.fragment_voice) {
         navCard.visibility = if (pending == null) View.GONE else View.VISIBLE
         if (pending == null) return
         navText.text = pending.plan.question
-        navBadge.visibility = if (pending.plan.demoData) View.VISIBLE else View.GONE
         navYes.setText(if (pending.request.action == NavAction.ADD_STOP) R.string.voice_nav_add_stop else R.string.voice_nav_start)
     }
 

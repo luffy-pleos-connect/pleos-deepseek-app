@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  월간랭킹 (최종정리 7장·12장). 위: 「N월 월간랭킹」· 데모 데이터 배지 · [대전하기로].
+  월간랭킹 (최종정리 7장·12장). 위: 「N월 월간랭킹」· [대전하기로].
   왼쪽: 내 순위 한 줄과 순위표(이 목록만 스크롤). 오른쪽: 이번 달 내 관리 요약 · AI 한 줄 · [질문하기].
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -24,15 +24,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <TextView
-            android:id="@+id/rankingBadge"
-            style="@style/Pleos.Text.Label.M"
+        <Space
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/moca_gap"
-            android:layout_weight="1"
-            android:text="@string/c13_badge_demo"
-            android:textColor="@color/pleos_text_dark_secondary" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/rankingBack"

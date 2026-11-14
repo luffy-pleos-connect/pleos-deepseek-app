@@ -5,7 +5,6 @@ import moca.core.Demo
 
 /**
  * 데모 시나리오 D0~D7. 값은 손으로 쓰지 않고 엔진의 데모 데이터(`moca.core.Demo`)에서 가져온다.
- * 화면에 쓰는 "데모 데이터" 배지는 그대로 붙는다.
  */
 enum class DemoScenario(val id: String) {
     D0("D0"),

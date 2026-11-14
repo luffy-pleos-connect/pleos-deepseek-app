@@ -152,8 +152,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     private fun nicknameText(prefs: Prefs): String = if (prefs.demoEnabled) {
-        prefs.nickname + " · " + DemoScenario.byId(prefs.demoScenarioId).id + " " +
-            getString(R.string.c13_badge_demo)
+        prefs.nickname + " · " + DemoScenario.byId(prefs.demoScenarioId).id
     } else {
         prefs.nickname
     }

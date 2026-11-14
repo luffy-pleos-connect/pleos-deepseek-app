@@ -125,16 +125,6 @@
             android:visibility="gone">
 
             <TextView
-                android:id="@+id/navConfirmBadge"
-                style="@style/Pleos.Text.Label.M"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/moca_gap"
-                android:text="@string/c13_badge_demo"
-                android:textColor="@color/pleos_text_dark_secondary"
-                android:visibility="gone" />
-
-            <TextView
                 android:id="@+id/navConfirmText"
                 style="@style/Pleos.Text.Body.L"
                 android:layout_width="0dp"
