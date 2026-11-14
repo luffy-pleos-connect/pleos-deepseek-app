@@ -4,13 +4,13 @@ ID               판정 상세
 AT-07            PASS   node --test 통과 122개
 AT-01~06,10      PASS   ALL TESTS PASSED RESULT: PASS
 빌드           PASS   assembleDebug 성공
-AT-08·대전    PASS   테스트 196개 통과
-PG-08            PASS   0 finding(s) in 110 file(s). UX restriction check present: True
+AT-08·대전    PASS   테스트 198개 통과
+PG-08            PASS   0 finding(s) in 119 file(s). UX restriction check present: True
 CQ-03            PASS   TODO·FIXME·@Ignore 0
 CQ-07(비밀값) PASS   0건
 LY-06            PASS   hex 색 0
 CQ-09            PASS   docs/plan·research·.omc 미추적
-PF-07            PASS   4MB
+PF-07            PASS   11MB
 D-14(DN)         PASS   Signer #1 certificate DN: CN=해적단, OU=MOCA, O=해적단, L=Seoul, ST=Seoul, C=KR
 설치           PASS   ai.moca.app 설치됨
 
