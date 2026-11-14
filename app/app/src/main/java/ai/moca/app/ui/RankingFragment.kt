@@ -201,11 +201,14 @@ class RankingFragment : Fragment(R.layout.fragment_ranking) {
                 put("전체 인원", it.total)
             }
         }
-        val messages = JSONArray().apply {
-            put(JSONObject().put("role", "system").put("content", getString(R.string.ranking_ai_system)))
-            put(JSONObject().put("role", "system").put("content", getString(R.string.ranking_ai_facts, facts.toString())))
-            put(JSONObject().put("role", "user").put("content", getString(R.string.ranking_ai_question)))
-        }
+        // apply 안에서 getString 을 부르면 JSONArray.getString(index) 가 불려 죽는다. 문장은 밖에서 꺼낸다.
+        val system = getString(R.string.ranking_ai_system)
+        val factsLine = getString(R.string.ranking_ai_facts, facts.toString())
+        val question = getString(R.string.ranking_ai_question)
+        val messages = JSONArray()
+            .put(JSONObject().put("role", "system").put("content", system))
+            .put(JSONObject().put("role", "system").put("content", factsLine))
+            .put(JSONObject().put("role", "user").put("content", question))
         val answer = try {
             ApiClient(app.prefs).chat(JSONObject().put("messages", messages))
         } catch (e: CancellationException) {
