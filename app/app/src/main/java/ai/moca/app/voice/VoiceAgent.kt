@@ -54,6 +54,8 @@ class VoiceAgent(
      * 분류기가 확신하는 6개 의도에만 쓴다. 실패하면 일반 경로([ask])로 되돌린다.
      */
     suspend fun askFast(question: String, drivingMode: Boolean, context: AskContext? = null): Answer {
+        // 넘어온 카드의 추천 질문은 낱말로 의도를 고르지 않는다(«순위가 올라?» 가 화면 열기로 잡혔다, 2026-11-14 실측).
+        if (context?.offlineAnswer != null) return ask(question, drivingMode, context)
         val intent = OfflineIntents.detect(question) ?: return ask(question, drivingMode, context)
         val toolName = OfflineIntents.toolName(intent, question)
         val args = OfflineIntents.toolArgs(intent, question)
