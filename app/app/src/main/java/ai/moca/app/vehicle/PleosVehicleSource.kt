@@ -1,6 +1,7 @@
 package ai.moca.app.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
+import ai.pleos.playground.vehicle.api.model.area.SeatArea
 import ai.pleos.playground.vehicle.api.model.area.WheelArea
 import ai.pleos.playground.vehicle.api.model.telltale.TelltaleData
 import ai.pleos.playground.vehicle.constant.area.WheelValue
@@ -32,6 +33,9 @@ class PleosVehicleSource(context: Context) : VehicleSource {
     private var warningCache = WarningSummary.empty()
 
     private var listener: TelltaleInfoListener? = null
+
+    /** 처음 한 번만 남기는 로그 이름. */
+    private val logged = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
     // Pleos SDK 리스너 콜백은 백그라운드 스레드에서 온다.
     // 캐시 갱신은 volatile 대입만 하고, 화면 갱신은 메인스레드로 넘긴다(CalledFromWrongThreadException 방지).
@@ -66,6 +70,9 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         readings += readItem(KEY_OIL_ENGINE) { cb, onFail ->
             vehicle.getSafety().getEngineOilLevelState(cb) { e -> onFail(noteOf(e)) }
         }
+        readings += readItem(KEY_OIL_TRANSMISSION) { cb, onFail ->
+            vehicle.getSafety().getTransmissionOilLevelState(cb) { e -> onFail(noteOf(e)) }
+        }
         readings += readItem(KEY_BRAKE_FLUID) { cb, onFail ->
             vehicle.getSafety().getBrakeFluidLevelState(cb) { e -> onFail(noteOf(e)) }
         }
@@ -78,11 +85,32 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         readings += readItem(KEY_SOC) { cb, onFail ->
             vehicle.getEvBattery().getEvBatteryStateOfCharge(cb) { e -> onFail(noteOf(e)) }
         }
+        readings += readItem(KEY_FUEL) { cb, onFail ->
+            vehicle.getFuel().getFuelPercent(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readItem(KEY_ODOMETER) { cb, onFail ->
+            vehicle.getOdometer().getCurrentDistanceDriven(cb) { e -> onFail(noteOf(e)) }
+        }
+        readings += readAirbag()
         readings += readTireLowPressure()
         readings += readTirePressure()
         readings += readTelltales()
 
+        // 개발문서 6장 4번: 단위 확인 전에는 표시하지 않는다. 확인용으로 처음 한 번만 남긴다.
+        readings[KEY_ODOMETER]?.value?.let { distance ->
+            logOnce("odometer") { Log.i(TAG, "odometer raw value $distance") }
+        }
+
+        // 실차에서 어떤 항목이 읽혔는지 처음 한 번 남긴다(값이 없으면 못 읽은 이유). 기기 로그에만 남는다.
+        logOnce("summary") {
+            Log.i(TAG, "readings " + readings.values.joinToString(", ") { r -> "${r.key}=${r.value ?: (r.note ?: "null")}" })
+        }
         VehicleSnapshot(readings, System.currentTimeMillis(), isDemo = false)
+    }
+
+    /** 같은 이름의 로그를 프로세스 수명 동안 한 번만 남긴다(점검은 앱을 켤 때마다 돈다). */
+    private fun logOnce(name: String, write: () -> Unit) {
+        if (logged.add(name)) write()
     }
 
     private fun noteOf(e: Exception): String {
@@ -140,6 +168,54 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         OilLevelState.ERROR -> ItemReading(key, supported = true, value = null, note = "sensor_error")
     }
 
+    /**
+     * 에어백 전개 여부. SDK 는 좌석(SeatArea)별로만 알려준다.
+     * 지원 좌석을 모두 읽어 하나라도 전개됐으면 1.0, 전부 아니면 0.0.
+     * 지원 좌석을 못 얻거나 하나도 못 읽으면 미지원/미측정으로 남긴다.
+     */
+    private suspend fun readAirbag(): Pair<String, ItemReading> {
+        val seats = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
+            suspendCancellableCoroutine<List<SeatArea>?> { cont ->
+                runCatching {
+                    vehicle.getSafety().checkAirbagDeployedCapabilities(
+                        { _, list -> if (cont.isActive) cont.resume(list) },
+                        { if (cont.isActive) cont.resume(null) },
+                    )
+                }.onFailure {
+                    if (cont.isActive) cont.resume(null)
+                }
+            }
+        }
+        if (seats == null) {
+            return KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = true, value = null, note = "capability_timeout")
+        }
+        if (seats.isEmpty()) {
+            return KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = false, value = null, note = "no_seat_area")
+        }
+        var read = 0
+        var deployed = false
+        for (seat in seats) {
+            val value = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
+                suspendCancellableCoroutine<Boolean?> { cont ->
+                    vehicle.getSafety().hasSeatAirbagBeenDeployed(
+                        seat,
+                        { v -> if (cont.isActive) cont.resume(v) },
+                        { if (cont.isActive) cont.resume(null) },
+                    )
+                }
+            } ?: continue
+            read++
+            if (value) deployed = true
+        }
+        return when {
+            // 전개된 좌석이 하나라도 있으면 나머지를 못 읽어도 결론은 같다.
+            deployed -> KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = true, value = 1.0)
+            read == seats.size -> KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = true, value = 0.0)
+            read == 0 -> KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = false, value = null, note = "unreadable")
+            else -> KEY_AIRBAG to ItemReading(KEY_AIRBAG, supported = true, value = null, note = "partial")
+        }
+    }
+
     private suspend fun readTireLowPressure(): Pair<String, ItemReading> {
         val areas = withTimeoutOrNull(ITEM_TIMEOUT_MS) {
             suspendCancellableCoroutine<List<WheelArea>?> { cont ->
@@ -159,6 +235,7 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         }
         val pairs = mutableListOf<Pair<Float?, Float?>>()
         val mapped = linkedMapOf<moca.core.WheelArea, Pair<Float?, Float?>>()
+        val wheelLog = mutableListOf<String>()
         for (area in areas) {
             val pressure = readFloat { onOk, onFail ->
                 vehicle.getTire().getTirePressure(area, onOk, onFail)
@@ -170,6 +247,12 @@ class PleosVehicleSource(context: Context) : VehicleSource {
             pairs += pair
             val core = toCoreWheel(area)
             if (core != null) mapped[core] = pair
+            wheelLog += "${core ?: area.values.joinToString("/")}=${pressure ?: "-"}/${threshold ?: "-"}"
+        }
+        // 개발문서 2.3절·6장 2번: 바퀴별 현재 공기압과 기준값을 실제 값으로 확인한다.
+        // 두 값 모두 0/1 로만 오면 "현재 < 기준" 판정을 다시 정해야 한다.
+        logOnce("tire") {
+            Log.i(TAG, "tire pressure/threshold kPa ${wheelLog.joinToString(", ")}")
         }
         val lowCount = moca.core.TirePressure.lowCount(pairs)
         val named = moca.core.TirePressure.lowAreas(mapped)
@@ -191,7 +274,8 @@ class PleosVehicleSource(context: Context) : VehicleSource {
      * UNKNOWN 이나 바퀴가 하나가 아닌 영역은 위치를 만들지 않는다.
      */
     private fun toCoreWheel(area: WheelArea): moca.core.WheelArea? {
-        val values = area.values
+        // 에뮬레이터는 영역 하나를 [UNKNOWN, LEFT_FRONT] 처럼 준다(2026-11-14 실측). UNKNOWN 을 빼고 하나만 남을 때 그 바퀴다.
+        val values = area.values.filter { it != WheelValue.UNKNOWN }
         if (values.size != 1) return null
         return when (values[0]) {
             WheelValue.LEFT_FRONT -> moca.core.WheelArea.FL
@@ -215,9 +299,13 @@ class PleosVehicleSource(context: Context) : VehicleSource {
             runCatching {
                 request(
                     { value -> if (cont.isActive) cont.resume(value) },
-                    { if (cont.isActive) cont.resume(null) },
+                    { e ->
+                        Log.d(TAG, "float read failed: ${e.javaClass.simpleName}: ${e.message}")
+                        if (cont.isActive) cont.resume(null)
+                    },
                 )
-            }.onFailure {
+            }.onFailure { e ->
+                Log.d(TAG, "float read threw: ${e.javaClass.simpleName}: ${e.message}")
                 if (cont.isActive) cont.resume(null)
             }
         }
@@ -293,21 +381,16 @@ class PleosVehicleSource(context: Context) : VehicleSource {
     }
 
     private fun summarize(list: List<TelltaleData>, isDemo: Boolean): WarningSummary {
-        var red = 0
-        var yellow = 0
-        var active = 0
         val actives = mutableListOf<ActiveWarning>()
         for (t in list) {
             if (t.state == TelltaleState.OFF) continue
-            active++
-            actives += ActiveWarning(t.type.name, t.color)
-            when (TelltaleColorMap.severity(t.color)) {
-                Severity.RED -> red++
-                Severity.YELLOW -> yellow++
-                Severity.NONE -> Unit
-            }
+            actives += ActiveWarning(
+                type = t.type.name,
+                color = t.color,
+                blinking = t.state == TelltaleState.BLINK,
+            )
         }
-        return WarningSummary(red, yellow, active, isDemo, actives)
+        return WarningCounter.summarize(actives, isDemo)
     }
 
     companion object {
@@ -315,10 +398,14 @@ class PleosVehicleSource(context: Context) : VehicleSource {
         private const val ITEM_TIMEOUT_MS = 1500L
 
         const val KEY_OIL_ENGINE = "oil_engine"
+        const val KEY_OIL_TRANSMISSION = "oil_transmission"
         const val KEY_BRAKE_FLUID = "brake_fluid"
         const val KEY_WASHER = "washer"
         const val KEY_POWER_DOWN = "power_down"
+        const val KEY_AIRBAG = "airbag"
         const val KEY_SOC = "soc"
+        const val KEY_FUEL = "fuel"
+        const val KEY_ODOMETER = "odometer"
         const val KEY_TIRE_LOW = "tire_low"
         const val KEY_TIRE_KPA = "tire_kpa"
         const val KEY_TELLTALES = "telltales"

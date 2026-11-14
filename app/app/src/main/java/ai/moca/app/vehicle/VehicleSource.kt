@@ -36,10 +36,15 @@ interface VehicleSource {
     fun stopWatchingWarnings()
 }
 
-/** 켜진 경고등 하나. type 을 보존해야 카테고리 배분이 맞는다. */
+/**
+ * 켜진 경고등 하나. type 을 보존해야 카테고리 배분이 맞는다.
+ * [blinking] 은 SDK `TelltaleState.BLINK` 였는지다. 감점 크기는 색이 정하고,
+ * 깜빡임은 엔진 [moca.core.TelltaleState] 에 그대로 넘겨 표시에 쓴다.
+ */
 data class ActiveWarning(
     val type: String,
     val color: Int,
+    val blinking: Boolean = false,
 )
 
 /**

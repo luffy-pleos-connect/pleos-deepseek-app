@@ -33,9 +33,12 @@ enum class DemoScenario(
             map[key] = ItemReading(key, supported, value, note)
         }
 
+        put(PleosVehicleSource.KEY_OIL_TRANSMISSION, 0.0)
         put(PleosVehicleSource.KEY_BRAKE_FLUID, 0.0)
         put(PleosVehicleSource.KEY_WASHER, 0.0)
         put(PleosVehicleSource.KEY_POWER_DOWN, 0.0)
+        put(PleosVehicleSource.KEY_AIRBAG, 0.0)
+        put(PleosVehicleSource.KEY_FUEL, 62.0)
         put(PleosVehicleSource.KEY_TIRE_KPA, 235.0)
 
         when (this) {
@@ -94,17 +97,14 @@ enum class DemoScenario(
         return map
     }
 
-    fun warnings(): WarningSummary = when (this) {
-        D3 -> WarningSummary(
-            redCount = 1, yellowCount = 1, total = 2, isDemo = true,
-            active = listOf(ActiveWarning("ABS", 4), ActiveWarning("TPMS", 3)),
-        )
-        D2, D5 -> WarningSummary(
-            redCount = 0, yellowCount = 1, total = 1, isDemo = true,
-            active = listOf(ActiveWarning("TPMS", 3)),
-        )
-        else -> WarningSummary(0, 0, 0, isDemo = true)
-    }
+    fun warnings(): WarningSummary = WarningCounter.summarize(
+        when (this) {
+            D3 -> listOf(ActiveWarning("ABS", 4), ActiveWarning("TPMS", 3))
+            D2, D5 -> listOf(ActiveWarning("TPMS", 3))
+            else -> emptyList()
+        },
+        isDemo = true,
+    )
 
     /** 계획 10장의 고정 상대. */
     fun opponentNickname(): String = when (this) {

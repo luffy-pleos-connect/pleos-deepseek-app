@@ -5,6 +5,7 @@ import ai.moca.app.vehicle.ItemReading
 import ai.moca.app.vehicle.PleosVehicleSource
 import ai.moca.app.vehicle.Severity
 import ai.moca.app.vehicle.TelltaleColorMap
+import ai.moca.app.vehicle.TelltaleTypeMap
 import ai.moca.app.vehicle.VehicleSource
 import ai.moca.app.vehicle.WarningSummary
 import moca.core.Category
@@ -15,7 +16,6 @@ import moca.core.FluidLevel
 import moca.core.Item
 import moca.core.Priority
 import moca.core.Rules
-import moca.core.Telltale
 import moca.core.VehicleSnapshot
 import moca.core.WheelArea
 import org.json.JSONArray
@@ -202,32 +202,10 @@ class Tools(
 
     /**
      * 경고등 type → 한국어 이름.
-     * ScoreBridge 의 비공개 매핑과 같은 대응이다. 없는 type 은 원문 그대로 둔다.
+     * 종류 대응은 [TelltaleTypeMap] 한 곳에만 있다. 대응이 없는 type 은 원문 그대로 둔다.
      */
-    private fun telltaleLabel(type: String): String {
-        val telltale = when (type.uppercase()) {
-            "ABS" -> Telltale.ABS
-            "ESC" -> Telltale.ESC
-            "MDPS" -> Telltale.MDPS
-            "TPMS" -> Telltale.TPMS
-            "AIRBAG" -> Telltale.AIRBAG
-            "MASTER_WARNING" -> Telltale.MASTER_WARNING
-            "ENGINE" -> Telltale.ENGINE
-            "ENGINE_OIL_PRESSURE" -> Telltale.ENGINE_OIL_PRESSURE
-            "ENGINE_TEMPERATURE" -> Telltale.ENGINE_TEMPERATURE
-            "EV_SYSTEM" -> Telltale.EV_SYSTEM
-            "HEV_SYSTEM" -> Telltale.HEV_SYSTEM
-            "PARTICLE_FILTER" -> Telltale.PARTICLE_FILTER
-            "LOW_VOLT_BATTERY" -> Telltale.LOW_VOLT_BATTERY
-            "POWER_DOWN" -> Telltale.POWER_DOWN
-            "LOW_FUEL" -> Telltale.LOW_FUEL
-            "LOW_EV_BATTERY" -> Telltale.LOW_EV_BATTERY
-            "SEAT_BELT" -> Telltale.SEATBELT
-            "PASSENGER_AIRBAG_OFF" -> Telltale.PASSENGER_AIRBAG_OFF
-            else -> null
-        }
-        return telltale?.label ?: type
-    }
+    private fun telltaleLabel(type: String): String =
+        TelltaleTypeMap.toEngine(type)?.label ?: type
 
     /** 색 정수는 PleosVehicleSource.TelltaleColorMap 과 같다. 4=빨강, 3=노랑. 그 밖은 이름을 붙이지 않는다. */
     private fun colorWord(color: Int): String? = when (TelltaleColorMap.severity(color)) {
