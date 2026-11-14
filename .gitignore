@@ -34,3 +34,6 @@ sample/
 .env.local
 .env.*.local
 __pycache__/
+
+# Agent Board 작업판(과제·로그)
+.board/
