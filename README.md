@@ -6,6 +6,7 @@
 - 팀: 해적단
 - 플랫폼: Pleos Connect (Android Automotive, API 28+)
 - 언어·도구: Kotlin, Android View(XML), Java 17, AGP 9.5.1 / Gradle 9.9.0
+- 내려받기: [릴리스 v1.2.0](https://github.com/luffy-pleos-connect/pleos-deepseek-app/releases/tag/v1.2.0) — 서명된 APK, 시연 영상(3분), 처음부터 끝까지 고화질 영상, 숏폼
 
 > **정직 고지**
 > - 에뮬레이터(Pleos Connect v2.1.0)는 엔진오일·브레이크액·변속기오일·워셔액·연료의 속성이 없어 읽히지 않고, 타이어 현재 공기압 속성(`TIRE_PRESSURE`)도 없다. 그래서 에뮬레이터의 **실제 모드**는 「이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요」가 나온다. 화면은 **데모 모드(D0~D7)** 로 확인한다.
