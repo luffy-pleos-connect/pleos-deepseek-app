@@ -71,39 +71,6 @@ class ApiClient(
         }
     }
 
-    /** 서버 순위. 서버 주소가 비었거나 답이 실패하면 null(화면은 연습 순위 그대로). */
-    data class RankAnswer(val rank: Int, val of: Int, val real: Int)
-
-    suspend fun rank(total: Int): RankAnswer? = withContext(Dispatchers.IO) {
-        if (baseUrl.isBlank()) return@withContext null
-        var conn: HttpURLConnection? = null
-        try {
-            val device = java.net.URLEncoder.encode(prefs.deviceId, "UTF-8")
-            val url = URL("$baseUrl/rank?total=$total&deviceId=$device")
-            conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = RANK_TIMEOUT_MS
-                readTimeout = RANK_TIMEOUT_MS
-            }
-            if (conn.responseCode != 200) {
-                android.util.Log.w("MOCA_NET", "rank ${'$'}{conn.responseCode}")
-                return@withContext null
-            }
-            val text = conn.inputStream.bufferedReader().use { it.readText() }
-            val root = runCatching { JSONObject(text) }.getOrNull() ?: return@withContext null
-            val rank = root.optInt("rank", 0)
-            val of = root.optInt("of", 0)
-            val real = root.optInt("real", 0)
-            if (rank < 1 || of < 1) return@withContext null
-            RankAnswer(rank, of, real)
-        } catch (e: Exception) {
-            android.util.Log.e("MOCA_NET", "rank failed", e)
-            null
-        } finally {
-            conn?.disconnect()
-        }
-    }
-
     /** 서버에 올린 내 요약을 지운다. 로컬 값을 지우기 전에 읽어 둔 기기 ID·비밀값을 받는다. */
     suspend fun deleteSnapshot(deviceId: String, deviceSecret: String): Boolean =
         snapshots("DELETE", "$baseUrl/snapshots?deviceId=$deviceId", deviceSecret, null)
@@ -138,7 +105,6 @@ class ApiClient(
     private companion object {
         const val CONNECT_TIMEOUT_MS = 5_000
         const val READ_TIMEOUT_MS = 20_000
-        const val RANK_TIMEOUT_MS = 3_000
 
         /** [내 데이터 삭제]는 최대 3초만 기다리고 실패해도 넘어간다. 연결·응답을 각 1.5초로 묶는다. */
         const val SNAPSHOT_TIMEOUT_MS = 1_500

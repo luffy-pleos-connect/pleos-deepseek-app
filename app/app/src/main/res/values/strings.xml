@@ -127,17 +127,6 @@
     <string name="battle_lose">패배</string>
     <string name="battle_again">다시</string>
     <string name="battle_round_score">%1$s : %2$s</string>
-    <string name="battle_no_grade_opponent">등급이 나오면 상대를 찾아 드려요</string>
-    <string name="battle_hint">대전을 시작하면 다섯 항목을 차례로 겨뤄요</string>
-    <string name="rank_title">오늘의 순위</string>
-    <string name="rank_practice_badge">연습 순위</string>
-    <string name="rank_explain">연습 상대 12명과 오늘 점수로 매긴 순위예요</string>
-    <string name="rank_summary">%1$d명 중 %2$d위</string>
-    <string name="rank_empty">등급이 나오면 순위를 보여 드려요</string>
-    <string name="rank_me_name">%1$s (나)</string>
-    <string name="rank_real_badge">실제 사용자 %1$d명 포함</string>
-    <string name="rank_real_explain">연습 상대 %1$d명과 실제 사용자 %2$d명 사이의 순위예요</string>
-    <string name="rank_list_note">아래 목록은 연습 상대만 보여요</string>
 
     <string name="settings_title">설정</string>
     <string name="settings_group_profile">내 정보</string>

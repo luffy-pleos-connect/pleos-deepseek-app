@@ -159,18 +159,19 @@ class BattleTest {
     }
 
     @Test
-    fun `상대 평가는 시드 카테고리로 만든다`() {
+    fun `상대 평가는 시드의 구역 점수와 관리 점수로 만든다`() {
         val seed = Seeds.byNickname("달리는곰")!!
-        val eval = opponentEvaluation(Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories))
+        val eval = seed.evaluation()
+        assertEquals(seed.categories, eval.categories)
+        assertEquals(seed.care, eval.care)
         assertNotNull(eval.grade)
         assertEquals(Grade.A, eval.grade)
     }
 
     @Test
-    fun `라운드가 동점이면 화면에 보이는 상대 종합으로 가른다`() {
+    fun `라운드가 동점이면 상대 평가의 종합으로 가른다`() {
         // 데모 D7(종합 84.5) 대 초보운전3년차(종합 85.4): 1 대 1 이고 상대 종합이 높아 진다.
-        val seed = Seeds.byNickname("초보운전3년차")!!
-        val theirs = opponentEvaluation(Opponent(seed.nickname, seed.grade.label, seed.overall, seed.categories))
+        val theirs = Seeds.byNickname("초보운전3년차")!!.evaluation()
         val result = Battle.judge(moca.core.Demo.evaluateOf("D7"), theirs)
         assertEquals(1, result.myWins)
         assertEquals(1, result.theirWins)

@@ -13,6 +13,7 @@ import ai.moca.app.data.Prefs
 import ai.moca.app.ui.BattleFragment
 import ai.moca.app.ui.HomeFragment
 import ai.moca.app.ui.OnboardingFragment
+import ai.moca.app.ui.RankingFragment
 import ai.moca.app.ui.SettingsFragment
 import ai.moca.app.ui.StartFragment
 import ai.moca.app.ui.StatusFragment
@@ -153,6 +154,9 @@ class MainActivity : FragmentActivity() {
 
     fun goBattle() = show(BATTLE_TAG) { BattleFragment() }
 
+    /** 월간랭킹. 하단 탭은 대전하기가 선택된 채로 둔다. */
+    fun goRanking() = show(RANKING_TAG) { RankingFragment() }
+
     fun goSettings() = show(SETTINGS_TAG) { SettingsFragment() }
 
     /**
@@ -204,7 +208,7 @@ class MainActivity : FragmentActivity() {
             HOME_TAG -> R.id.tabHome
             STATUS_TAG -> R.id.tabStatus
             VOICE_TAG -> R.id.tabVoice
-            BATTLE_TAG -> R.id.tabBattle
+            BATTLE_TAG, RANKING_TAG -> R.id.tabBattle
             SETTINGS_TAG -> R.id.tabSettings
             else -> {
                 bar.visibility = View.GONE
@@ -253,6 +257,7 @@ class MainActivity : FragmentActivity() {
         const val STATUS_TAG = "status"
         const val VOICE_TAG = "voice"
         const val BATTLE_TAG = "battle"
+        const val RANKING_TAG = "ranking"
         const val SETTINGS_TAG = "settings"
         const val ONBOARD_TAG = "onboarding"
     }

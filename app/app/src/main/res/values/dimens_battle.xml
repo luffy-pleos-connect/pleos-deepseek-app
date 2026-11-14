@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 대전하기: 차 그림 높이, 두 차 사이 가운데 칸 너비, 부딪힌 뒤 진 쪽이 밀려나는 거리. -->
+    <dimen name="moca_battle_car_height">280dp</dimen>
+    <dimen name="moca_battle_center_width">360dp</dimen>
+    <dimen name="moca_battle_recoil">48dp</dimen>
+    <!-- 월간랭킹 순위표 한 줄 높이. -->
+    <dimen name="moca_ranking_row_height">80dp</dimen>
+</resources>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 대전하기·월간랭킹 화면 문구(최종정리 7장). 이 화면의 새 문구는 이 파일에만 둔다. -->
+<resources>
+    <!-- 대전하기 -->
+    <string name="versus_grade_score">%1$s · %2$d</string>
+    <string name="versus_practice_badge">연습 상대</string>
+    <string name="versus_round_label">%1$d라운드 · %2$s</string>
+    <string name="versus_pair">%1$s : %2$s</string>
+    <string name="versus_round_pending">대기</string>
+    <string name="versus_round_win">승</string>
+    <string name="versus_round_lose">패</string>
+    <string name="versus_round_draw">무</string>
+    <string name="versus_winner_mark">승리</string>
+    <string name="versus_draw_mark">무승부</string>
+    <string name="versus_start">대전 시작</string>
+    <string name="versus_skip">건너뛰기</string>
+    <string name="versus_again">다시</string>
+    <string name="versus_ranking">월간랭킹</string>
+    <string name="versus_record">전적 %1$d승 %2$d무 %3$d패</string>
+    <string name="versus_result_win">%1$d : %2$d 로 이겼어요</string>
+    <string name="versus_result_win_overall">%1$d : %2$d · 종합 %3$d 대 %4$d 로 이겼어요</string>
+    <string name="versus_result_lose">%1$d : %2$d 로 졌어요</string>
+    <string name="versus_result_lose_overall">%1$d : %2$d · 종합 %3$d 대 %4$d 로 졌어요</string>
+    <string name="versus_result_draw">비겼어요</string>
+
+    <!-- 이 차만큼 관리하려면 -->
+    <string name="versus_catchup_title">이 차만큼 관리하려면</string>
+    <string name="versus_catchup_reaches">%1$s %2$d vs %3$d → %4$s 해결하면 %5$d점이 돼요</string>
+    <string name="versus_catchup_short">%1$s %2$d vs %3$d → %4$s 해결하면 %5$d점까지 올라가요</string>
+    <string name="versus_catchup_nothing">%1$s %2$d vs %3$d → 이 구역은 지금 더 올릴 수 있는 항목이 없어요</string>
+    <string name="versus_catchup_unmeasured">%1$s: 이 구역은 측정되지 않아 비교할 수 없어요</string>
+    <string name="versus_catchup_ahead">%1$s에서 앞섰어요</string>
+    <string name="versus_catchup_go">해결하러 가기</string>
+
+    <!-- 월간랭킹 -->
+    <string name="ranking_title">%1$d월 월간랭킹</string>
+    <string name="ranking_back">대전하기로</string>
+    <string name="ranking_mine">%1$d명 중 %2$d위 · 1위 %3$s %4$d점 · %5$d점 차이</string>
+    <string name="ranking_mine_first">%1$d명 중 1위예요</string>
+    <string name="ranking_me_name">%1$s (나)</string>
+    <string name="ranking_care_title">이번 달 내 관리 요약</string>
+    <string name="ranking_care_days">점검한 날 %1$d일</string>
+    <string name="ranking_care_streak">연속 점검 %1$d일</string>
+    <string name="ranking_care_resolved">해결한 항목 %1$d개</string>
+    <string name="ranking_care_gap">1위와 %1$d점 차이</string>
+    <string name="ranking_care_tips">따라잡는 방법: %1$s 해결</string>
+    <string name="ranking_care_no_tips">지금 감점이 없어요. 매일 점검하면 관리 점수가 올라요</string>
+    <string name="ranking_ai_template">이번 달 %1$d일 점검했고 %2$d일 연속이에요. 해결한 항목은 %3$d개, 1위와는 %4$d점 차이예요.</string>
+    <string name="ranking_ai_template_no_rank">이번 달 %1$d일 점검했고 %2$d일 연속이에요. 해결한 항목은 %3$d개예요.</string>
+    <string name="ranking_ai_facts">도구 결과(확인된 값): %1$s\n이 값만 근거로 답한다. 도구를 부르지 않는다.</string>
+    <string name="ranking_ai_question">이번 달 내 관리를 두 문장으로 요약해 줘</string>
+    <string name="ranking_ai_system">너는 MOCA의 차량 관리 비서다. 한국어 해요체로 답한다. 도구 결과(확인된 값)에 있는 숫자만 쓰고 다른 숫자는 말하지 않는다.</string>
+    <string name="ranking_ask">질문하기</string>
+</resources>
