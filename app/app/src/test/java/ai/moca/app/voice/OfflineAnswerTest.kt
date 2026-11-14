@@ -1,9 +1,6 @@
 package ai.moca.app.voice
 
 import ai.moca.app.vehicle.DemoScenario
-import ai.moca.app.vehicle.VehicleSnapshot
-import ai.moca.app.vehicle.VehicleSource
-import ai.moca.app.vehicle.WarningSummary
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -18,23 +15,14 @@ import org.junit.Test
  */
 class OfflineAnswerTest {
 
-    private class FakeVehicle(private val scenario: DemoScenario) : VehicleSource {
-        override suspend fun read(): VehicleSnapshot =
-            VehicleSnapshot(scenario.readings(), 1_700_000_000_000L, isDemo = true)
-        override fun cachedWarnings(): WarningSummary = scenario.warnings()
-        override fun startWatchingWarnings(onChange: (WarningSummary) -> Unit) = Unit
-        override fun stopWatchingWarnings() = Unit
-    }
-
     private val started = mutableListOf<String>()
 
     private fun tools(scenario: DemoScenario): Tools = Tools(
-        vehicle = FakeVehicle(scenario),
+        latest = { latestOf(scenario) },
         isDemo = true,
         drivingLimited = { false },
         openScreen = { true },
-        evaluate = { readings, warnings, isDemo -> ai.moca.app.score.ScoreBridge.evaluate(readings, warnings, isDemo) },
-        startFix = { """{"ok":true,"result":"NAVI_OPENED"}""" },
+        requestNav = { """{"ok":true,"needs_confirmation":true,"question":"안내할까요?"}""" },
         startBattle = { started += "start" },
     )
 
@@ -212,12 +200,13 @@ class OfflineAnswerTest {
         assertEquals(1, Regex(Regex.escape(Tools.STOP_SAFELY)).findAll(text).count())
     }
 
-    // ── 대전: 실제로 시작하고, 시작했다고 말한다    @Test
-    fun `대전을 말하면 대전을 시작하고 시작했다고 답한다`() {
+    // ── 대전: 대전하기 화면만 열고(바로 시작하지 않는다), 그렇게 말한다
+    @Test
+    fun `대전을 말하면 대전하기 화면을 열고 시작 단추를 누르라고 답한다`() {
         started.clear()
         val text = ask(DemoScenario.D3, "대전 하자")
         assertEquals(listOf("start"), started)
-        assertTrue(text, text.contains("대전을 시작"))
+        assertEquals("대전하기 화면을 열었어요. 시작 단추를 눌러 주세요.", text)
     }
 
     // ── 화면 이름: 지금 탭 이름으로 알아듣는다

@@ -1,7 +1,7 @@
 package ai.moca.app.voice
 
 /**
- * 서버가 끊기거나 동의를 거부했을 때 쓰는 기기 안 의도 6개.
+ * 서버가 끊기거나 동의를 거부했을 때 쓰는 기기 안 의도 8개.
  * LLM 없이 키워드로 의도를 고르고, 같은 [Tools] 를 호출한다.
  */
 enum class OfflineIntent(val id: String) {
@@ -11,6 +11,8 @@ enum class OfflineIntent(val id: String) {
     PART("부품"),
     BATTLE("대전"),
     OPEN_SCREEN("화면"),
+    NAVIGATE("길안내"),
+    CANCEL_NAV("안내취소"),
 }
 
 object OfflineIntents {
@@ -28,52 +30,73 @@ object OfflineIntents {
         val q = question.lowercase()
         // 예전 탭 이름. 「관리」보다 먼저 봐야 등급이 아니라 화면 열기로 간다.
         if (q.contains("상태관리")) return OfflineIntent.OPEN_SCREEN
-        // 더 구체적인 의도부터 본다: 경고 > 부품 > 점검 > 등급 > 대전 > 화면
+        // 더 구체적인 의도부터 본다: 경고 > 길 안내 > 부품 > 점검 > 등급 > 대전 > 화면
+        fun matches(intent: OfflineIntent) = patterns.getValue(intent).any { q.contains(it) }
+        if (matches(OfflineIntent.WARNINGS)) return OfflineIntent.WARNINGS
+        NavIntents.detect(question)?.let {
+            return if (it.action == NavAction.CANCEL) OfflineIntent.CANCEL_NAV else OfflineIntent.NAVIGATE
+        }
         val order = listOf(
-            OfflineIntent.WARNINGS,
             OfflineIntent.PART,
             OfflineIntent.INSPECT,
             OfflineIntent.GRADE,
             OfflineIntent.BATTLE,
             OfflineIntent.OPEN_SCREEN,
         )
-        for (intent in order) {
-            if (patterns.getValue(intent).any { q.contains(it) }) return intent
-        }
-        return null
+        return order.firstOrNull { matches(it) }
     }
 
-    fun toolName(intent: OfflineIntent): String = when (intent) {
+    /** 길 안내는 말에 따라 도구가 셋으로 갈리므로 [question] 을 함께 본다. */
+    fun toolName(intent: OfflineIntent, question: String = ""): String = when (intent) {
         OfflineIntent.INSPECT -> "run_inspection"
         OfflineIntent.GRADE -> "get_latest_inspection"
         OfflineIntent.WARNINGS -> "get_active_warnings"
         OfflineIntent.PART -> "get_part_status"
         OfflineIntent.BATTLE -> "start_battle"
         OfflineIntent.OPEN_SCREEN -> "open_screen"
+        OfflineIntent.CANCEL_NAV -> NavAction.CANCEL.toolName
+        OfflineIntent.NAVIGATE -> (NavIntents.detect(question)?.action ?: NavAction.GO).toolName
     }
 
-    /** 화면 열기일 때만 탭 이름을 넘긴다. 모르는 말이면 빈 화면이라 열지 않는다. */
-    fun toolArgs(intent: OfflineIntent, question: String): org.json.JSONObject? =
-        if (intent == OfflineIntent.OPEN_SCREEN) {
-            org.json.JSONObject().put("screen", screenId(question))
-        } else {
-            null
+    /**
+     * 화면 열기일 때는 탭 이름을(모르는 말이면 빈 화면이라 열지 않는다), 부품 질문은 그 구역을,
+     * 길 안내는 종류나 말한 장소를 넘긴다.
+     */
+    fun toolArgs(intent: OfflineIntent, question: String): org.json.JSONObject? = when (intent) {
+        OfflineIntent.OPEN_SCREEN -> org.json.JSONObject().put("screen", screenId(question))
+        OfflineIntent.PART -> partCategory(question)?.let { org.json.JSONObject().put("category", it) }
+        OfflineIntent.NAVIGATE -> NavIntents.detect(question)?.let { request ->
+            org.json.JSONObject().apply {
+                request.kind?.let { put("kind", it.name.lowercase()) }
+                request.keyword?.let { put("place", it) }
+            }
         }
+        else -> null
+    }
 
     /**
      * open_screen 값. MainActivity 가 여는 탭과 같다.
-     * 홈·점검 → home/inspect, 상세·상태관리 → status, 순위 → battle, 설정 → settings.
+     * 홈 → home, 상태관리·상세 → status, 대전하기·순위 → battle, 설정 → settings.
      */
     fun screenId(question: String): String {
         val q = question.lowercase()
         return when {
             q.contains("설정") -> "settings"
-            q.contains("순위") -> "battle"
-            q.contains("상세") || q.contains("상태관리") -> "status"
-            q.contains("점검") || q.contains("검사") -> "inspect"
+            q.contains("대전하기") || q.contains("순위") -> "battle"
+            q.contains("상태관리") || q.contains("상세") -> "status"
             q.contains("홈") -> "home"
             else -> ""
         }
+    }
+
+    /** 질문에 있는 부품이 속한 구역. 부품을 못 가렸으면 전체. */
+    private fun partCategory(question: String): String? = when (partKind(question)) {
+        "oil" -> "power"
+        "brake" -> "brake"
+        "tire" -> "tire"
+        "battery" -> "electric"
+        "washer" -> "safety"
+        else -> null
     }
 
     /**
@@ -91,6 +114,7 @@ object OfflineIntents {
             ?: return "지금은 확인할 수 없어요. 잠시 뒤 다시 물어봐 주세요."
         if (!obj.optBoolean("ok", false)) {
             val reason = obj.optString("reason")
+            if (intent == OfflineIntent.CANCEL_NAV && obj.has("message")) return obj.optString("message")
             return when {
                 reason == "driving_limited" -> "주행 중에는 화면을 열 수 없어요. 안전한 곳에 정차한 뒤 다시 말해 주세요."
                 reason == "no_measurement" -> "아직 점검 기록이 없어요. 점검해 주시면 등급을 알려 드릴게요."
@@ -101,8 +125,10 @@ object OfflineIntents {
             OfflineIntent.GRADE, OfflineIntent.INSPECT -> gradeSentence(obj)
             OfflineIntent.WARNINGS -> warningSentence(obj)
             OfflineIntent.PART -> partSentence(question, obj)
-            OfflineIntent.BATTLE -> "대전을 시작했어요. 결과는 순위·대전 화면에서 볼 수 있어요."
+            OfflineIntent.BATTLE -> "대전하기 화면을 열었어요. 시작 단추를 눌러 주세요."
             OfflineIntent.OPEN_SCREEN -> screenSentence(obj)
+            OfflineIntent.NAVIGATE -> obj.optString("question")
+            OfflineIntent.CANCEL_NAV -> obj.optString("message")
         }
         val withSafety = stopSafelyFirst(intent, obj, sentence)
         // 주행 중에는 2문장 이내로 자른다. 정차 안내를 넣은 뒤에 자른다(안내가 잘리면 안 된다).
@@ -116,7 +142,7 @@ object OfflineIntents {
     private fun stopSafelyFirst(intent: OfflineIntent, obj: org.json.JSONObject, sentence: String): String {
         val readsVehicle = when (intent) {
             OfflineIntent.GRADE, OfflineIntent.INSPECT, OfflineIntent.PART, OfflineIntent.WARNINGS -> true
-            OfflineIntent.BATTLE, OfflineIntent.OPEN_SCREEN -> false
+            OfflineIntent.BATTLE, OfflineIntent.OPEN_SCREEN, OfflineIntent.NAVIGATE, OfflineIntent.CANCEL_NAV -> false
         }
         if (!readsVehicle) return sentence
         if (obj.optInt("red") <= 0) return sentence
@@ -254,9 +280,9 @@ object OfflineIntents {
 
     private fun screenSentence(obj: org.json.JSONObject): String {
         val name = when (obj.optString("screen")) {
-            "home", "inspect" -> "홈"
-            "status" -> "상세"
-            "battle" -> "순위·대전"
+            "home" -> "홈"
+            "status" -> "상태관리"
+            "battle" -> "대전하기"
             "settings" -> "설정"
             else -> ""
         }
@@ -269,5 +295,5 @@ object OfflineIntents {
         return parts.take(max).joinToString(". ") + "."
     }
 
-    const val NO_MATCH = "차량 관련 질문을 이해하지 못했어요. 등급·경고등·부품·점검·대전 중 하나로 물어봐 주세요."
+    const val NO_MATCH = "차량 관련 질문을 이해하지 못했어요. 등급·경고등·부품·점검·대전·길 안내 중 하나로 물어봐 주세요."
 }

@@ -71,6 +71,10 @@ class MainActivity : FragmentActivity() {
      */
     private fun applyUxRestrictions(state: PleosUxRestrictions.State) {
         drivingLimited = state.distractionOptimized
+        // 보이스챗은 주행 상태가 바뀌면 키보드 입력 칸을 바로 막거나 되돌린다.
+        mainHandler.post {
+            (supportFragmentManager.findFragmentByTag(VOICE_TAG) as? VoiceFragment)?.setDrivingLimited(drivingLimited)
+        }
     }
 
     fun isDrivingLimited(): Boolean = drivingLimited

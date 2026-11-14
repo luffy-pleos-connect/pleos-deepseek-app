@@ -8,6 +8,7 @@
     <string name="voice_state_thinking">생각 중…</string>
     <string name="voice_state_speaking">말하는 중…</string>
     <string name="voice_hint_type">정차 중에는 글로도 물어볼 수 있어요</string>
+    <string name="voice_hint_driving">정차한 뒤 키보드로 입력해 주세요</string>
     <string name="voice_send">보내기</string>
     <string name="voice_tool_chip_running">확인 중</string>
     <string name="voice_tool_chip_done">확인 완료</string>
@@ -15,15 +16,49 @@
     <string name="voice_tool_get_active_warnings">경고등</string>
     <string name="voice_tool_run_inspection">다시 점검</string>
     <string name="voice_tool_get_part_status">부품 상태</string>
-    <string name="voice_tool_get_energy_and_distance">잔량·주행 가능 거리</string>
-    <string name="voice_tool_start_battle">대전</string>
+    <string name="voice_tool_get_energy_and_distance">연료·배터리 잔량</string>
+    <string name="voice_tool_start_battle">대전하기 화면</string>
     <string name="voice_tool_open_screen">화면 이동</string>
-    <string name="voice_tool_start_navigation_to_service">정비소 안내</string>
+    <string name="voice_tool_navigation">내비게이션</string>
+    <string name="voice_item_power">엔진오일 수준</string>
+    <string name="voice_item_brake">브레이크액 수준</string>
+    <string name="voice_item_tire">타이어 공기압</string>
+    <string name="voice_item_electric">배터리 잔량</string>
+    <string name="voice_item_safety">경고등 · 워셔액 수준</string>
     <string name="voice_recent_1">내 차 등급 몇이야?</string>
     <string name="voice_recent_2">이 경고등 뭐야?</string>
     <string name="voice_recent_3">엔진오일 괜찮아?</string>
     <string name="voice_recent_4">다음 등급까지 몇 점 남았어?</string>
     <string name="voice_permission_needed">마이크 권한이 필요해요. 글로 물어볼 수 있어요.</string>
+
+    <!-- 지금 내 차 요약 카드 -->
+    <string name="voice_summary_title">지금 내 차</string>
+    <string name="voice_summary_grade">%1$s · %2$d</string>
+    <string name="voice_summary_grade_none">—</string>
+
+    <!-- 길 안내 확인 카드 -->
+    <string name="voice_nav_start">안내 시작</string>
+    <string name="voice_nav_add_stop">경유지 추가</string>
+    <string name="voice_nav_cancel">취소</string>
+    <string name="voice_nav_declined">안내하지 않을게요</string>
+
+    <!-- 다른 화면에서 넘어온 내용 카드와 추천 질문 -->
+    <string name="voice_context_item">%1$s · %2$s −%3$d · %4$s</string>
+    <string name="voice_context_care">이번 달 관리 요약 · 점검 %1$d일 · 연속 %2$d일 · 해결 %3$d개 · 1위와 %4$d점 차이</string>
+    <string name="voice_context_care_first">이번 달 관리 요약 · 점검 %1$d일 · 연속 %2$d일 · 해결 %3$d개 · 지금 1위</string>
+    <string name="voice_care_offline">이번 달 %1$d일 점검했고 %2$d일 연속이에요. 해결한 항목은 %3$d개, 1위와는 %4$d점 차이예요.</string>
+    <string name="voice_care_offline_first">이번 달 %1$d일 점검했고 %2$d일 연속이에요. 해결한 항목은 %3$d개, 지금 1위예요.</string>
+    <string name="voice_q_item_why">왜 감점됐어?</string>
+    <string name="voice_q_item_how">어떻게 해결해?</string>
+    <string name="voice_q_item_why_ask">%1$s 왜 감점됐어?</string>
+    <string name="voice_q_item_how_ask">%1$s 어떻게 해결해?</string>
+    <string name="voice_q_navi_repair">가까운 정비소 안내해줘</string>
+    <string name="voice_q_navi_gas">가까운 주유소 안내해줘</string>
+    <string name="voice_q_navi_charging">가까운 충전소 안내해줘</string>
+    <string name="voice_q_washer_buy">워셔액은 어디서 사?</string>
+    <string name="voice_q_care_1">어떻게 하면 순위가 올라?</string>
+    <string name="voice_q_care_2">이번 달 내 관리 어땠어?</string>
+    <string name="voice_q_care_3">1위를 따라잡으려면?</string>
 
     <string name="battle_lobby_title">부품 대전</string>
     <string name="battle_my_grade">내 등급</string>

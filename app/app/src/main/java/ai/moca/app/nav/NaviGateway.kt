@@ -71,6 +71,16 @@ class NaviGateway(private val port: NaviPort, private val places: List<Place>) {
         }
     }
 
+    /** 경유지로 넣기 전의 확인 문장. */
+    fun planStop(kind: PlaceKind, demo: Boolean): NaviPlan {
+        val place = if (demo) firstOf(kind) else null
+        return if (place != null) {
+            NaviPlan("${place.name}${objectParticle(place.name)} 경유지로 넣을까요?", place, demoData = true)
+        } else {
+            NaviPlan("내비에서 가까운 ${kind.label}${objectParticle(kind.label)} 찾아 경유지로 넣을까요?", null, demoData = false)
+        }
+    }
+
     fun navigateTo(kind: PlaceKind, demo: Boolean): NaviResult {
         val place = if (demo) firstOf(kind) else null
         return if (place != null) requestRoute(place, demoData = true) else openSearch(kind, forStop = false)

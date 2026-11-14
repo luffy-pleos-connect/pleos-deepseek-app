@@ -13,20 +13,68 @@
         android:paddingEnd="@dimen/moca_screen_margin"
         android:paddingBottom="@dimen/moca_gap">
 
+        <!-- 지금 내 차 요약: 답이 내 차 데이터에서 나온다는 것을 보이게 한다. 항상 보인다. -->
         <LinearLayout
-            android:id="@+id/badgeRow"
+            android:id="@+id/voiceSummaryCard"
+            style="@style/Widget.Pleos.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="@dimen/moca_gap">
+
+            <TextView
+                style="@style/Pleos.Text.Body.M"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/voice_summary_title"
+                android:textColor="@color/pleos_text_dark_secondary" />
+
+            <TextView
+                android:id="@+id/voiceSummaryGrade"
+                style="@style/Pleos.Text.Title.M"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/moca_gap"
+                android:text="@string/voice_summary_grade_none" />
+
+            <TextView
+                android:id="@+id/voiceSummaryBadge"
+                style="@style/Pleos.Text.Body.L"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/moca_gap"
+                android:text="@string/home_warning_none" />
 
             <TextView
                 android:id="@+id/voiceOfflineBadge"
                 style="@style/Pleos.Text.Label.M"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
                 android:text="@string/voice_badge_offline"
                 android:textColor="@color/pleos_text_dark_tertiary"
                 android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- 다른 화면에서 넘어왔을 때만 보인다(상태관리의 항목, 월간랭킹의 관리 요약). -->
+        <LinearLayout
+            android:id="@+id/voiceContextCard"
+            style="@style/Widget.Pleos.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:orientation="horizontal"
+            android:padding="@dimen/moca_gap"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/voiceContextText"
+                style="@style/Pleos.Text.Body.M"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/pleos_text_dark_primary" />
         </LinearLayout>
 
         <LinearLayout
@@ -38,7 +86,7 @@
             android:orientation="vertical"
             android:padding="@dimen/moca_card_padding">
 
-            <!-- 답이 길어도 질문 단추 네 개가 밀리지 않도록 글자 높이를 세 줄로 묶고 안에서 스크롤한다. -->
+            <!-- 답이 길어도 질문 단추가 밀리지 않도록 글자 높이를 세 줄로 묶고 안에서 스크롤한다. -->
             <ai.moca.app.ui.widget.MaxHeightScrollView
                 android:id="@+id/answerScroll"
                 android:layout_width="match_parent"
@@ -62,14 +110,53 @@
                 android:layout_marginTop="@dimen/moca_gap"
                 android:textColor="@color/pleos_text_dark_tertiary"
                 android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- 길 안내 확인 카드. 내비를 조작하기 전에 반드시 이 카드로 묻는다. -->
+        <LinearLayout
+            android:id="@+id/navConfirmCard"
+            style="@style/Widget.Pleos.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/moca_gap"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="@dimen/moca_gap"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/navConfirmBadge"
+                style="@style/Pleos.Text.Label.M"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/moca_gap"
+                android:text="@string/c13_badge_demo"
+                android:textColor="@color/pleos_text_dark_secondary"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/navConfirmText"
+                style="@style/Pleos.Text.Body.L"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/pleos_text_dark_primary" />
 
             <Button
-                android:id="@+id/voiceFixAction"
-                style="@style/Widget.Pleos.Button.Secondary.L"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/pleos_button_height_l"
-                android:layout_marginTop="@dimen/moca_gap"
-                android:visibility="gone" />
+                android:id="@+id/navConfirmNo"
+                style="@style/Widget.Pleos.Button.Secondary.M"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/pleos_button_height_m"
+                android:layout_marginStart="@dimen/moca_gap"
+                android:text="@string/voice_nav_cancel" />
+
+            <Button
+                android:id="@+id/navConfirmYes"
+                style="@style/Widget.Pleos.Button.Primary.M"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/pleos_button_height_m"
+                android:layout_marginStart="@dimen/moca_gap"
+                android:text="@string/voice_nav_start" />
         </LinearLayout>
 
         <ImageButton
@@ -91,6 +178,7 @@
             android:gravity="center"
             android:text="@string/voice_state_idle" />
 
+        <!-- 질문 단추와 입력 칸은 답 길이와 상관없이 늘 보여야 하므로 늘어나는 칸 밖에 둔다. 채워진 강조 단추는 확인 카드의 [안내 시작] 하나다. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -99,7 +187,7 @@
 
             <Button
                 android:id="@+id/suggestion1"
-                style="@style/Widget.Pleos.Button.Primary.M"
+                style="@style/Widget.Pleos.Button.Secondary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_marginEnd="@dimen/moca_gap"
@@ -108,7 +196,7 @@
 
             <Button
                 android:id="@+id/suggestion2"
-                style="@style/Widget.Pleos.Button.Primary.M"
+                style="@style/Widget.Pleos.Button.Secondary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_weight="1"
@@ -123,7 +211,7 @@
 
             <Button
                 android:id="@+id/suggestion3"
-                style="@style/Widget.Pleos.Button.Primary.M"
+                style="@style/Widget.Pleos.Button.Secondary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_marginEnd="@dimen/moca_gap"
@@ -132,7 +220,7 @@
 
             <Button
                 android:id="@+id/suggestion4"
-                style="@style/Widget.Pleos.Button.Primary.M"
+                style="@style/Widget.Pleos.Button.Secondary.M"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/pleos_button_height_m"
                 android:layout_weight="1"
@@ -153,12 +241,13 @@
                 android:layout_marginEnd="@dimen/moca_gap"
                 android:layout_weight="1"
                 android:hint="@string/voice_hint_type"
+                android:imeOptions="flagNoExtractUi|actionSend"
                 android:inputType="text"
                 android:maxLength="100" />
 
             <Button
                 android:id="@+id/sendButton"
-                style="@style/Widget.Pleos.Button.Primary.L"
+                style="@style/Widget.Pleos.Button.Secondary.L"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/pleos_button_height_l"
                 android:text="@string/voice_send" />

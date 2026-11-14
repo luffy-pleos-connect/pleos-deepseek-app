@@ -1,17 +1,16 @@
 package ai.moca.app.voice
 
-import ai.moca.app.score.ScoreBridge
+import ai.moca.app.inspect.InspectionResult
+import ai.moca.app.nav.PlaceKind
 import ai.moca.app.vehicle.ItemReading
 import ai.moca.app.vehicle.PleosVehicleSource
 import ai.moca.app.vehicle.Severity
 import ai.moca.app.vehicle.TelltaleColorMap
 import ai.moca.app.vehicle.TelltaleTypeMap
-import ai.moca.app.vehicle.VehicleSource
 import ai.moca.app.vehicle.WarningSummary
 import moca.core.Category
 import moca.core.Deduction
 import moca.core.Evaluation
-import moca.core.FixAction
 import moca.core.FluidLevel
 import moca.core.Item
 import moca.core.Priority
@@ -22,16 +21,19 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * 차량 도구 8개. LLM(도구 호출)과 오프라인 의도가 **같은 함수**를 부른다.
- * 결과는 JSON 문자열이며 VIN·기기 ID·개인정보를 담지 않는다.
+ * 차량 도구 10개. LLM(도구 호출)과 오프라인 의도가 **같은 함수**를 부른다.
+ * 결과는 JSON 문자열이며 VIN·기기 ID·위치·좌표를 담지 않는다.
+ *
+ * 차의 값은 «가장 최근 점검»([latest])에서만 읽는다. 물을 때마다 차를 다시 읽지 않는다.
+ * 다시 점검하는 것은 run_inspection 뿐이다.
+ * 길 안내 도구는 내비를 직접 만지지 않고 화면에 요청을 넘긴다([requestNav]).
  */
 class Tools(
-    private val vehicle: VehicleSource,
+    private val latest: () -> InspectionResult?,
     private val isDemo: Boolean,
     private val drivingLimited: () -> Boolean,
     private val openScreen: (String) -> Boolean,
-    private val evaluate: (Map<String, ItemReading>, WarningSummary, Boolean) -> Evaluation?,
-    private val startFix: suspend (FixAction) -> String,
+    private val requestNav: (NavRequest) -> String,
     private val rerunInspection: suspend () -> Unit = {},
     private val startBattle: () -> Unit = {},
 ) {
@@ -40,13 +42,15 @@ class Tools(
         val readings: Map<String, ItemReading>,
         val warnings: WarningSummary,
         val evaluation: Evaluation?,
+        val engine: VehicleSnapshot,
+        val odometer: Double?,
     )
 
-    private suspend fun snapshot(): Snapshot {
-        val readings = vehicle.read()
-        val warnings = vehicle.cachedWarnings()
-        return Snapshot(readings.items, warnings, evaluate(readings.items, warnings, readings.isDemo))
+    private fun snapshot(): Snapshot? = latest()?.let {
+        Snapshot(it.readings, it.warnings, it.evaluation, it.engine, it.distanceDriven)
     }
+
+    private fun noMeasurement(): String = JSONObject().put("ok", false).put("reason", "no_measurement").toString()
 
     /** 도구 정의(OpenAI 형식). 서버에 그대로 보낸다. */
     fun definitions(): JSONArray = JSONArray().apply {
@@ -64,19 +68,42 @@ class Tools(
                 }),
             ),
         )
-        put(fn("get_energy_and_distance", "배터리·연료 잔량과 주행거리를 돌려준다.", obj()))
-        put(fn("start_battle", "부품 대전을 시작한다.", obj()))
+        put(fn("get_energy_and_distance", "연료·배터리 잔량과 누적 주행거리를 돌려준다. 주행 가능 거리는 알 수 없다.", obj()))
+        put(fn("start_battle", "대전하기 화면을 연다. 대전은 운전자가 시작 단추를 눌러 시작한다.", obj()))
         put(
             fn(
                 "open_screen",
                 "앱 화면을 연다. 주행 중이면 열 수 없다.",
                 obj().put("screen", JSONObject().apply {
                     put("type", "string")
-                    put("enum", JSONArray(listOf("home", "status", "battle", "settings", "inspect")))
+                    put("enum", JSONArray(listOf("home", "status", "battle", "settings")))
                 }),
             ),
         )
-        put(fn("start_navigation_to_service", "가까운 정비소로 경로를 시작한다.", obj()))
+        put(
+            fn(
+                "start_navigation_to_service",
+                "차량 내비로 길 안내를 요청한다. 운전자에게 확인을 받은 뒤 시작한다. place 가 있으면 그 장소로, 없으면 가까운 kind 로 안내한다.",
+                obj().put("kind", kindParam()).put("place", JSONObject().apply {
+                    put("type", "string")
+                    put("description", "운전자가 말한 장소 이름. 있으면 kind 보다 우선")
+                }),
+            ),
+        )
+        put(
+            fn(
+                "add_stop",
+                "안내 중인 길에 가까운 장소를 경유지로 넣는다. 운전자에게 확인을 받은 뒤 넣는다.",
+                obj().put("kind", kindParam()),
+            ),
+        )
+        put(fn("cancel_navigation", "진행 중인 길 안내를 끈다.", obj()))
+    }
+
+    private fun kindParam(): JSONObject = JSONObject().apply {
+        put("type", "string")
+        put("enum", JSONArray(PlaceKind.entries.map { it.name.lowercase() }))
+        put("description", "생략하면 repair_shop")
     }
 
     private fun fn(name: String, description: String, params: JSONObject): JSONObject = JSONObject().apply {
@@ -107,16 +134,27 @@ class Tools(
             "get_energy_and_distance" -> energyAndDistance()
             "start_battle" -> startBattleTool()
             "open_screen" -> openScreenTool(args?.optString("screen").orEmpty())
-            "start_navigation_to_service" -> startFix(FixAction.REPAIR_SHOP)
+            "start_navigation_to_service" -> requestNav(goRequest(args))
+            "add_stop" -> requestNav(NavRequest(NavAction.ADD_STOP, kind = kindOf(args)))
+            "cancel_navigation" -> requestNav(NavRequest(NavAction.CANCEL))
             else -> JSONObject().put("ok", false).put("error", "unknown_tool").put("name", name).toString()
         }
     }.getOrElse { e ->
         JSONObject().put("ok", false).put("error", e.javaClass.simpleName).toString()
     }
 
-    private suspend fun latestInspection(): String {
-        val s = snapshot()
-        val eval = s.evaluation ?: return JSONObject().put("ok", false).put("reason", "no_measurement").toString()
+    private fun kindOf(args: JSONObject?): PlaceKind =
+        PlaceKind.entries.firstOrNull { it.name.equals(args?.optString("kind"), ignoreCase = true) } ?: PlaceKind.REPAIR_SHOP
+
+    /** 말한 장소 이름이 있으면 그것이 종류보다 먼저다. */
+    private fun goRequest(args: JSONObject?): NavRequest {
+        val place = args?.optString("place")?.trim().orEmpty()
+        return if (place.isNotEmpty()) NavRequest(NavAction.GO, keyword = place) else NavRequest(NavAction.GO, kind = kindOf(args))
+    }
+
+    private fun latestInspection(): String {
+        val s = snapshot() ?: return noMeasurement()
+        val eval = s.evaluation ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
             put("isDemo", isDemo)
@@ -137,8 +175,8 @@ class Tools(
         }.toString()
     }
 
-    private suspend fun activeWarnings(): String {
-        val s = snapshot()
+    private fun activeWarnings(): String {
+        val s = snapshot() ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
             put("isDemo", isDemo)
@@ -151,9 +189,9 @@ class Tools(
         }.toString()
     }
 
-    private suspend fun partStatus(category: String): String {
-        val s = snapshot()
-        val engine = ScoreBridge.toEngineSnapshot(s.readings, s.warnings, isDemo)
+    private fun partStatus(category: String): String {
+        val s = snapshot() ?: return noMeasurement()
+        val engine = s.engine
         val all = JSONObject().apply {
             putFluid(
                 PleosVehicleSource.KEY_OIL_ENGINE,
@@ -337,7 +375,7 @@ class Tools(
         "brake" -> listOf(PleosVehicleSource.KEY_BRAKE_FLUID)
         "tire" -> listOf(PleosVehicleSource.KEY_TIRE_LOW)
         "electric" -> listOf(PleosVehicleSource.KEY_SOC)
-        "safety" -> listOf(PleosVehicleSource.KEY_TELLTALES)
+        "safety" -> listOf(PleosVehicleSource.KEY_TELLTALES, PleosVehicleSource.KEY_WASHER)
         else -> emptyList()
     }
 
@@ -346,25 +384,29 @@ class Tools(
         put(key, itemJson(r))
     }
 
-    private suspend fun energyAndDistance(): String {
-        val s = snapshot()
+    /** 읽힌 잔량만 넣는다. 주행 가능 거리는 읽을 수 없고, 주행거리는 단위를 확인하지 못했다. */
+    private fun energyAndDistance(): String {
+        val s = snapshot() ?: return noMeasurement()
         return JSONObject().apply {
             put("ok", true)
             put("isDemo", isDemo)
-            put("batteryPercent", s.readings[PleosVehicleSource.KEY_SOC]?.value ?: JSONObject.NULL)
+            readPercent(s, PleosVehicleSource.KEY_FUEL)?.let { put("fuelPercent", it) }
+            readPercent(s, PleosVehicleSource.KEY_SOC)?.let { put("batteryPercent", it) }
+            s.odometer?.let { put("odometer", it) }
+            put("odometerUnit", "unverified")
         }.toString()
     }
 
+    private fun readPercent(s: Snapshot, key: String): Double? =
+        s.readings[key]?.takeIf { it.supported }?.value
+
+    /** 대전하기 화면만 연다. 대전은 운전자가 시작 단추를 눌러 시작한다. */
     private fun startBattleTool(): String {
         if (drivingLimited()) {
             return JSONObject().put("ok", false).put("reason", "driving_limited").toString()
         }
         startBattle()
-        return JSONObject()
-            .put("ok", true)
-            .put("action", "start_battle")
-            .put("screen", "battle")
-            .toString()
+        return JSONObject().put("ok", true).put("opened", "battle").toString()
     }
 
     private fun openScreenTool(screen: String): String {
