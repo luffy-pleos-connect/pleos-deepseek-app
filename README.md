@@ -2,7 +2,7 @@
 
 차가 알려 주는 부품 상태를 점수와 등급으로 보여 주고, 고칠 곳과 고칠 방법까지 이어 준다. 기능은 **상태관리 · 보이스챗 · 대전하기** 세 개다.
 
-- 공모전: 현대차·기아 차량용 앱 개발 공모전
+- 공모전: 현대자동차그룹 차량용 앱 개발 공모전
 - 팀: 해적단
 - 플랫폼: Pleos Connect (Android Automotive, API 28+)
 - 언어·도구: Kotlin, Android View(XML), Java 17, AGP 9.5.1 / Gradle 9.9.0
@@ -12,19 +12,19 @@
 > - 에뮬레이터(Pleos Connect v2.1.0)는 엔진오일·브레이크액·변속기오일·워셔액·연료의 속성이 없어 읽히지 않고, 타이어 현재 공기압 속성(`TIRE_PRESSURE`)도 없다. 그래서 에뮬레이터의 **실제 모드**는 「이 차는 읽을 수 있는 항목이 적어 등급을 낼 수 없어요」가 나온다. 화면은 **데모 모드(D0~D7)** 로 확인한다.
 > - **실차에서는 확인하지 못했다.** 경고등 종류 이름과 색 숫자(빨강·노랑) 대응, 경고등 읽기 권한(`PRIVATE_CAR_SAFETY`)은 실차 확인이 남았다(팀 내부 기준 문서 0.5절).
 > - 2D 자동차 그림은 **자리표시**다. 디자인 담당의 그림으로 바꿀 예정이다. 용품 QR 은 상품명을 지정한 쿠팡 검색 주소다(불스원 레인OK 에탄올 3in1 코팅워셔액 1.8L, 샤오미 미지아 무선 공기주입기 2. `tools/qr/make_qr.py`). 제휴 연동은 아직 안 했다.
-> - 아래 「검증」의 숫자는 이 README 를 고친 날(2026-11-14) 이 저장소에서 다시 돌린 결과다. 돌리지 않은 것은 그렇게 적었다.
+> - 아래 「검증」의 숫자는 2026-11-15 이 저장소에서 다시 돌린 결과다. 돌리지 않은 것은 그렇게 적었다.
 
-## 검증 (2026-11-14)
+## 검증 (2026-11-15)
 
 | 항목 | 결과 |
 |---|---|
 | 점수 엔진 단위 테스트 | **247 / 247** (`core/run-tests.sh`, JDK 17) |
 | 서버 테스트 | **122 / 122** (`server` 에서 `node --test`) |
-| Pleos 디자인 시스템 정적 검사 | **0 findings / 110 files** (`pleos_lint.py app`) |
+| Pleos 디자인 시스템 정적 검사 | **0 findings / 119 files** (`pleos_lint.py app`) |
 | 평가 도구 자체 단위 테스트 | 48 / 48 (`python3 -m unittest tools/test_moca_eval.py`). 이 도구의 기준표는 옛 화면 기준이라 **지금 앱에 대한 평가 결과는 없다** |
-| 앱 단위 테스트 | **196 / 196** (`app` 에서 `./gradlew :app:testDebugUnitTest`, 실패·오류 0) |
-| `./check.sh` 전체 | **PASS 12 / FAIL 0 / SKIP 0** (2026-11-14, 출력은 `docs/evidence/V12/check.txt`) |
-| release APK | 2026-11-14 다시 빌드. 4MB, 서명 주체 `CN=해적단`. 깨끗한 에뮬레이터에 설치해 동의부터 설정까지 눌러 본 기록은 `docs/evidence/V12/result.json`(확인 17 / 17) |
+| 앱 단위 테스트 | **198 / 198** (`app` 에서 `./gradlew :app:testDebugUnitTest`, 실패·오류 0) |
+| `./check.sh` 전체 | **PASS 12 / FAIL 0 / SKIP 0** (2026-11-15, 출력은 `docs/evidence/V12/check.txt`) |
+| release APK | 새 구조로 다시 빌드. 11MB, 서명 주체 `CN=해적단`. 깨끗한 에뮬레이터에 설치해 동의부터 설정까지 눌러 본 기록은 `docs/evidence/V12/result.json`(확인 17 / 17) |
 
 ## 공모전 README 필수 항목
 
@@ -105,7 +105,7 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties
 "$ANDROID_HOME/platform-tools/adb" shell am start -n ai.moca.app/.MainActivity
 ```
 
-- `app/settings.gradle.kts` 는 `pleos-ds` 모듈을 `../../pleos-connect-design-system/pleos-ds` 에서 가져온다. 이 저장소와 같은 위치(저장소 폴더의 옆)에 `pleos-connect-design-system` 폴더가 있어야 빌드된다. 이 폴더는 이 저장소에 들어 있지 않다. 빌드 없이 확인하려면 `apk/` 의 APK 를 설치한다(다시 빌드한 뒤).
+- `app/settings.gradle.kts` 는 `pleos-ds` 모듈을 `../../pleos-connect-design-system/pleos-ds` 에서 가져온다. 이 저장소와 같은 위치(저장소 폴더의 옆)에 `pleos-connect-design-system` 폴더가 있어야 빌드된다. 이 폴더는 이 저장소에 들어 있지 않다. 빌드 없이 확인하려면 `apk/` 의 APK 를 설치한다.
 - 에뮬레이터에 release 서명 앱이 이미 깔려 있으면 debug APK 설치가 거부된다. 그때는 `adb uninstall ai.moca.app` 로 지우고 다시 설치한다.
 - 에뮬레이터의 실제 모드는 등급이 나오지 않는다(정직 고지 참고). **화면 확인은 설정에서 데모 모드를 켜고 시나리오(D0~D7)를 고른다.** D3 이 대표 이야기다.
 
@@ -149,9 +149,8 @@ Pleos Connect 에뮬레이터 v2.1.0 (AVD `Pleos_Connect_v2.1.0`, Android API 34
 
 ## APK 위치
 
-- `apk/해적단_MOCA_release.apk`
-
-**이 파일은 앱이 새 구조(상태관리 · 보이스챗 · 대전하기)로 바뀌기 전에 만든 것이다. 다시 빌드해서 바꿔 넣어야 한다.**
+- 저장소: `apk/해적단_MOCA_release.apk` (서명된 release, 11MB, 새 구조)
+- GitHub Release: https://github.com/luffy-pleos-connect/pleos-deepseek-app/releases/tag/v1.2.0
 
 ## 구조
 
