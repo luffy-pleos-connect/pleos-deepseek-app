@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>crash3d promo</title>
+<style>html,body{margin:0;background:#03050b;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./node_modules/three/build/three.module.js",
+  "three/addons/": "./node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<script type="module">
+  import('./promo.js').catch((e) => { window.__error = String(e && e.stack || e); });
+</script>
+</body>
+</html>
